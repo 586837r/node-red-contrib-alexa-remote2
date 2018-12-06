@@ -1,0 +1,35 @@
+{
+  "name": "node-red-contrib-alexa-remote2",
+  "version": "0.1.0",
+  "author": {
+    "name": "586837r",
+    "email": "586837r@gmail.com"
+  },
+  "description": "node-red nodes wrapped around alexa-remote2",
+  "keywords": [
+    "node-red",
+    "alexa remote",
+    "alexa",
+    "echo"
+  ],
+  "license": "MIT",
+  "node-red": {
+    "nodes": {
+      "alexa-remote-config": "nodes/alexa-remote-account.js",
+      "alexa-remote-init": "nodes/alexa-remote-init.js",
+      "alexa-remote-command": "nodes/alexa-remote-command.js",
+      "alexa-remote-sequence": "nodes/alexa-remote-sequence.js",
+      "alexa-remote-get": "nodes/alexa-remote-get.js",
+      "alexa-remote-set": "nodes/alexa-remote-set.js",
+      "alexa-remote-action": "nodes/alexa-remote-action.js",
+      "alexa-remote-event": "nodes/alexa-remote-event.js"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/586837r/node-red-contrib-alexa-remote2"
+  },
+  "dependencies": {
+    "alexa-remote2": "2.0.0"
+  }
+}

@@ -1,0 +1,310 @@
+<script type="text/x-red" data-template-name="alexa-remote-get">
+	<div class="form-row">
+		<label for="node-input-name"><i class="icon-tag"></i> Name</label>
+		<input type="text" id="node-input-name" placeholder="Optional">
+	</div>
+	<div class="form-row">
+		<label for="node-input-account"><i class="fa fa-amazon"></i> Account</label>
+		<input id="node-input-account">
+	</div>
+	<div class="form-row">
+		<label for="node-input-target_value"><i class="fa fa-sort"></i> Request</label>
+		<input id="node-input-target_value"></input>
+		<input type="hidden" id="node-input-target_type">
+	</div>
+	<hr>
+	<div class="form-row">
+		<label for="node-input-serialOrName_value"><i class="fa fa-circle"></i> Device</label>
+		<input id="node-input-serialOrName_value">
+		<input type="hidden" id="node-input-serialOrName_type">
+	</div>
+</script>
+
+<script type="text/x-red" data-help-name="alexa-remote-get">
+	<p>Gets information from alexa.</p>
+
+	<h3>Outputs</h3>
+    <ol class="node-ports">
+		<dl class="message-properties">
+			<dt>payload <span class="property-type">Object</span></dt>
+			<dd>the standard output</dd>
+		</dl>
+		<dl class="message-properties">
+			<dt>error <span class="property-type">string</span></dt>
+			<dd>the standard error output, is not defined on success</dd>
+		</dl>
+	</ol>
+	
+	<h3>References</h3>
+    <ul>
+		<li><a href="#">npm</a> - the nodes npm repository</li>
+        <li><a href="#">GitHub</a> - the nodes github repository</li>
+    </ul>
+</script>
+
+<script type="text/javascript">
+	RED.nodes.registerType('alexa-remote-get', {
+		category: 'alexa',
+		color: '#6fbad8',
+		defaults: {
+			name: { value: '' },
+			account: { value: '', type: 'alexa-remote-account', required: false },
+			target_type: { value: 'str' },
+			target_value: { value: 'devices' },
+			serialOrName_type: { value: '' },
+			serialOrName_value: { value: '' }, 		
+			options: { value: {} },
+		},
+		inputs: 1,
+		outputs: 1,
+		icon: 'alexa-remote-icon.png',
+		label: function() {
+			return this.name || `Alexa get ${this.target_value}`;
+		},
+		labelStyle: function() {
+			return this.name ? "node_label_italic" : "";
+		},
+		oneditprepare: function() {	
+			/*
+				// inputconfigs may look like this:
+				let colorConfig = {
+					rgb: { red: '', green: 53, blue: ['lightblue', 'darkblue'] }
+					hsv: { hue: { label: 'huehue', value: 53 } }
+					hsl: { test: { type: 'select', label: 'Choose', value: ['dark', 'bright'] } }
+				}
+				// savedInput may look like:
+				let savedInput = {
+					value: 'rgb';
+					options: { green: 255, ... }
+				}
+				// attached structure like:
+				{
+					rgb: {
+						red: [container, { red: {input:x, output:y}, green: ... }]
+					}
+				}
+			*/
+			function createSelectInputConfigs(selectElement, containerElement, inputConfigs, saved) {
+				let tools = {
+					isPlainObject: x => typeof x == 'object' && x !== null && !Array.isArray(x),
+					camelCaseToLabel: str => str.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()),
+					isChrome: () => navigator.userAgent.toLowerCase().indexOf('chrome') != -1,
+					commonTypes: ['msg', 'flow', 'global', 'jsonata', 'env']
+				}
+
+				let elementMap = {};
+
+				let container = $(containerElement);
+				let select = $(selectElement);
+
+				// setup container
+				container.empty();
+				Object.entries(inputConfigs).forEach(([configName, configProps]) => {
+					let elementMapRows = {};
+					let rowElementsContainer = $('<div>').appendTo(container);
+					let savedConfig = saved && saved.options ? saved.options[configName] : undefined;
+
+					Object.entries(configProps).forEach(([key, value]) => {
+						let rowElement = $('<div>').appendTo(rowElementsContainer).addClass('form-row');
+						let labelElement = $('<label>').appendTo(rowElement);
+						let inputElement = $('<input>').appendTo(rowElement).typedInput({});
+						rowElement.children('div').css('flex', '1');
+
+						let getTypeFromValue = v =>
+							typeof v === typeof 'abc' ? 'str'
+								: typeof v === typeof 5 ? 'num'
+									: typeof v === typeof true ? 'bool'
+										: Array.isArray(v) ? 'select'
+											: undefined;
+
+						let input = {
+							type: undefined,
+							value: undefined,
+							label: undefined,
+							types: undefined,
+							options: undefined
+						};
+
+						// set type, value, label?, options
+						if (tools.isPlainObject(value)) {
+							input = value;
+							if (input.type === undefined && input.value !== undefined)
+								input.type = getTypeFromValue(input.value);
+
+							switch (input.type) {
+								case 'select':
+									if (input.options === undefined) return console.error(`[inputconfig]: options must be defined for select (${key}, ${value})`);
+									if (input.value === undefined) input.value = input.options[0];
+									break;
+								case 'str': case 'num': case 'bool':
+									if (input.value !== undefined) input.value = String(input.value);
+									break;
+							}
+						}
+						else {
+							input.type = getTypeFromValue(value);
+
+							switch (input.type) {
+								case 'select':
+									input.options = value;
+									input.value = value[0];
+									break;
+								case 'str': case 'num': case 'bool':
+									input.value = String(value);
+									break;
+							}
+						}
+
+						// set types, handle error
+						switch (input.type) {
+							case 'select':
+								input.types = [{ value: 'select', label: 'Select', options: input.options, validate: () => true }, 'str', ...tools.commonTypes];
+								break;
+							case 'str': case 'num': case 'bool':
+								input.types = [input.type, ...tools.commonTypes];
+								break;
+							case undefined:
+								return console.log(`[inputconfig]: type or value must be defined (${key}, ${value})`);
+							default:
+								return console.log(`[inputconfig]: invalid type (${key}, ${value}, ${input.type})`);
+						}
+
+						// set label
+						if (input.label === undefined)
+							input.label = tools.camelCaseToLabel(key);
+
+						labelElement.text(input.label);
+						inputElement.data('name', key)
+							.typedInput('types', input.types)
+							.typedInput('type', input.type)
+							.typedInput('value', input.value);
+
+						if (savedConfig) {
+							let option = savedConfig[key];
+							if (typeof option !== 'undefined') {
+								inputElement.typedInput('type', option.type);
+								inputElement.typedInput('value', option.value);
+							}
+						}
+
+						elementMapRows[key] = { label: labelElement[0], input: inputElement[0] };
+					});
+					elementMap[configName] = [rowElementsContainer[0], elementMapRows];
+				});
+
+				// setup select
+				select.typedInput({
+					types: [{
+						value: 'select',
+						label: 'Select',
+						options: Object.keys(inputConfigs) //.map(tools.camelCaseToLabel)
+					}, ...tools.commonTypes]
+				})
+
+				let selectChangeHandler = () => {
+					let value = select.typedInput('value');
+					Object.entries(elementMap).forEach(([name, config]) => {
+						$(config[0]).css('display', name === value ? '' : 'none');
+					});
+				};
+
+				// hacky fix:
+				// if not displayed, size of typedInput button is not calculated (correctly)
+				// this calculation is instantanious in firefox but delayed
+				// in chrome so we wait a bit for chrome until we 'display: none' the inputs
+				setTimeout(function () {
+					select.change(selectChangeHandler);
+					if (saved.value !== undefined) select.typedInput('value', saved.value);
+					if (saved.type !== undefined) select.typedInput('type', saved.type);
+					select.change();
+				}, tools.isChrome() ? 200 : 0);
+
+				select.data('alexa-remote-map', elementMap);
+				console.log(elementMap);
+			}
+
+			let targets = {
+				devices: 					{},
+				cards: 						{ limit: 10, beforeCreationTime: '%t'},
+				media:						{},
+				playerInfo:					{},
+				list: 						{ size: 100, startTime: '', endTime: '', completed: false, listType: ['TASK', 'SHOPPING_ITEM']},
+				//lists: 						{ serialOrName: serialOrNameInput, size: 100, startTime: '', endTime: '', completed: false},
+				wakewords:					{},
+				notifications: 				{ cached: true},
+				doNotDisturb:				{},
+				devicesNotificationState: 	{},
+				bluetooth: 					{ cached: true},
+				activities: 				{ startTime: '', size: 1, offset: 1},
+				account:					{},
+				conversations: 				{ latest: true, includeHomegroup: true, unread: false, modifiedSinceDate: '1970-01-01T00:00:00.000Z', includeUserName: true },
+				automationRoutines: 		{ limit: 2000 },
+				musicProviders:				{},
+				homeGroup:					{},
+				devicePreferences:			{},
+				smarthomeDevices:			{},
+				smarthomeGroups:			{},
+				smarthomeEntities:			{},
+				smarthomeBehaviourActionDefinitions: {}	
+			};
+			
+			createSelectInputConfigs(
+				$('#node-input-target_value')[0], 
+				$('<div>').appendTo('#dialog-form')[0], 
+				targets,
+				{ value: this.target_value, type: this.target_type, options: this.options }
+			);
+
+			let select = $('#node-input-target_value');
+			let serialOrName = $('#node-input-serialOrName_value')
+				.typedInput({
+					types: ['str', 'msg', 'flow', 'global', 'jsonata', 'env'],
+					typeField: $('#node-input-serialOrName_type')[0]
+				});	
+
+
+			setTimeout(function () {
+				select.change(() => {
+					let type = select.typedInput('type');
+					let value = select.typedInput('value');
+					if (type === 'str' || type === 'select') {
+						let requireDevice = ['media', 'list', 'devicesNotificationState'];
+						if (requireDevice.includes(value)) {
+							serialOrName.parent().css('display', '');
+						}
+						else {
+							serialOrName.parent().css('display', 'none');
+						}
+					}
+					else {
+						serialOrName.parent().css('display', '');
+					}
+				});
+				select.change();
+			}, navigator.userAgent.toLowerCase().indexOf('chrome') != -1 ? 200 : 0);
+		},
+		oneditsave: function() {
+			function saveSelectInputConfigs(selectElement){
+				let select = $(selectElement);
+				let map = select.data('alexa-remote-map');
+
+				let options = {};
+				Object.entries(map)
+				.forEach(([configName, configProps]) => {
+					options[configName] = {};
+					Object.entries(configProps[1])
+					.forEach(([propName, propElements]) => {
+						options[configName][propName] = {};
+						options[configName][propName].type = $(propElements.input).typedInput('type');
+						options[configName][propName].value = $(propElements.input).typedInput('value');
+					});
+				});
+				return options;
+			}
+
+			this.options = saveSelectInputConfigs($('#node-input-target_value')[0]);
+
+			//console.log(this.target_value, this.target_type, this.options);
+		}
+	});
+</script>

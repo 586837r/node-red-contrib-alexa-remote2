@@ -1,0 +1,56 @@
+<script type="text/x-red" data-template-name="alexa-remote-init">
+	<div class="form-row">
+		<label for="node-input-name"><i class="icon-tag"></i> Name</label>
+		<input type="text" id="node-input-name" placeholder="Optional">
+	</div>
+	<div class="form-row">
+		<label for="node-input-account"><i class="fa fa-amazon"></i> Account</label>
+		<input id="node-input-account">
+	</div>
+</script>
+
+<script type="text/x-red" data-help-name="alexa-remote-init">
+	<p>Initializes an alexa instance connected to an account.</p>
+	<p>
+		This is only necessary for when the <code>lazy</code> initialization behaviour is chosen
+		for the account. In other cases it can be used to check if initialization alone is successful.
+	</p>
+
+	<h3>Outputs</h3>
+    <ol class="node-ports">
+		<dl class="message-properties">
+			<dt>payload <span class="property-type">Object</span></dt>
+			<dd>the standard output</dd>
+		</dl>
+		<dl class="message-properties">
+			<dt>error <span class="property-type">string</span></dt>
+			<dd>the standard error output, is not defined on success</dd>
+		</dl>
+	</ol>
+	
+	<h3>References</h3>
+    <ul>
+		<li><a href="#">npm</a> - the nodes npm repository</li>
+        <li><a href="#">GitHub</a> - the nodes github repository</li>
+    </ul>
+</script>
+
+<script type="text/javascript">
+	RED.nodes.registerType('alexa-remote-init', {
+		category: 'alexa',
+		color: '#6fbad8',
+		defaults: {
+			name: { value: '' },
+			account: { value: '', type: 'alexa-remote-account', required: false }
+		},
+		inputs: 1,
+		outputs: 1,
+		icon: 'alexa-remote-icon.png',
+		label: function () {
+			return this.name || "Alexa Init";
+		},
+		labelStyle: function () {
+			return this.name ? "node_label_italic" : "";
+		}
+	});
+</script>

@@ -1,0 +1,78 @@
+<script type="text/x-red" data-template-name="alexa-remote-event">
+	<div class="form-row">
+		<label for="node-input-name"><i class="icon-tag"></i> Name</label>
+		<input type="text" id="node-input-name" placeholder="Optional">
+	</div>
+	<div class="form-row">
+		<label for="node-input-account"><i class="fa fa-amazon"></i> Account</label>
+		<input id="node-input-account">
+	</div>
+	<div class="form-row">
+		<label for="node-input-event"><i class="fa fa-sort"></i> Command</label>
+		<select id="node-input-event">
+			<option value="ws-disconnect"				>Disconnect					</option>
+			<option value="ws-error"					>Error						</option>
+			<option value="ws-connect"					>Connect					</option>
+			<option value="ws-device-connection-change"	>Device Connection Change	</option>
+			<option value="ws-bluetooth-state-change"	>Bluetooth State Change		</option>
+			<option value="ws-audio-player-state-change">Audioplayer State Change	</option>
+			<option value="ws-media-queue-change"		>Media Queue Change			</option>
+			<option value="ws-media-change"				>Media Change				</option>
+			<option value="ws-volume-change"			>Volume Change				</option>
+			<option value="ws-content-focus-change"		>Content Focus Change		</option>
+			<option value="ws-equilizer-state-change"	>Equalizer State Change		</option>	
+			<option value="ws-notification-change"		>Notification Change		</option>	
+			<option value="ws-device-activity"			>Device Activity			</option>	
+			<option value="ws-unknown-message"			>Unknown Message			</option>
+			<option value="ws-unknown-command"			>Unknown Command			</option>	
+		</select>
+	</div>
+</script>
+
+<script type="text/x-red" data-help-name="alexa-remote-event">
+	<p>Sends a message when an event occurs.
+		Events must be enabled for the account.
+	</p>
+
+	<h3>Outputs</h3>
+    <ol class="node-ports">
+		<dl class="message-properties">
+			<dt>payload <span class="property-type">Object</span></dt>
+			<dd>the standard output</dd>
+		</dl>
+	</ol>
+	
+	<h3>Details</h3>
+	<p>Please note that if the <i>Intialization Behaviour</i> is not <i>Manual</i>
+	then the connect event might be missed because it was fired before this node started
+	listening.</p>
+	<p>The <i>Device Activity</i> event will fire when you talk to alexa, so you can get the spoken message from
+	<code>msg.payload.description.summary</code>.</p>
+
+	<h3>References</h3>
+    <ul>
+		<li><a href="#">npm</a> - the nodes npm repository</li>
+        <li><a href="#">GitHub</a> - the nodes github repository</li>
+    </ul>
+</script>
+
+<script type="text/javascript">
+	RED.nodes.registerType('alexa-remote-event', {
+		category: 'alexa',
+		color: '#6fbad8',
+		defaults: {
+			name: { value: '' },
+			account: { value: '', type: 'alexa-remote-account', required: false },
+			event: { value: 'ws-device-activity' }
+		},
+		inputs: 0,
+		outputs: 1,
+		icon: 'alexa-remote-icon.png',
+		label: function () {
+			return this.name || ("Alexa event " + this.event.slice(3));
+		},
+		labelStyle: function () {
+			return this.name ? "node_label_italic" : "";
+		}
+	});
+</script>

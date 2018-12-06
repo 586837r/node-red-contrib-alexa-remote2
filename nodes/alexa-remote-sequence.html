@@ -1,0 +1,182 @@
+<script type="text/x-red" data-template-name="alexa-remote-sequence">
+	<div class="form-row">
+		<label for="node-input-name"><i class="icon-tag"></i> Name</label>
+		<input type="text" id="node-input-name" placeholder="Optional">
+	</div>
+	<div class="form-row">
+		<label for="node-input-account"><i class="fa fa-amazon"></i> Account</label>
+		<input id="node-input-account">
+	</div>
+	<div class="form-row">
+		<label for="node-input-serialOrName_value"><i class="fa fa-circle"></i> Device</label>
+		<input id="node-input-serialOrName_value">
+		<input type="hidden" id="node-input-serialOrName_type">
+	</div>
+	<div class="form-row" style="margin-bottom:0;">
+		<label><i class="fa fa-list"></i> Commands</label>
+	</div>
+	<div class="form-row node-input-sequence-nodes-container-row">
+		<ol id="node-input-sequence-nodes-container"></ol>
+	</div>
+</script>
+
+<script type="text/x-red" data-help-name="alexa-remote-sequence">
+	<p>Execute a sequence of voice commands.</p>
+
+	<h3>Outputs</h3>
+    <ol class="node-ports">
+		<dl class="message-properties">
+			<dt>payload <span class="property-type">Object</span></dt>
+			<dd>the standard output</dd>
+		</dl>
+		<dl class="message-properties">
+			<dt>error <span class="property-type">string</span></dt>
+			<dd>the standard error output, is not defined on success</dd>
+		</dl>
+	</ol>
+	
+	<h3>References</h3>
+    <ul>
+		<li><a href="#">npm</a> - the nodes npm repository</li>
+        <li><a href="#">GitHub</a> - the nodes github repository</li>
+    </ul>
+</script>
+
+<script type="text/javascript">
+	RED.nodes.registerType('alexa-remote-sequence', {
+		category: 'alexa',
+		color: '#6fbad8',
+		defaults: {
+			name: { value: '' },
+			account: { value: '', type: 'alexa-remote-account', required: false },
+			serialOrName_type: { value: '' },
+			serialOrName_value: { value: '' },
+			sequenceInputs: { value: [
+				{
+					command:'speak', 
+					value_type: 'str', 
+					value_value: 'Hello World!'
+				}
+			]}
+		},
+		inputs: 1,
+		outputs: 1,
+		icon: 'alexa-remote-icon.png',
+		label: function () {
+			return this.name || "Alexa Sequence";
+		},
+		labelStyle: function () {
+			return this.name ? "node_label_italic" : "";
+		},
+		oneditprepare: function() {
+			let node = this;
+
+			let resizeRow = (row) => {
+				var newWidth = row.width();
+				row.find('.red-ui-typedInput').typedInput("width", newWidth - 145);
+			}
+
+			let device = $('#node-input-serialOrName_value').typedInput({
+				types: ['str', 'msg', 'flow', 'global', 'jsonata', 'env'],
+				typeField: $('#node-input-serialOrName_type')[0]
+			});
+			console.log(device);
+			
+			let container = $('#node-input-sequence-nodes-container').css('min-height', '250px').css('min-width', '100px').editableList({
+				addItem: function(row, index, data) {
+					if(!data.hasOwnProperty('command')){
+						data = { command: 'speak', value_type: 'str', value_value: 'Hello World!' };
+					}
+					row.css({
+						overflow: 'hidden',
+						whiteSpace: 'nowrap'
+					});
+
+					let subrow = $('<div>').appendTo(row)
+
+					let commandSelect = $('<select>', { class: "node-input-sequence-node-command", style: "margin-right:10px;" }).css('width', '125px').appendTo(subrow);
+					let selectOptions = [
+						{ value: 'speak', 			label: 'Speak' 			}, 
+						{ value: 'volume',			label: 'Volume'			},
+						{ value: 'goodmorning',		label: 'Good Morning' 	},
+						{ value: 'weather', 		label: 'Weather' 		}, 
+						{ value: 'traffic', 		label: 'Traffic' 		}, 
+						{ value: 'flashbriefing', 	label: 'Flash briefing' },
+						{ value: 'singasong',		label: 'Sing a song' 	},
+						{ value: 'tellstory',		label: 'Tell a story' 	},
+					];
+					selectOptions.forEach(o => {
+						commandSelect.append($('<option>').val(o.value).text(o.label));
+					});
+
+					let emptyType = { value: 'empty', label: ' ', hasValue: false };
+					let valueTypedInput = $('<input>', { class: "node-input-sequence-node-value", type: "text" })
+						.appendTo(subrow)
+						.typedInput({ default: 'str', types: ['msg', 'flow', 'global', 'str', 'num', 'bool', 'json', 'bin', 'date', 'jsonata', 'env', emptyType ] });
+					
+					commandSelect.change(function() {
+						let command = $(this).val();
+						let types = (() => {
+							switch(command){
+								case 'speak': 	return ['msg', 'flow', 'global', 'str', 'num', 'bool', 'date', 'jsonata', 'env'];
+								case 'volume':	return ['msg', 'flow', 'global', 'num', 'jsonata', 'env'];
+								default: 		return [emptyType];
+							}
+						})();
+
+						valueTypedInput.typedInput('types', types);
+
+						resizeRow(row)
+					});
+
+					commandSelect.val(data.command);
+					commandSelect.change();
+					valueTypedInput.typedInput('type', data.value_type);
+					valueTypedInput.typedInput('value', data.value_value);
+
+					resizeRow(row);
+				},
+				resizeItem: resizeRow,
+				scrollOnAdd: true,
+				removable: true,
+				sortable: true
+			});
+
+			if(!node.sequenceInputs)
+				node.sequenceInputs = [];
+
+			node.sequenceInputs.forEach(input => {
+				container.editableList('addItem', input);
+			});
+		},
+		oneditsave: function() {
+			let node = this;		
+			let rows = $('#node-input-sequence-nodes-container').editableList('items');
+
+			node.sequenceInputs = [];
+
+			rows.each(function() {
+				let row = $(this);
+								
+				let sequenceInput = {
+					command: 		row.find('.node-input-sequence-node-command').val(),
+					value_type: 	row.find('.node-input-sequence-node-value').typedInput('type'),
+					value_value:	row.find('.node-input-sequence-node-value').typedInput('value')
+				};
+				
+				node.sequenceInputs.push(sequenceInput)
+			});
+		},
+		oneditresize: function (size) {
+			var rows = $("#dialog-form>div:not(.node-input-sequence-nodes-container-row)");
+			var height = size.height;
+			for (var i = 0; i < rows.size(); i++) {
+				height -= $(rows[i]).outerHeight(true);
+			}
+			var editorRow = $("#dialog-form>div.node-input-sequence-nodes-container-row");
+			height -= (parseInt(editorRow.css("marginTop")) + parseInt(editorRow.css("marginBottom")));
+
+			$("#node-input-sequence-nodes-container").editableList('height', height);
+		}
+	});
+</script>
