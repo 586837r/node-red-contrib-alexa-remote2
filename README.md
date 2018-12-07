@@ -9,11 +9,13 @@ The goal is to expose all of [alexa-remote2](https://www.npmjs.com/package/alexa
 2. Create a new Account by pressing the edit button at the right side of the *Account* field.
 3. Enter the **Cookie** or the **Email** and **Password** of your Amazon Alexa Account.
 4. Choose a **Service Host** and **Page** depending on your location. For Example:
+
    ||Service Host|Page
    |---|---|---
    |USA|pitangui.amazon.com|amazon.com
    |UK|alexa.amazon.co.uk|amazon.co.uk
    |GER|layla.amazon.de|amazon.de
+   
 5. *Add* the new Account.
 6. Enter the **Device** name (or Serial Number) of the target Alexa Device that is connected to your account.
 
