@@ -233,7 +233,7 @@
 				wakewords:					{},
 				notifications: 				{ cached: true},
 				doNotDisturb:				{},
-				devicesNotificationState: 	{},
+				deviceNotificationState: 	{},
 				bluetooth: 					{ cached: true},
 				activities: 				{ startTime: '', size: 1, offset: 1},
 				account:					{},
@@ -268,7 +268,7 @@
 					let type = select.typedInput('type');
 					let value = select.typedInput('value');
 					if (type === 'str' || type === 'select') {
-						let requireDevice = ['media', 'list', 'devicesNotificationState'];
+						let requireDevice = ['media', 'list', 'deviceNotificationState', 'playerInfo'];
 						if (requireDevice.includes(value)) {
 							serialOrName.parent().css('display', '');
 						}
