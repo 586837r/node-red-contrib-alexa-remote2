@@ -31,14 +31,14 @@
 		</dl>
 		<dl class="message-properties">
 			<dt>error <span class="property-type">string</span></dt>
-			<dd>the standard error output, is not defined on success</dd>
+			<dd>the standard error output, is undefined on success</dd>
 		</dl>
 	</ol>
 	
 	<h3>References</h3>
     <ul>
 		<li><a href="#">npm</a> - the nodes npm repository</li>
-        <li><a href="#">GitHub</a> - the nodes github repository</li>
+        <li><a href="https://github.com/586837r/node-red-contrib-alexa-remote2">GitHub</a> - the nodes github repository</li>
     </ul>
 </script>
 
@@ -49,8 +49,8 @@
 		defaults: {
 			name: 					{ value: '' },
 			account: 				{ value: '', type: 'alexa-remote-account', required: false },
-			target_type: 			{ value: 'playMusicProvider' },
-			target_value: 			{ value: 'TUNEIN' },
+			target_type: 			{ value: 'select' },
+			target_value: 			{ value: 'playMusicProvider' },
 			serialOrName_type:		{ value: '' },
 			serialOrName_value:		{ value: '' }, 		
 			options: 				{ value: {} },
