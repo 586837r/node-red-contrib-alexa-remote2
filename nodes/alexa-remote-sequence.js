@@ -14,12 +14,17 @@ module.exports = function (RED) {
 			let config = {};
 			tools.assignTypedConvert(RED, node, msg, config, ['serialOrName'], input);
 
-			config.sequenceCommands = node.sequenceInputs.map(input => {
-				return {
-					command: input.command,
-					value: RED.util.evaluateNodeProperty(input.value_value, input.value_type, node, msg)
-				}
-			});
+			if(msg.sequence){
+				config.sequenceCommands = msg.sequence;
+			}
+			else{
+				config.sequenceCommands = node.sequenceInputs.map(input => {
+					return {
+						command: input.command,
+						value: RED.util.evaluateNodeProperty(input.value_value, input.value_type, node, msg)
+					}
+				});
+			}
 
 			tools.initAndSend(node, msg, (alexa) => {
 				return new Promise((resolve, reject) => {
