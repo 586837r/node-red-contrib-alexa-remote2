@@ -35,9 +35,14 @@
     </div>
 	<hr>
     <div class="form-row">
-        <label for="node-config-input-useWsMqtt_value">Enable Events</label>
+        <label for="node-config-input-useWsMqtt_value">Events</label>
 		<input type="checkbox" id="node-config-input-useWsMqtt_value">
 		<input type="hidden" id="node-config-input-useWsMqtt_type">
+	</div>
+	<div class="form-row">
+        <label for="node-config-input-bluetooth_value">Bluetooth</label>
+		<input type="checkbox" id="node-config-input-bluetooth_value">
+		<input type="hidden" id="node-config-input-bluetooth_type">
 	</div>
     <div class="form-row">
         <label for="node-config-input-initType">Init Behaviour</label>
@@ -63,23 +68,25 @@
 			<li>UK: <code>alexa.amazon.co.uk</code> and <code>amazon.co.uk</code></li>
 			<li>Germany: <code>layla.amazon.de</code> and <code>amazon.de</code></li>
 		</ul>
-		<p><i>I have only tested the settings for Germany. Please report if different settings worked better for you.</i></p>
-		<p>You can optionally define the requested <b>Language</b> in a format like <code>en-US</code>, <code>en-UK</code> or <code>de-DE</code> and your <b>User agent</b>.</p>
+		<p>You can optionally define the request Accept-<b>Language</b> Header and the <b>User Agent</b>.
+		   Language may look like <code>en-US</code>, <code>en-UK</code> or <code>de-DE</code> etc.
+		</p>
 	</p>
 	<h3>Behaviour Settings</h3>
-	<p><b>Enable Events</b> needs to be <code>true</code> to use the Alexa Remote Event node with this account.</p>
+	<p><b>Events</b> needs to be <code>on</code> to use the Alexa Remote Event node with this account.</p>
+	<p><b>Bluetooth</b> needs to be <code>on</code> to use some bluetooth related commands.</p>
 	<p><b>Init Behaviour: </b>Each Alexa Remote Account has an <code>AlexaRemote</code> instance that does all the work. It needs to be initialized before
-	using it, to generate the cookie and request the devices to resolve device names.</p>
+	using it, to generate the cookie and request the devices to resolve device names and more.</p>
 	<ul>
 		<li><b>Lazy</b><i>(default)</i> means that AlexaRemote is initialized if it hasn't yet been initialized or if an error occured.</li>
-		<li><b>Manual</b> means that you will have to use the Alexa Init node to initialize AlexaRemote.</li>
+		<li><b>Manual</b> means that only the Alexa Init node will initialize AlexaRemote.</li>
 		<li><b>Every Request</b> means that AlexaRemote is (re)initialized before every request</li>
 	</ul>
 
 	<h3>References</h3>
     <ul>
 		<li><a href="#">npm</a> - the nodes npm repository</li>
-        <li><a href="#">GitHub</a> - the nodes github repository</li>
+        <li><a href="https://github.com/586837r/node-red-contrib-alexa-remote2">GitHub</a> - the nodes github repository</li>
     </ul>
 </script>
 
@@ -98,9 +105,11 @@
             userAgent:          { value: '' },
             acceptLanguage:     { value: 'en-US' },
 			amazonPage:         { value: 'amazon.com' },
-			useWsMqtt_type:		{ value: 'bool' },
-			useWsMqtt_value:    { value: 'true' },
 			initType:			{ value: 'lazy' },
+			useWsMqtt_type:		{ value: 'onoff' },
+			useWsMqtt_value:    { value: 'on' },
+			bluetooth_type: 	{ value: 'onoff' },
+			bluetooth_value: 	{ value: 'on' },
         },
         label: function () {
             return this.name || 'Alexa Account';
@@ -119,7 +128,8 @@
 				input.change();
 			}
 			
-			setupTypedInput('useWsMqtt', ['bool']);
+			setupTypedInput('useWsMqtt', [{ value: 'onoff', label: '', options: ['on', 'off'] }]);
+			setupTypedInput('bluetooth', [{ value: 'onoff', label: '', options: ['on', 'off'] }]);
 		},
     });
 </script>

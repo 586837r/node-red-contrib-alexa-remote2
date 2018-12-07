@@ -8,7 +8,7 @@ module.exports = function (RED) {
 		let node = this;
 
 		tools.assign(node, ['bluetooth', 'alexaServiceHost', 'userAgent', 'amazonPage', 'initType'], input);
-		tools.assignTypedConvert(RED, null, null, node, ['useWsMqtt'], input);
+		tools.assignTypedConvert(RED, null, null, node, ['useWsMqtt', 'bluetooth'], input);
 		node.emitter = new EventEmitter();
 
 		/**
@@ -17,7 +17,7 @@ module.exports = function (RED) {
 		node.initAlexa = function() {
 			this.alexa = new AlexaRemote();
 			let config = { logger: tools.logger };
-			tools.assign(config, ['bluetooth', 'alexaServiceHost', 'userAgent', 'amazonPage', 'useWsMqtt'], this);
+			tools.assign(config, ['alexaServiceHost', 'userAgent', 'amazonPage', 'useWsMqtt', 'bluetooth'], this);
 			tools.assign(config, ['cookie', 'email', 'password'], this.credentials);
 			let has = (x) => config[x] !== undefined;
 			if (!has('cookie') && (!has('email') || !has('password'))) {
