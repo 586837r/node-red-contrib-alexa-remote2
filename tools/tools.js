@@ -122,7 +122,7 @@ module.exports = {
 		node.status({ shape: 'dot', fill: 'green', text: 'Success' });
 		msg.payload = val;
 		delete msg.error;
-		console.log('onSucc');
+		//console.log('onSucc');
 		node.send(msg);
 	},
 	nodeOnError: function(node, msg, err) {
@@ -130,7 +130,7 @@ module.exports = {
 		delete msg.payload;
 		msg.error = err;
 		node.error(err);
-		console.log('onErr');
+		//console.log('onErr');
 		node.send(msg);
 	},
 	/**
