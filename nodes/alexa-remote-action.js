@@ -39,7 +39,7 @@ module.exports = function (RED) {
 						case 'connectBluetooth': 			return alexa.connectBluetooth(serialOrName, options.address, callback);
 						case 'unpaireBluetooth': 			return alexa.unpaireBluetooth(serialOrName, options.address, callback);
 						case 'disconnectBluetooth': 		return alexa.disconnectBluetooth(serialOrName, options.address, callback);
-						default: return Promise.reject(new Error('invalid action target'));
+						default: return reject(new Error('invalid action target'));
 					}
 				})
 			}

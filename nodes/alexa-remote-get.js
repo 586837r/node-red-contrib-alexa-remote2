@@ -44,7 +44,7 @@ module.exports = function (RED) {
 						case 'smarthomeGroups':							return alexa.getSmarthomeGroups(callback);
 						case 'smarthomeEntities':						return alexa.getSmarthomeEntities(callback);
 						case 'smarthomeBehaviourActionDefinitions': 	return alexa.getSmarthomeBehaviourActionDefinitions(callback);
-						default: return Promise.reject(new Error('invalid get target'));
+						default: return reject(new Error('invalid get target'));
 					}
 				})
 			}
