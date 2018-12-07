@@ -185,7 +185,7 @@ module.exports = {
 					.catch(onError);
 				} 
 				else {
-					console.log('acc already init');
+					//console.log('acc already init');
 					wrappedSendFun(account.alexa)
 					.catch(() => new Promise((resolve, reject) => {
 						account.initAlexa()
@@ -216,7 +216,7 @@ module.exports = {
 				break;
 			}
 			default: {
-				onError('invalid init behaviour');
+				onError(new Error('invalid init behaviour'));
 				break;
 			}
 		}
