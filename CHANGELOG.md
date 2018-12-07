@@ -1,0 +1,2 @@
+- **1.0.1** Added *Create File* to *Alexa Speak List Dashboard* example
+- **1.0.0** Initial
