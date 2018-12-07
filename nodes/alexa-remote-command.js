@@ -14,11 +14,11 @@ module.exports = function (RED) {
 		node.on('input', function (msg) {
 			let config = tools.assignTypedConvert(RED, node, msg, {}, ['serialOrName', 'command'], node);
 			let options = tools.assignTypedStructConvert(RED, node, msg, {}, node.options[config.command]); 
-			console.log(options, node.options);
+			//console.log(options, node.options);
 
 			tools.initAndSend(node, msg, (alexa) => 
 				new Promise((resolve, reject) => 
-					alexa.sendCommand(config.serialOrName, config.command, config.value, (err,val) => 
+					alexa.sendCommand(config.serialOrName, config.command, options.value, (err,val) => 
 						err ? reject(err) : resolve(val)
 					)
 				)
