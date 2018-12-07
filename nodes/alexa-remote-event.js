@@ -12,10 +12,10 @@ module.exports = function (RED) {
 			if(node.account.useWsMqtt){
 				node.account.emitter.addListener('alexa-init', () => {
 					node.status({ fill: "yellow", shape: "dot", text: "starting listening" });
-					setTimeout(() => node.status({}), 2000);
+					setTimeout(() => node.status({ fill: "grey", shape: "dot", text: "listening" }), 2000);
 					node.account.alexa.addListener(node.event, val => {
 						node.status({ fill: "blue", shape: "dot", text: "event fired!" });
-						setTimeout(() => node.status({}), 2000);
+						setTimeout(() => node.status({ fill: "grey", shape: "dot", text: "listening" }), 2000);
 						node.send({ payload: val });
 					});
 				});
