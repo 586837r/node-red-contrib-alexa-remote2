@@ -5,7 +5,7 @@
     "name": "586837r",
     "email": "586837r@gmail.com"
   },
-  "description": "node-red nodes for controlling alexa",
+  "description": "node-red nodes for interacting with alexa",
   "keywords": [
     "node-red",
     "alexa remote",
