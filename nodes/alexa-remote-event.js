@@ -9,7 +9,7 @@ module.exports = function (RED) {
 		tools.assignNode(RED, node, ['account'], input);
 
 		node.initCallback = function() {
-			node.warn('account init');
+			//node.warn('account init');
 			node.status({ fill: "yellow", shape: "dot", text: "starting listening" });
 			setTimeout(() => node.status({ fill: "grey", shape: "dot", text: "listening" }), 2000);
 			node.account.alexa.addListener(node.event, val => {
