@@ -1,2 +1,7 @@
-- **1.0.1** Added *Create File* to *Alexa Speak List Dashboard* example
-- **1.0.0** Initial
+- **1.0.2** 
+  - fixed setting Command/Request to anything other than select
+  - fixed events triggering more than once
+- **1.0.1** 
+  - added *Create File* to *Alexa Speak List Dashboard* example
+- **1.0.0** 
+  - initial
