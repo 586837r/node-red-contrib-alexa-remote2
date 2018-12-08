@@ -84,7 +84,7 @@
 					}
 				}
 			*/
-			function createSelectInputConfigs(selectElement, containerElement, inputConfigs, saved) {
+			function createSelectInputConfigs(selectName, containerElement, inputConfigs, saved) {
 				let tools = {
 					isPlainObject: x => typeof x == 'object' && x !== null && !Array.isArray(x),
 					camelCaseToLabel: str => str.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()),
@@ -94,8 +94,10 @@
 
 				let elementMap = {};
 
+				let selectValue = $('#node-input-' + selectName + '_value');
+				let selectType = $('#node-input-' + selectName + '_type');
+
 				let container = $(containerElement);
-				let select = $(selectElement);
 
 				// setup container
 				container.empty();
@@ -193,7 +195,8 @@
 				});
 
 				// setup select
-				select.typedInput({
+				selectValue.typedInput({
+					typeField: selectType,
 					types: [{
 						value: 'select',
 						label: 'Select',
@@ -202,7 +205,7 @@
 				})
 
 				let selectChangeHandler = () => {
-					let value = select.typedInput('value');
+					let value = selectValue.typedInput('value');
 					Object.entries(elementMap).forEach(([name, config]) => {
 						$(config[0]).css('display', name === value ? '' : 'none');
 					});
@@ -213,13 +216,13 @@
 				// this calculation is instantanious in firefox but delayed
 				// in chrome so we wait a bit for chrome until we 'display: none' the inputs
 				setTimeout(function () {
-					select.change(selectChangeHandler);
-					if (saved.value !== undefined) select.typedInput('value', saved.value);
-					if (saved.type !== undefined) select.typedInput('type', saved.type);
-					select.change();
+					selectValue.change(selectChangeHandler);
+					if (saved.value !== undefined) selectValue.typedInput('value', saved.value);
+					if (saved.type !== undefined) selectValue.typedInput('type', saved.type);
+					selectValue.change();
 				}, tools.isChrome() ? 200 : 0);
 
-				select.data('alexa-remote-map', elementMap);
+				selectValue.data('alexa-remote-map', elementMap);
 				console.log(elementMap);
 			}
 
@@ -249,7 +252,7 @@
 			};
 			
 			createSelectInputConfigs(
-				$('#node-input-target_value')[0], 
+				'target', 
 				$('<div>').appendTo('#dialog-form')[0], 
 				targets,
 				{ value: this.target_value, type: this.target_type, options: this.options }
@@ -284,25 +287,24 @@
 			}, navigator.userAgent.toLowerCase().indexOf('chrome') != -1 ? 200 : 0);
 		},
 		oneditsave: function() {
-			function saveSelectInputConfigs(selectElement){
-				let select = $(selectElement);
+			function saveSelectInputConfigs(selectName) {
+				let select = $('#node-input-' + selectName + '_value');
 				let map = select.data('alexa-remote-map');
 
 				let options = {};
 				Object.entries(map)
-				.forEach(([configName, configProps]) => {
-					options[configName] = {};
-					Object.entries(configProps[1])
-					.forEach(([propName, propElements]) => {
-						options[configName][propName] = {};
-						options[configName][propName].type = $(propElements.input).typedInput('type');
-						options[configName][propName].value = $(propElements.input).typedInput('value');
+					.forEach(([configName, configProps]) => {
+						options[configName] = {};
+						Object.entries(configProps[1])
+							.forEach(([propName, propElements]) => {
+								options[configName][propName] = {};
+								options[configName][propName].type = $(propElements.input).typedInput('type');
+								options[configName][propName].value = $(propElements.input).typedInput('value');
+							});
 					});
-				});
 				return options;
 			}
-
-			this.options = saveSelectInputConfigs($('#node-input-target_value')[0]);
+			this.options = saveSelectInputConfigs('target');
 
 			//console.log(this.target_value, this.target_type, this.options);
 		}
