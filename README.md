@@ -7,7 +7,7 @@ The goal is to expose all of [alexa-remote2](https://www.npmjs.com/package/alexa
 [Changelog](CHANGELOG.md)
 
 ### Setup
-1. Drag a **alexa sequence node** into your flow.
+1. Drag a **alexa remote sequence** node into your flow.
 2. Create a new Account by pressing the edit button at the right side of the *Account* field.
 3. Enter the **Cookie** or the **Email** and **Password** of your Amazon Alexa Account.
 4. Choose a **Service Host** and **Page** depending on your location. For Example:
@@ -22,6 +22,10 @@ The goal is to expose all of [alexa-remote2](https://www.npmjs.com/package/alexa
 6. Enter the **Device** name (or Serial Number) of the target Alexa Device that is connected to your account.
 
 Now trigger the Alexa Sequence Node with any message and your Alexa will say "Hello World!". (Hopefully!)
+
+### Advanced
+- **alexa remote sequence**: you can set the sequence by message too, see node info
+- you can override the account for each node by defining `msg.alexaRemoteAccount` with the required properties: `cookie` or `email` and `password`, `alexaServiceHost`, `amazonPage`, and optional properties: `bluetooth`*(true/false)*, `useWsMqtt`*(=events true/false)*, `acceptLanguage` and `userAgent`.
 
 ### Examples
 To use the following examples you need to select your account for each of the *alexa remote nodes*, or modify the account that is already set for the nodes. All following examples depend on node-red-dashboard.
