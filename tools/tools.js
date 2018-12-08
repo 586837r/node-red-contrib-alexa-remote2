@@ -117,7 +117,7 @@ module.exports = {
 			...[...arguments].slice(3)
 		);
 	},
-	getMsgAccount: msg => msg['alexa-remote-account'],
+	getMsgAccount: msg => msg['alexaRemoteAccount'],
 	nodeOnSuccess: function(node, msg, val) {
 		node.status({ shape: 'dot', fill: 'green', text: 'Success' });
 		msg.payload = val;
