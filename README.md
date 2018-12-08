@@ -9,7 +9,7 @@ The goal is to expose all of [alexa-remote2](https://www.npmjs.com/package/alexa
 ### Setup
 1. Drag a **alexa remote sequence** node into your flow.
 2. Create a new Account by pressing the edit button at the right side of the *Account* field.
-3. Enter the **Cookie** or the **Email** and **Password** of your Amazon Alexa Account.
+3. Enter the **Cookie** or the **Email** and **Password** of your Amazon Alexa Account. ([how do i get my cookie?](get_cookie.md))
 4. Choose a **Service Host** and **Page** depending on your location. For Example:
 
    ||Service Host|Page
