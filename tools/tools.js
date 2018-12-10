@@ -117,15 +117,52 @@ module.exports = {
 			...[...arguments].slice(3)
 		);
 	},
-	getMsgAccount: msg => msg['alexaRemoteAccount'],
-	nodeOnSuccess: function(node, msg, val) {
+	requireUncached: function(mod) {
+		delete require.cache[require.resolve(mod)];
+		return require(mod);
+	},
+	generateCookie: function(config, callback) {
+		const alexaCookie = this.requireUncached('alexa-cookie2');
+		alexaCookie.generateAlexaCookie(config.email, config.password, config, callback);
+	},
+	initAlexa: function(alexa, config) {
+		const has = (x) => typeof config[x] !== 'undefined';
+
+		if (!has('cookie') && (!has('email') || !has('password')))
+			return Promise.reject('either cookie or email and password must be defined');
+
+		if (has('cookie')) {
+			return new Promise((resolve, reject) => {
+				console.log(config);
+				// dont you dare try to resolve cookie yourself! >:(
+				delete config.email;
+				delete config.password;
+				alexa.init(config, (err, val) => err ? reject(err) : resolve(val));
+			});
+		}
+		else {
+			return new Promise((resolve, reject) => {
+				this.generateCookie(config, (err, val) => {
+					if (err) return reject(err);
+					config.cookie = val.cookie;
+
+					console.log(config);
+					// dont you dare try to resolve cookie yourself! >:(
+					delete config.email;
+					delete config.password;
+					alexa.init(config, (err, val) => err ? reject(err) : resolve(val));
+				});
+			});
+		}
+	},
+	nodeOnSuccess: function (node, msg, val) {
 		node.status({ shape: 'dot', fill: 'green', text: 'Success' });
 		msg.payload = val;
 		delete msg.error;
 		//console.log('onSucc');
 		node.send(msg);
 	},
-	nodeOnError: function(node, msg, err) {
+	nodeOnError: function (node, msg, err) {
 		node.status({ shape: 'dot', fill: 'red', text: err.message });
 		delete msg.payload;
 		msg.error = err;
@@ -145,22 +182,18 @@ module.exports = {
 	initAndSend: function (node, msg, sendFun) {
 		node.status({ shape: 'ring', fill: 'grey', text: 'initializing' });
 
-		let onSuccess = this.nodeOnSuccess.bind(null, node, msg);
-		let onError = this.nodeOnError.bind(null, node, msg);
+		let onSuccess = this.nodeOnSuccess.bind(this, node, msg);
+		let onError = this.nodeOnError.bind(this, node, msg);
 		let wrappedSendFun = (alexa) => {
 			node.status({ shape: 'dot', fill: 'grey', text: 'sending' });
 			// filter out "no body" because it is a false error
 			return sendFun(alexa).catch(err => err.message === 'no body' ? Promise.resolve(null) : Promise.reject(err));
 		};
 
-		let msgAccount = this.getMsgAccount(msg);
-		if (msgAccount !== undefined) {
+		let msgAccount = msg['alexaRemoteAccount'];
+		if (typeof msgAccount === 'object') {
 			let alexa = new AlexaRemote();
-			new Promise((resolve, reject) => {
-				alexa.init(msgAccount, (err, val) => {
-					err ? reject(err) : resolve(val)
-				})
-			})
+			this.initAlexa(alexa, msgAccount)
 			.then(() => wrappedSendFun(alexa))
 			.then(onSuccess)
 			.catch(onError)

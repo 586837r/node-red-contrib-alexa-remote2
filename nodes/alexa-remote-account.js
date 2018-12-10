@@ -15,27 +15,13 @@ module.exports = function (RED) {
 		 * @returns {Promise<*>} promise
 		 */
 		node.initAlexa = function() {
-			this.alexa = new AlexaRemote();
-			let config = { logger: tools.logger };
-			tools.assign(config, ['alexaServiceHost', 'userAgent', 'amazonPage', 'useWsMqtt', 'bluetooth'], this);
-			tools.assign(config, ['cookie', 'email', 'password'], this.credentials);
-			let has = (x) => config[x] !== undefined;
-			if (!has('cookie') && (!has('email') || !has('password'))) {
-				return Promise.reject('either cookie or email and password must be defined');
-			}
-			else {
-				return new Promise((resolve, reject) => {
-					this.alexa.init(config, (err, val) => {
-						if(err){
-							reject(err);
-						}
-						else{
-							this.emitter.emit('alexa-init');
-							resolve(val);
-						}
-					});
-				});
-			}
+			node.alexa = new AlexaRemote();
+
+			const config = { logger: tools.logger };
+			tools.assign(config, ['alexaServiceHost', 'userAgent', 'amazonPage', 'useWsMqtt', 'bluetooth'], node);
+			tools.assign(config, ['cookie', 'email', 'password'], node.credentials);
+
+			return tools.initAlexa(node.alexa, config).then(() => node.emitter.emit('alexa-init'))
 		}
     }
 	RED.nodes.registerType("alexa-remote-account", AlexaRemoteAccountNode, { 
