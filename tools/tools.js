@@ -132,21 +132,34 @@ module.exports = {
 			return Promise.reject('either cookie or email and password must be defined');
 
 		if (has('cookie')) {
+			// dont retry authentication
+			config.cookieJustCreated = true;
+
+			console.log(config);
 			return new Promise((resolve, reject) => {
-				console.log(config);
 				// dont you dare try to resolve cookie yourself! >:(
 				delete config.email;
 				delete config.password;
-				alexa.init(config, (err, val) => err ? reject(err) : resolve(val));
+				alexa.init(config, (err, val) => {
+					if(err) {
+						reject(err);
+					}
+					else {
+						// alexa-remote return no err on authentication fail, so check again
+						alexa.checkAuthentication((authenticated) => {
+							authenticated ? resolve() : reject(new Error('Authentication failed'));
+						});
+					}
+				});
 			});
 		}
 		else {
+			console.log(config);
 			return new Promise((resolve, reject) => {
 				this.generateCookie(config, (err, val) => {
 					if (err) return reject(err);
 					config.cookie = val.cookie;
 
-					console.log(config);
 					// dont you dare try to resolve cookie yourself! >:(
 					delete config.email;
 					delete config.password;
@@ -192,6 +205,9 @@ module.exports = {
 
 		let msgAccount = msg['alexaRemoteAccount'];
 		if (typeof msgAccount === 'object') {
+			// dont retry authentication
+			msgAccount.cookieJustCreated = true;
+
 			let alexa = new AlexaRemote();
 			this.initAlexa(alexa, msgAccount)
 			.then(() => wrappedSendFun(alexa))
