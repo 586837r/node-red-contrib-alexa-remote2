@@ -1,3 +1,5 @@
+- **1.0.4**
+  - fixed `UnhandledPromiseRejectionWarning` for event node
 - **1.0.3**
   - fixed logging in with email & password
   - fixed some error reporting

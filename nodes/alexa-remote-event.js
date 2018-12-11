@@ -30,7 +30,11 @@ module.exports = function (RED) {
 		node.account.emitter.removeListener('alexa-init', node.initCallback);
 		node.account.emitter.addListener('alexa-init', node.initCallback);
 		if (node.account.initType !== 'manual') {
-			node.account.initAlexa();
+			node.account.initAlexa()
+			.catch(err => {
+				node.status({ shape: 'dot', fill: 'red', text: err.message });
+				node.error(err);
+			});
 		}
 	}
 	RED.nodes.registerType("alexa-remote-event", AlexaRemoteEventNode)

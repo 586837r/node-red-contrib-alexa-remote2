@@ -129,7 +129,7 @@ module.exports = {
 		const has = (x) => typeof config[x] !== 'undefined';
 
 		if (!has('cookie') && (!has('email') || !has('password')))
-			return Promise.reject('either cookie or email and password must be defined');
+			return Promise.reject(new Error('either cookie or email and password must be defined'));
 
 		if (has('cookie')) {
 			// dont retry authentication
