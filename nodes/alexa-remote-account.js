@@ -21,7 +21,12 @@ module.exports = function (RED) {
 			tools.assign(config, ['alexaServiceHost', 'userAgent', 'amazonPage', 'useWsMqtt', 'bluetooth'], node);
 			tools.assign(config, ['cookie', 'email', 'password'], node.credentials);
 
-			return tools.initAlexa(node.alexa, config).then(() => node.emitter.emit('alexa-init'))
+			return tools.initAlexa(node.alexa, config)
+				.then(() => node.emitter.emit('alexa-init'))
+				.catch((err) => {
+					delete node.alexa;
+					return Promise.reject(err);
+				})
 		}
     }
 	RED.nodes.registerType("alexa-remote-account", AlexaRemoteAccountNode, { 
