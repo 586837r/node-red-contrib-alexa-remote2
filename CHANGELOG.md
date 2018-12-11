@@ -1,3 +1,6 @@
+- **1.0.3**
+  - fixed logging in with email & password
+  - fixed some error reporting
 - **1.0.2** 
   - fixed setting Command/Request to anything other than select
   - fixed events triggering more than once

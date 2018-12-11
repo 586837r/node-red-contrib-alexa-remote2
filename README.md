@@ -6,11 +6,17 @@ The goal is to expose all of [alexa-remote2](https://www.npmjs.com/package/alexa
 
 [Changelog](CHANGELOG.md)
 
+### Logging in with Email and Password
+   - **works with node version 10 but not with node version 8!**
+   - will not work if Captcha or 2 Factor Authentication is needed
+
 ### Setup
 1. Drag a **alexa remote sequence** node into your flow.
 2. Create a new Account by pressing the edit button at the right side of the *Account* field.
-3. Enter the **Cookie** or the **Email** and **Password** of your Amazon Alexa Account. ([how do i get my cookie?](get_cookie.md))
-4. Choose a **Service Host** and **Page** depending on your location. For Example:
+3. Enter the **Cookie** or the **Email** and **Password** of your Amazon Alexa Account.
+   - [How do i get my cookie?](get_cookie.md)
+   - [Logging in with Email and Password](#logging-in-with-email-and-password)
+4. Choose a **Service Host** and **Page** depending on your location. For example:
 
    ||Service Host|Page
    |---|---|---

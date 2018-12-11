@@ -135,7 +135,7 @@ module.exports = {
 			// dont retry authentication
 			config.cookieJustCreated = true;
 
-			console.log(config);
+			//console.log(config);
 			return new Promise((resolve, reject) => {
 				// dont you dare try to resolve cookie yourself! >:(
 				delete config.email;
@@ -154,7 +154,7 @@ module.exports = {
 			});
 		}
 		else {
-			console.log(config);
+			//console.log(config);
 			return new Promise((resolve, reject) => {
 				this.generateCookie(config, (err, val) => {
 					if (err) return reject(err);
