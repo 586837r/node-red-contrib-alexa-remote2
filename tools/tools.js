@@ -219,7 +219,7 @@ module.exports = {
 		let account = node.account;
 
 		if (!account) {
-			onError(new Error('missing account'));
+			onError(new Error('Missing account'));
 			return;
 		}
 
@@ -255,7 +255,7 @@ module.exports = {
 			}
 			case 'manual': {
 				if(account.alexa === undefined) {
-					onError(new Error('manual initialization required'));
+					onError(new Error('Manual initialization required'));
 				}
 				else {
 					wrappedSendFun(account.alexa)
@@ -265,7 +265,7 @@ module.exports = {
 				break;
 			}
 			default: {
-				onError(new Error('invalid init behaviour'));
+				onError(new Error('Invalid init behaviour'));
 				break;
 			}
 		}
