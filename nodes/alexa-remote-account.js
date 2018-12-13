@@ -18,6 +18,7 @@ module.exports = function (RED) {
 			if(node.alexa) {
 				if(node.alexa.alexaWsMqtt) {
 					node.alexa.alexaWsMqtt.removeAllListeners();
+					node.alexa.alexaWsMqtt.disconnect();
 				}
 				node.alexa.removeAllListeners();
 			}
