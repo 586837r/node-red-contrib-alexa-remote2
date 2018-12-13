@@ -1,3 +1,7 @@
+- **1.0.5**
+  - fixed turning off events/bluetooth
+  - fixed events triggering more than once (again)
+  - changed msg.error from text to more detailed object
 - **1.0.4**
   - fixed `UnhandledPromiseRejectionWarning` for event node
 - **1.0.3**
