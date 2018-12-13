@@ -33,7 +33,7 @@ module.exports = function (RED) {
 						return reject(new Error('Unknown Device or Serial number'));
 					}
 					alexa.sendMultiSequenceCommand(config.serialOrName, config.sequenceCommands, (err, val) => {
-						err ? reject(err) : resolve(val)
+						err ? reject(err, val) : resolve(val)
 					})
 				})
 			})

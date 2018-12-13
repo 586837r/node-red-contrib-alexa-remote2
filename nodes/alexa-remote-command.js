@@ -19,7 +19,7 @@ module.exports = function (RED) {
 			tools.initAndSend(node, msg, (alexa) => 
 				new Promise((resolve, reject) => 
 					alexa.sendCommand(config.serialOrName, config.command, options.value, (err,val) => 
-						err ? reject(err) : resolve(val)
+						err ? reject(err, val) : resolve(val)
 					)
 				)
 			)
