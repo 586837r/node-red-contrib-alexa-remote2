@@ -125,48 +125,41 @@ module.exports = {
 		const alexaCookie = this.requireUncached('alexa-cookie2');
 		alexaCookie.generateAlexaCookie(config.email, config.password, config, callback);
 	},
-	initAlexa: function(alexa, config) {
-		const has = (x) => typeof config[x] !== 'undefined';
-
-		if (!has('cookie') && (!has('email') || !has('password')))
+	generateCookiePromise: function(config) {
+		return new Promise((resolve, reject) => {
+			this.generateCookie(config, (err,val) => {
+				err ? reject(err) : resolve(val.cookie);
+			});
+		});
+	},
+	initAlexa: async function(alexa, config) {
+		if (!config.cookie && (!config.email || !config.password))
 			return Promise.reject(new Error('either cookie or email and password must be defined'));
 
-		if (has('cookie')) {
-			// dont retry authentication
-			config.cookieJustCreated = true;
-
-			//console.log(config);
-			return new Promise((resolve, reject) => {
-				// dont you dare try to resolve cookie yourself! >:(
-				delete config.email;
-				delete config.password;
-				alexa.init(config, (err, val) => {
-					if(err) {
-						reject(err);
-					}
-					else {
-						// alexa-remote return no err on authentication fail, so check again
-						alexa.checkAuthentication((authenticated) => {
-							authenticated ? resolve() : reject(new Error('Authentication failed'));
-						});
-					}
-				});
-			});
+		if(!config.cookie) {
+			config.cookie = await this.generateCookiePromise(config);
 		}
-		else {
-			//console.log(config);
-			return new Promise((resolve, reject) => {
-				this.generateCookie(config, (err, val) => {
-					if (err) return reject(err);
-					config.cookie = val.cookie;
 
-					// dont you dare try to resolve cookie yourself! >:(
-					delete config.email;
-					delete config.password;
-					alexa.init(config, (err, val) => err ? reject(err) : resolve(val));
-				});
+		// dont you dare try to resolve cookie yourself! >:(
+		delete config.email;
+		delete config.password;
+
+		// dont retry authentication
+		config.cookieJustCreated = true;
+
+		return new Promise((resolve, reject) => {
+			alexa.init(config, (err, val) => {
+				if (err) {
+					reject(err);
+				}
+				else {
+					// alexa-remote returns no err on authentication fail, so check again
+					alexa.checkAuthentication((authenticated) => {
+						authenticated ? resolve(val) : reject(new Error('Authentication failed'));
+					});
+				}
 			});
-		}
+		});
 	},
 	nodeOnSuccess: function (node, msg, val) {
 		node.status({ shape: 'dot', fill: 'green', text: 'Success' });
