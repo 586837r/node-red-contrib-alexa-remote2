@@ -168,10 +168,12 @@ module.exports = {
 		//console.log('onSucc');
 		node.send(msg);
 	},
-	nodeOnError: function (node, msg, err) {
+	nodeOnError: function (node, msg, err, val) {
 		node.status({ shape: 'dot', fill: 'red', text: err.message });
 		delete msg.payload;
-		msg.error = err;
+		msg.error = {};
+		msg.error.message = err.message;
+		if(val !== undefined) msg.error.payload = val;
 		node.error(err);
 		//console.log('onErr');
 		node.send(msg);
@@ -229,11 +231,10 @@ module.exports = {
 				else {
 					//console.log('acc already init');
 					wrappedSendFun(account.alexa)
-					.catch(() => new Promise((resolve, reject) => {
-						account.initAlexa()
-						.then(() => wrappedSendFun(account.alexa).then((val) => resolve(val)).catch((err) => reject(err)))
-						.catch(onError)
-					}))
+					.catch(() => {
+						node.status({ shape: 'ring', fill: 'grey', text: 'initializing' });
+						return account.initAlexa().then(() => wrappedSendFun(account.alexa));
+					})
 					.then(onSuccess)
 					.catch(onError);
 				}
