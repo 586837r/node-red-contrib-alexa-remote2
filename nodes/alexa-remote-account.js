@@ -8,7 +8,9 @@ module.exports = function (RED) {
 		let node = this;
 
 		tools.assign(node, ['bluetooth', 'alexaServiceHost', 'userAgent', 'amazonPage', 'initType'], input);
-		tools.assignTypedConvert(RED, null, null, node, ['useWsMqtt', 'bluetooth'], input);
+		node.useWsMqtt = input.useWsMqtt_value === 'on';
+		node.bluetooth = input.bluetooth_value === 'on';
+
 		node.emitter = new EventEmitter();
 
 		/**
