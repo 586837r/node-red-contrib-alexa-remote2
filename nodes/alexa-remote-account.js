@@ -15,6 +15,13 @@ module.exports = function (RED) {
 		 * @returns {Promise<*>} promise
 		 */
 		node.initAlexa = function() {
+			if(node.alexa) {
+				if(node.alexa.alexaWsMqtt) {
+					node.alexa.alexaWsMqtt.removeAllListeners();
+				}
+				node.alexa.removeAllListeners();
+			}
+
 			node.alexa = new AlexaRemote();
 
 			const config = { logger: tools.logger };
@@ -26,7 +33,7 @@ module.exports = function (RED) {
 				.catch((err) => {
 					delete node.alexa;
 					return Promise.reject(err);
-				})
+				});
 		}
     }
 	RED.nodes.registerType("alexa-remote-account", AlexaRemoteAccountNode, { 
