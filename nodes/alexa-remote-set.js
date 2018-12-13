@@ -16,7 +16,7 @@ module.exports = function (RED) {
 
 			let sendFun = (alexa) => {
 				return new Promise((resolve, reject) => {
-					let callback = (err, val) => err ? reject(err, val) : resolve(val); 
+					let callback = (err, val) => err ? reject([err, val]) : resolve(val); 
 
 					switch (target) {
 						case 'tuneIn': 			return alexa.setTunein(serialOrName, options.guideId, options.contentType, callback);

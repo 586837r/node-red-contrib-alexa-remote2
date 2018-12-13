@@ -18,7 +18,7 @@ module.exports = function (RED) {
 			// console.log(target, options);
 			let sendFun = (alexa) => {
 				return new Promise((resolve, reject) => {
-					let callback = (err, val) => err ? reject(err, val) : resolve(val);
+					let callback = (err, val) => err ? reject([err, val]) : resolve(val);
 
 					switch (target) {
 						case 'checkAuthentication': 		return alexa.checkAuthentication((val) => resolve(val));

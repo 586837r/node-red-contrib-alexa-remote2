@@ -168,13 +168,22 @@ module.exports = {
 		//console.log('onSucc');
 		node.send(msg);
 	},
-	nodeOnError: function (node, msg, err, val) {
-		node.status({ shape: 'dot', fill: 'red', text: err.message });
+	nodeOnError: function (node, msg, errorArgs) {
+		let error = Array.isArray(errorArgs) ? errorArgs[0] : errorArgs;
+		let message = error instanceof Error ? error.message : error;
+		let payload = Array.isArray(errorArgs) ? errorArgs[1] : undefined;
+
 		delete msg.payload;
-		msg.error = {};
-		msg.error.message = err.message;
-		if(val !== undefined) msg.error.payload = val;
-		node.error(err);
+		msg.error = {
+			message: message,
+			payload: payload
+		};
+
+		node.status({ shape: 'dot', fill: 'red', text: message });
+		node.error(error);
+
+		//console.log({ onError: error });
+		
 		//console.log('onErr');
 		node.send(msg);
 	},
@@ -195,7 +204,12 @@ module.exports = {
 		let wrappedSendFun = (alexa) => {
 			node.status({ shape: 'dot', fill: 'grey', text: 'sending' });
 			// filter out "no body" because it is a false error
-			return sendFun(alexa).catch(err => err.message === 'no body' ? Promise.resolve(null) : Promise.reject(err));
+			return sendFun(alexa).catch((errorArgs) => {
+				//console.log({ wrapped: error });
+				let error = Array.isArray(errorArgs) ? errorArgs[0] : errorArgs;
+				let message = error instanceof Error ? error.message : error;
+				return message === 'no body' ? Promise.resolve(null) : Promise.reject(errorArgs);
+			});
 		};
 
 		let msgAccount = msg['alexaRemoteAccount'];
