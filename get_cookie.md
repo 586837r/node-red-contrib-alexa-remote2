@@ -5,6 +5,7 @@
 3. Now enter `alexa.amazon.`[`de`,`co.uk`,`com`] in the url and press enter.
 4. In the table (of the Developer Tools) click on the request with the **Name** `index.html`. (sort by Waterfall(last column) ascending and it should be the first).
 5. Now in the newly appeared panel go to **Headers** > **Request Headers** and there you will find **Cookie**.
+   - If you see "⚠️ Provisional headers are shown" disable all extensions / use incognito mode
 6. Copy this whole cookie.
 7. Paste it into the alexa remote account nodes cookie field.
 
