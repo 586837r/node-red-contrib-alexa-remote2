@@ -23,7 +23,7 @@ module.exports = function (RED) {
 						case 'doNotDisturb':	return alexa.setDoNotDisturb(serialOrName, options.enabled, callback);
 						case 'alarmVolume':		return alexa.setAlarmVolume(serialOrName, options.volume, callback);
 						case 'list':			return alexa.setList(serialOrName, options.listType, options.value, callback);
-						case 'reminder': 		return alexa.setReminder(serialOrName, options.timestamp, options.label, callback);
+						case 'reminder': 		return alexa.getList(serialOrName, options.timestamp, options.label, callback);
 						default: return reject(new Error('invalid set target'));
 					}
 				})
