@@ -15,7 +15,7 @@ module.exports = function (RED) {
 			let { target, serialOrName } = tools.assignTypedConvert(RED, node, msg, {}, ['target', 'serialOrName'], node);
 			let options = tools.assignTypedStructConvert(RED, node, msg, {}, node.options[target]);
 
-			// console.log(target, options);
+			//console.log(target, options);
 			let sendFun = (alexa) => {
 				return new Promise((resolve, reject) => {
 					let callback = (err, val) => err ? reject([err, val]) : resolve(val);
@@ -28,7 +28,7 @@ module.exports = function (RED) {
 						case 'findDevice': 					return resolve(alexa.find(serialOrName));
 						case 'renameDevice':				return alexa.renameDevice(serialOrName, options.newName, callback);
 						case 'deleteDevice':				return alexa.deleteDevice(serialOrName, callback);
-						case 'executeAutomationRoutine': 	return alexa.executeAutomationRoutine(serialOrName, { sequenceId: true, automationId: options.automationId }, callback);
+						case 'executeAutomationRoutine': 	return tools.executeAutomationRoutine(alexa, serialOrName, options.utteranceOrId, callback);
 						case 'playMusicProvider': 			return alexa.playMusicProvider(serialOrName, options.providerId, options.searchPhrase, callback);
 						case 'sendTextMessage': 			return alexa.sendTextMessage(options.conversationId, options.text, callback);
 						case 'deleteSmarthomeDevice': 		return alexa.deleteSmarthomeDevice(options.smarthomeDevice, callback);

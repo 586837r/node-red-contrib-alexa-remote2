@@ -277,5 +277,42 @@ module.exports = {
 				break;
 			}
 		}
+	},
+	executeAutomationRoutine(alexa, serialOrName, utteranceOrId, callback) {
+		if (typeof utteranceOrId !== 'string') {
+			return callback && callback(new Error('utteranceOrId needs to be a string'));
+		}
+
+		alexa.getAutomationRoutines((err, res) => {
+			if (err) {
+				return callback && callback(err, res);
+			}
+
+			let routines = res;
+			let routine;
+
+			if (utteranceOrId.match(/amzn1.alexa.automation/)) {
+				// is id
+				routine = routines.find(r => r.automationId === utteranceOrId);
+			}
+			else {
+				// is utterance
+				routine = routines.find(
+					routine => routine.triggers.find(
+						trigger => trigger.payload.utterance === utteranceOrId));
+			}
+
+			if (!routine) {
+				return callback && callback(new Error('Routine not found'));
+			}
+
+			let command = {
+				sequence: routine.sequence,
+				automationId: routine.automationId,
+				status: 'ENABLED',
+			};
+
+			alexa.sendSequenceCommand(serialOrName, command, callback);
+		});
 	}
 };
