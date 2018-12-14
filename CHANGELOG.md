@@ -1,3 +1,5 @@
+- **1.0.6**
+  - fixed executeAutomationRoutine action
 - **1.0.5**
   - fixed turning off events/bluetooth
   - fixed events triggering more than once (again)
