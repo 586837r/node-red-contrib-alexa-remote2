@@ -1,3 +1,5 @@
+- **1.0.7**
+  - fixed set reminder
 - **1.0.6**
   - fixed executeAutomationRoutine action
 - **1.0.5**
