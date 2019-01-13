@@ -14,7 +14,7 @@ module.exports = function (RED) {
 			let config = {};
 			tools.assignTypedConvert(RED, node, msg, config, ['serialOrName'], input);
 
-			if(msg.sequence){
+			if(msg.sequence) {
 				config.sequenceCommands = msg.sequence;
 			}
 			else{

@@ -112,6 +112,9 @@
 					let selectOptions = [
 						{ value: 'speak', 			label: 'Speak' 			}, 
 						{ value: 'volume',			label: 'Volume'			},
+						{ valie: 'deviceStop',		label: 'Stop'			},
+						{ value: 'notification',	label: 'Notification'	},
+						{ value: 'ssml',			label: 'SSML'			},
 						{ value: 'goodmorning',		label: 'Good Morning' 	},
 						{ value: 'weather', 		label: 'Weather' 		}, 
 						{ value: 'traffic', 		label: 'Traffic' 		}, 
@@ -132,7 +135,8 @@
 						let command = $(this).val();
 						let types = (() => {
 							switch(command){
-								case 'speak': 	return ['str', 'msg', 'flow', 'global', 'bool', 'date', 'jsonata', 'env'];
+								case 'speak': case 'notification': case 'ssml':
+									return ['str', 'msg', 'flow', 'global', 'bool', 'date', 'jsonata', 'env'];
 								case 'volume':	return ['num', 'msg', 'flow', 'global', 'jsonata', 'env'];
 								default: 		return [emptyType];
 							}
