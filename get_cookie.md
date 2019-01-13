@@ -1,20 +1,22 @@
 ## Chrome
 
-1. Open Developer Tools by pressing `F12`, `Ctrl+Shift+I` or `Cmd+Opt+I` (or from the menu).
-2. In the Developer Tools switch to the **Network** tab.
-3. Now enter `alexa.amazon.`[`de`,`co.uk`,`com`] in the url and press enter.
-4. In the table (of the Developer Tools) click on the request with the **Name** `index.html`. (sort by Waterfall(last column) ascending and it should be the first).
-5. Now in the newly appeared panel go to **Headers** > **Request Headers** and there you will find **Cookie**.
+1. Go to `alexa.amazon.com`.
+2. Open Developer Tools by pressing `F12`, `Ctrl+Shift+I` or `Cmd+Opt+I` (or from the menu).
+3. In the Developer Tools switch to the **Network** tab.
+4. Select a radio station to play.
+5. Now you should see a request with the **Name** `queue-and-play`. Click on it.
+6. Now in the newly appeared panel go to **Headers** > **Request Headers** and there you will find **Cookie**.
    - If you see "⚠️ Provisional headers are shown" disable all extensions / use incognito mode
-6. Copy this whole cookie.
-7. Paste it into the alexa remote account nodes cookie field.
+7. Copy this whole cookie.
+8. Paste it into the alexa remote account nodes cookie field.
 
 ## Firefox
 
-1. Open Web Developer Tools by pressing `F12`, `Ctrl+Shift+I` or `Cmd+Opt+I` (or from the menu).
-2. In the Web Developer Tools switch to the **Network** tab.
-3. Now enter `alexa.amazon.`[`de`,`co.uk`,`com`] in the url and press enter.
-4. In the table (of the Web Developer Tools) click on the request with the **File** `index.html`. (sort by Waterfall(last column) ascending and it should be the first).
-5. Now in the newly appeared panel go to **Headers** > **Request Headers** and there you will find **Cookie**.
-6. Copy this whole cookie by clicking into the field after *Cookie:*, Select All(right click or ctrl+A) and then Copy.
-7. Paste it into the alexa remote account nodes cookie field.
+1. Go to `alexa.amazon.com`.
+2. Open Web Developer Tools by pressing `F12`, `Ctrl+Shift+I` or `Cmd+Opt+I` (or from the menu).
+3. In the Web Developer Tools switch to the **Network** tab.
+4. Select a radio station to play.
+5. Now you should see a request with the **File** `queue-and-play`. Click on it.
+6. Now in the newly appeared panel go to **Headers** > **Request Headers** and there you will find **Cookie**.
+7. Copy this whole cookie by clicking into the field after *Cookie:*, Select All(right click or ctrl+A) and then Copy.
+8. Paste it into the alexa remote account nodes cookie field.
