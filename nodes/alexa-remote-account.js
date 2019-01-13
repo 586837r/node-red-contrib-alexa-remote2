@@ -7,7 +7,7 @@ module.exports = function (RED) {
 		RED.nodes.createNode(this, input);
 		let node = this;
 
-		tools.assign(node, ['bluetooth', 'alexaServiceHost', 'userAgent', 'amazonPage', 'initType'], input);
+		tools.assign(node, ['alexaServiceHost', 'userAgent', 'amazonPage', 'initType'], input);
 		node.useWsMqtt = input.useWsMqtt_value === 'on';
 		node.bluetooth = input.bluetooth_value === 'on';
 
