@@ -1,3 +1,6 @@
+- **1.1.0** 
+  - added SSML,Stop and Notification to Sequence node (alexa-remote2 v2.1.0)
+  - added *Alexa Account Get/Set Config* to programmatically change account config
 - **1.0.6**
   - fixed executeAutomationRoutine action
 - **1.0.5**
