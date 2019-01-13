@@ -51,7 +51,7 @@
 
 	<h3>References</h3>
     <ul>
-		<li><a href="#">npm</a> - the nodes npm repository</li>
+		<li><a href="https://npmjs.com/package/node-red-contrib-alexa-remote2">npm</a> - the nodes npm repository</li>
         <li><a href="https://github.com/586837r/node-red-contrib-alexa-remote2">GitHub</a> - the nodes github repository</li>
     </ul>
 </script>
@@ -68,8 +68,9 @@
 		inputs: 0,
 		outputs: 1,
 		icon: 'alexa-remote-icon.png',
+		paletteLabel: 'Alexa Event',
 		label: function () {
-			return this.name || ("Alexa event " + this.event.slice(3));
+			return this.name || ("Alexa Event " + this.event.slice(3));
 		},
 		labelStyle: function () {
 			return this.name ? "node_label_italic" : "";
