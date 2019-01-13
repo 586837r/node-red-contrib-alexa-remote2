@@ -27,7 +27,7 @@
     <ol class="node-ports">
 		<dl class="message-properties">
 			<dt>payload <span class="property-type">Object</span></dt>
-			<dd>the standard output</dd>
+			<dd>the standard output, is undefined on success</dd>
 		</dl>
 		<dl class="message-properties">
 			<dt>error <span class="property-type">Object</span></dt>
@@ -40,6 +40,9 @@
 	<code>msg.sequence</code> must be an array of Objects with a <code>command</code> property that must be one of
 	<code>'speak'</code>,
 	<code>'volume'</code>,
+	<code>'deviceStop'</code>,
+	<code>'ssml'</code>,
+	<code>'notification'</code>,
 	<code>'goodmorning'</code>,
 	<code>'weather'</code>,
 	<code>'traffic'</code>,
