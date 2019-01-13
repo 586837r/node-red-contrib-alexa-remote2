@@ -127,16 +127,30 @@
 					});
 
 					let emptyType = { value: 'empty', label: ' ', hasValue: false };
+					let ssml = { 
+						value: "ssml",
+						label: "SSML",
+						expand: function () {
+							let that = this;
+							let value = this.value();
+							RED.editor.editMarkdown({
+								value: this.value().replace(/\t/g, "\n"),
+								complete: function (v) {
+									that.value(v.replace(/\n/g, "\t"));
+								}
+							})
+						}
+					};
 					let valueTypedInput = $('<input>', { class: "node-input-sequence-node-value", type: "text" })
 						.appendTo(subrow)
-						.typedInput({ default: 'str', types: ['str', 'msg', 'flow', 'global', 'bool', 'json', 'bin', 'date', 'jsonata', 'env', emptyType ] });
+						.typedInput({ default: 'str', types: [emptyType] });
 					
 					commandSelect.change(function() {
 						let command = $(this).val();
 						let types = (() => {
 							switch(command){
-								case 'speak': case 'notification': case 'ssml':
-									return ['str', 'msg', 'flow', 'global', 'bool', 'date', 'jsonata', 'env'];
+								case 'speak': case 'notification': 	return ['str', 'msg', 'flow', 'global', 'bool', 'date', 'jsonata', 'env'];
+								case 'ssml': return [ssml, 'msg', 'flow', 'global', 'bool', 'date', 'jsonata', 'env'];
 								case 'volume':	return ['num', 'msg', 'flow', 'global', 'jsonata', 'env'];
 								default: 		return [emptyType];
 							}
