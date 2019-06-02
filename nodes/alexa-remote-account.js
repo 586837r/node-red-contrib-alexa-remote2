@@ -2,7 +2,7 @@ const EventEmitter = require('events');
 const tools = require('../tools/tools.js');
 const AlexaRemote = tools.AlexaRemote;
 const fs = require('fs');
-const DEBUG = true;
+const DEBUG = false;
 
 module.exports = function (RED) {
 	function AlexaRemoteAccountNode(input) {
@@ -106,11 +106,7 @@ module.exports = function (RED) {
 				case 'password': this._status('init-password'); break;
 			}
 
-			if(DEBUG) console.log({config:config});
-
 			this.alexa.init(config, (err, val) => {
-				if(DEBUG) console.log({err:err, val:val});
-
 				const afterInitCallback = (err, val) => {
 					if (err) {
 						// proxy status message is not the final callback call
@@ -134,8 +130,12 @@ module.exports = function (RED) {
 						}
 					}
 					else {
-						if(!this.cookieFile && config.authMethod === 'proxy') {
-							fs.writeFile(this.cookieFile, val, 'utf8', (err, val) => {
+						if(this.cookieFile && this.authMethod === 'proxy') {
+							const options = this.alexa._options;
+							const regData = options && options.formerRegistrationData;
+							const string = JSON.stringify(regData);
+
+							fs.writeFile(this.cookieFile, string, 'utf8', (err, val) => {
 								if(err) {
 									err.warning = true;
 									callback && callback(err, val);
@@ -156,7 +156,7 @@ module.exports = function (RED) {
 							err = new Error('Authentication failed');
 						}
 
-						afterInitCallback(err);
+						afterInitCallback(err, val);
 					});
 				}
 				else {
