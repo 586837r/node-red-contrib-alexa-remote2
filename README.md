@@ -7,29 +7,42 @@ The goal is to expose all of [alexa-remote2](https://www.npmjs.com/package/alexa
  - [Changelog](CHANGELOG.md)
  - [Examples](examples.md)
 
+### Logging in with Proxy
+   - highly recommended
+   - you will have to log in to amazon using the proxy, cookies will be automatically captured
+   - cookie refresh is possible by sending a `msg.payload` of `"refresh"`
+   - can setup a persistant automatic initialisation with **File Path**, and aforementioned refresh with an inject node
+
+### Logging in with Cookie
+   - [How do i get my cookie?](get_cookie.md)
+
 ### Logging in with Email and Password
+   - deprecated, use proxy
    - **works with node version 10 but not with node version 8!**
    - will not work if Captcha or 2 Factor Authentication is needed
 
-### Setup
-1. Drag a **alexa remote sequence** node into your flow.
-2. Create a new Account by pressing the edit button at the right side of the *Account* field.
-3. Enter the **Cookie** or the **Email** and **Password** of your Amazon Alexa Account.
-   - [How do i get my cookie?](get_cookie.md)
-   - [Logging in with Email and Password](#logging-in-with-email-and-password)
-4. Choose a **Service Host** and **Page** depending on your location. For example:
 
-   ||Service Host|Page
-   |---|---|---
-   |USA|pitangui.amazon.com|amazon.com
-   |UK|alexa.amazon.co.uk|amazon.co.uk
-   |GER|layla.amazon.de|amazon.de
+### Setup
+1. Drag a **Alexa Sequence** node into your flow.
+2. Create a new Account by pressing the edit button at the right side of the *Account* field.
+3. Choose a **Service Host** and **Page** and optionally **Language** depending on your location. For example:
+
+   ||Service Host|Page|Language
+   |---|---|---|---
+   |USA|pitangui.amazon.com|amazon.com|en-US
+   |UK|alexa.amazon.co.uk|amazon.co.uk|en-UK
+   |GER|layla.amazon.de|amazon.de|de-DE
    
+4. **recommended:** Enter a file path to save the authentication result so following authentications will be automatic. 
 5. *Add* the new Account.
-6. Enter the **Device** name (or Serial Number) of the target Alexa Device that is connected to your account.
+6. Deploy
+7. Follow the url you see in the node status, by default `localhost:3456` but replace localhost with the ip of your nodered server.
+8. Log in, wait until you see the node status **ready**
+9. Select a device. Clicking on the button on the far right of the device field will let you select from a list of your devices.
 
 Now trigger the Alexa Sequence Node with any message and your Alexa will say "Hello World!". (Hopefully!)
 
-### Advanced
-- **alexa remote sequence**: you can set the sequence by message too, see node info
-- you can override the account for each node by defining `msg.alexaRemoteAccount` with the required properties: `cookie` or `email` and `password`, `alexaServiceHost`, `amazonPage`, and optional properties: `bluetooth`*(true/false)*, `useWsMqtt`*(=events true/false)*, `acceptLanguage` and `userAgent`.
+### Automatic Initialisation (proxy)
+ - Enter a file path to save the authentication result.
+ - To keep authentication working you should refresh the cookie every few days. 
+Simply attach an inject node with the payload `"refresh"` to do so.

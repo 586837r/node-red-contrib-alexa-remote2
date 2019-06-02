@@ -1,3 +1,8 @@
+- **2.0.0**
+  - exposed proxy initialisation with refreshable cookie
+  - proper catchable error handling
+  - removed obsolete set/get account nodes
+  - added device selection by list
 - **1.1.0** 
   - added SSML,Stop and Notification to Sequence node (alexa-remote2 v2.1.0)
   - added *Alexa Account Get/Set Config* to programmatically change account config

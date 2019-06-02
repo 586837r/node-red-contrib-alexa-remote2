@@ -189,7 +189,7 @@ module.exports = {
 
 		node._onStatus = (code, message) => {
 			node._stopBlinking(); 
-			const text = typeof message === 'string' ? this.trim(message, 32) : '';
+			const text = typeof message === 'string' ? (message.includes(' in your browser') ? message : this.trim(message, 32)) : '';
 
 			switch(code) {
 				case 'init-proxy': 		node.status({shape: 'dot', fill: 'grey', text: 'init with proxy' }); break;

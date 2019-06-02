@@ -123,6 +123,7 @@ module.exports = function (RED) {
 							const url = err.message.substring(begin.length, endIdx);
 							const text = `open ${url} in your browser`;
 					
+							this.warn(text);
 							this._status('wait-proxy', text);
 							// we dont call callback
 						}
