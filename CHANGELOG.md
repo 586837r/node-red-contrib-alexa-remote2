@@ -1,3 +1,6 @@
+- **2.2.1**
+  - fix display bugs (device input, this ip)
+  - update and improve documentation
 - **2.2.0**
   - added changable proxy ip to access from remote 
 - **2.1.0**
