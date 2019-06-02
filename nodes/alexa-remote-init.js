@@ -5,7 +5,6 @@ module.exports = function (RED) {
 		RED.nodes.createNode(this, input);
 
 		tools.assignNode(RED, this, ['account'], input);
-		this.autoInit = input.autoInit === 'on';
 
 		this.stopBlinking = function() {
 			if(this.blinkInterval) {
@@ -41,7 +40,6 @@ module.exports = function (RED) {
 			}
 
 			this.account.initAlexa(msg.payload, (err) => {
-				console.log(`CALLBACK: alexa-remote-init`, err);
 				const options = this.account.alexa._options;
 				const regData = options && options.formerRegistrationData;
 				tools.nodeErrVal(this, msg, err, regData, 'ready');
@@ -71,10 +69,6 @@ module.exports = function (RED) {
 		const {code, message} = this.account.status;
 		this.onStatus(code, message);
 
-		if(this.autoInit) {
-			this.onInput({});
-		}
-
 		this.on('close', function () { 
 			this.stopBlinking();
 		});
@@ -82,6 +76,7 @@ module.exports = function (RED) {
 	}
 	RED.nodes.registerType("alexa-remote-init", AlexaRemoteInitNode)
 
+	/*
 	RED.httpAdmin.post("/alexa-remote-init/:id", RED.auth.needsPermission("config.write"), function(req, res){
 		const node = RED.nodes.getNode(req.params.id);
         if (node != null) {
@@ -101,4 +96,5 @@ module.exports = function (RED) {
             res.sendStatus(404);
         }
 	})
+	*/
 }

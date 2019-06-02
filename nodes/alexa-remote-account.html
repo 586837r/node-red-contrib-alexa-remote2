@@ -33,6 +33,28 @@
         <input type="text" id="node-config-input-cookieFile" placeholder="Optional">
 	</div>
 	<hr>
+	<div class="form-row">
+		<label for="node-input-autoInit"><i class="fa fa-wrench"></i> Auto Init</label>
+		<select id="node-input-autoInit" style="width: 70%;">
+			<option value="on">On</option>
+			<option value="off">Off</option>
+		</select>
+	</div>
+    <div class="form-row">
+        <label for="node-config-input-useWsMqtt"><i class="fa fa-rocket"></i> Events</label>
+		<select id="node-config-input-useWsMqtt" style="width: 70%;">
+			<option value="on">On</option>
+			<option value="off">Off</option>
+		</select>
+	</div>
+	<div class="form-row">
+        <label for="node-config-input-bluetooth"><i class="fa fa-bluetooth"></i> Bluetooth</label>
+		<select id="node-config-input-bluetooth" style="width: 70%;">
+			<option value="on">On</option>
+			<option value="off">Off</option>
+		</select>
+	</div>
+	<hr>
     <div class="form-row">
         <label for="node-config-input-alexaServiceHost"><i class="fa fa-amazon"></i> Service Host</label>
         <input type="text" id="node-config-input-alexaServiceHost" placeholder="Required">
@@ -49,22 +71,6 @@
         <label for="node-config-input-userAgent"><i class="fa fa-info-circle"></i> User Agent</label>
         <input type="text" id="node-config-input-userAgent" placeholder="Optional">
     </div>
-	<hr>
-    <div class="form-row">
-        <label for="node-config-input-useWsMqtt"><i class="fa fa-rocket"></i> Events</label>
-		<select id="node-config-input-useWsMqtt" style="width: 70%;">
-			<option value="on">On</option>
-			<option value="off">Off</option>
-		</select>
-	</div>
-	<div class="form-row">
-        <label for="node-config-input-bluetooth"><i class="fa fa-bluetooth"></i> Bluetooth</label>
-		<select id="node-config-input-bluetooth" style="width: 70%;">
-			<option value="on">On</option>
-			<option value="off">Off</option>
-		</select>
-	</div>
-
 </script>
 
 <script type="text/x-red" data-help-name="alexa-remote-account">
@@ -127,7 +133,7 @@
             acceptLanguage:     { required: true,  value: 'en-US' },
 			amazonPage:         { required: true,  value: 'amazon.com' },
 			useWsMqtt:			{ required: true,  value: 'on' },
-			bluetooth: 			{ required: true,  value: 'off' },
+			bluetooth: 			{ required: true,  value: 'on' },
 			autoInit:			{ required: true,  value: 'on' }
 		},
 		paletteLabel: 'Alexa Account',

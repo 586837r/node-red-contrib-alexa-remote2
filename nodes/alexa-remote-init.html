@@ -7,13 +7,6 @@
 		<label for="node-input-account"><i class="fa fa-amazon"></i> Account</label>
 		<input id="node-input-account">
 	</div>
-	<div class="form-row">
-        <label for="node-input-autoInit"><i class="fa fa-wrench"></i> Auto Init</label>
-		<select id="node-input-autoInit" style="width: 70%;">
-			<option value="on">On</option>
-			<option value="off">Off</option>
-		</select>
-	</div>
 </script>
 
 <script type="text/x-red" data-help-name="alexa-remote-init">
@@ -49,7 +42,6 @@
 		defaults: {
 			name: { value: '' },
 			account: { value: '', type: 'alexa-remote-account', required: true },
-			autoInit: { value: 'on' }
 		},
 		inputs: 1,
 		outputs: 1,
@@ -64,7 +56,8 @@
 		button: {
             enabled: function() {
                 return !this.changed
-            },
+			},
+			/*
             onclick: function() {
                 if (this.changed) {
                     return RED.notify(RED._("notification.warning", {message:RED._("notification.warnings.undeployedChanges")}),"warning");
@@ -87,7 +80,8 @@
                         }
                     }
                 }); 
-            }
+			}
+			*/
         }
 	});
 </script>

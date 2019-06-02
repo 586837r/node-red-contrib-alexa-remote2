@@ -11,6 +11,7 @@ module.exports = function (RED) {
 		tools.assign(this, ['authMethod', 'proxyPort', 'cookieFile', 'alexaServiceHost', 'userAgent', 'amazonPage'], input);
 		this.useWsMqtt = input.useWsMqtt === 'on';
 		this.bluetooth = input.bluetooth === 'on';
+		this.autoInit  = input.autoInit  === 'on';
 
 		this.alexa = new AlexaRemote();
 		this.emitter = new EventEmitter();
@@ -195,7 +196,7 @@ module.exports = function (RED) {
 				return callback && callback(error);
 			}
 
-			this._status('refreshing');
+			this._status('refreshing cookie');
 			this.alexa.refreshCookie((err, val) => {
 				this.alexa.setCookie(val);
 				this._status('ready');
@@ -210,6 +211,19 @@ module.exports = function (RED) {
 		this.on('close', function () {
 			this.stopAlexa();
 		})
+
+		
+		console.log('\n-----------------------------------------------------------------\n');
+		console.log('\nACCOUNT INIT CALLED\n');
+		console.log('\n-----------------------------------------------------------------\n');
+
+		if(this.autoInit) {
+			this.initAlexa(undefined, (err, val) => {
+				if(err) {
+					this.error(err);
+				}
+			});
+		}
 	}
 
 	RED.nodes.registerType("alexa-remote-account", AlexaRemoteAccountNode, {
