@@ -30,30 +30,24 @@
 </script>
 
 <script type="text/x-red" data-help-name="alexa-remote-event">
-	<p>Sends a message when an event occurs.
-		Events must be enabled for the account.
-	</p>
-
-	<h3>Outputs</h3>
-    <ol class="node-ports">
-		<dl class="message-properties">
-			<dt>payload <span class="property-type">Object</span></dt>
-			<dd>the standard output</dd>
-		</dl>
-	</ol>
-	
-	<h3>Details</h3>
-	<p>Please note that if the <i>Intialization Behaviour</i> is not <i>Manual</i>
-	then the connect event might be missed because it was fired before this node started
-	listening.</p>
-	<p>The <i>Device Activity</i> event will fire when you talk to alexa, so you can get the spoken message from
-	<code>msg.payload.description.summary</code>.</p>
-
-	<h3>References</h3>
-    <ul>
+	<p>Listens to WebSocket events.
+		Events must be enabled for this account.</p>
+	<hr>
+	<h3 id="outputs"><strong>Outputs</strong></h3>
+	<ul>
+		<li><strong>payload</strong>
+			<ul>
+				<li>response from amazon</li>
+			</ul>
+		</li>
+	</ul>
+	<hr>
+	<h3 id="references"><strong>References</strong></h3>
+	<ul>
 		<li><a href="https://npmjs.com/package/node-red-contrib-alexa-remote2">npm</a> - the nodes npm repository</li>
-        <li><a href="https://github.com/586837r/node-red-contrib-alexa-remote2">GitHub</a> - the nodes github repository</li>
-    </ul>
+		<li><a href="https://github.com/586837r/node-red-contrib-alexa-remote2">GitHub</a> - the nodes GitHub repository
+		</li>
+	</ul>
 </script>
 
 <script type="text/javascript">

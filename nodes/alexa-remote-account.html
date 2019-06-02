@@ -85,30 +85,128 @@
 			padding: 4px 8px;
 		}
 	</style>
-	<p>Account configuration node.</p>
 
-	<h3>Request Details</h3>
+	<p>Alexa ccount configuration node.</p>
+	<hr>
+	<h3 id="settings"><strong>Settings</strong></h3>
 	<ul>
+		<li><strong>Auth Method</strong>
+			<ul>
+				<li><strong>Proxy</strong>
+					<ul>
+						<li>automatically captures your cookies using a proxy</li>
+						<li>enables cookie refreshing by sending a <code>msg.payload</code> of <code>refresh</code></li>
+						<li>can setup persistant automatic initialisation with <strong>File Path</strong> and a refresh
+							every few days</li>
+					</ul>
+				</li>
+				<li><strong>Cookie</strong>
+					<ul>
+						<li>login with manually entering your cookie</li>
+						<li><a href="get_cookie.md">How do i get my cookie?</a></li>
+					</ul>
+				</li>
+				<li><strong>Email &amp; Password</strong>
+					<ul>
+						<li>deprecated, use proxy</li>
+						<li>works with node version 10 but not with node version 8!</li>
+						<li>will not work if Captcha or 2 Factor Authentication is needed</li>
+					</ul>
+				</li>
+			</ul>
+		</li>
+		<li><strong>Auto Init</strong>
+			<ul>
+				<li><em>on</em> to initialise the account everytime the node starts or has changed</li>
+			</ul>
+		</li>
+		<li><strong>Events</strong>
+			<ul>
+				<li><em>on</em> to enable events sent over WebSocket, required for Event node</li>
+			</ul>
+		</li>
+		<li><strong>Service Host, Page, Language</strong>
+			<ul>
+				<li>see <a href="#Setup">Setup</a></li>
+			</ul>
+		</li>
+	</ul>
+	<hr>
+	<h3 id="setup"><strong>Setup</strong></h3>
+	<ol>
 		<li>
-			<p>The <b>Service Host</b> and <b>Page</b> will depend on your location. For example:</p>
+			<p>Drag a <strong>Alexa Sequence</strong> node into your flow.</p>
+		</li>
+		<li>
+			<p>Create a new Account by pressing the edit button at the right side of the <em>Account</em> field.</p>
+		</li>
+		<li>
+			<p>Choose a <strong>Service Host</strong> and <strong>Page</strong> and optionally <strong>Language</strong>
+				depending on your location. For example:</p>
 			<table>
-				<tr><td></td><td><b>Service Host</b></td><td><b>Amazon Page</b></td></tr>
-				<tr><td><b>USA</b></td><td>pitangui.amazon.com</td><td>amazon.com</td></tr>
-				<tr><td><b>UK</b></td><td>alexa.amazon.co.uk</td><td>amazon.co.uk</td></tr>
-				<tr><td><b>GER</b></td><td>layla.amazon.de</td><td>amazon.de</td></tr>
+				<thead>
+					<tr>
+						<th></th>
+						<th>Service Host</th>
+						<th>Page</th>
+						<th>Language</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>USA</td>
+						<td><a href="http://pitangui.amazon.com">pitangui.amazon.com</a></td>
+						<td><a href="http://amazon.com">amazon.com</a></td>
+						<td>en-US</td>
+					</tr>
+					<tr>
+						<td>UK</td>
+						<td><a href="http://alexa.amazon.co.uk">alexa.amazon.co.uk</a></td>
+						<td><a href="http://amazon.co.uk">amazon.co.uk</a></td>
+						<td>en-UK</td>
+					</tr>
+					<tr>
+						<td>GER</td>
+						<td><a href="http://layla.amazon.de">layla.amazon.de</a></td>
+						<td><a href="http://amazon.de">amazon.de</a></td>
+						<td>de-DE</td>
+					</tr>
+				</tbody>
 			</table>
 		</li>
 		<li>
-			You can optionally define the request Accept-<b>Language</b> Header and the <b>User Agent</b>.
-			Language may look like <b>en-US</b>, <b>en-UK</b> or <b>de-DE</b> etc.
-	 </li>		
-	</ul>
-
-	<h3>References</h3>
-    <ul>
+			<p>Set <strong>This IP</strong> to the ip of your Node-RED server</p>
+		</li>
+		<li>
+			<p>Enter a <strong>File Path</strong> to save the authentication result so following authentications will be
+				automatic.</p>
+		</li>
+		<li>
+			<p><em>Add</em> the new Account.</p>
+		</li>
+		<li>
+			<p>Deploy</p>
+		</li>
+		<li>
+			<p>Follow the url you see in the node status</p>
+		</li>
+		<li>
+			<p>Log in, wait until you see the node status <strong>ready</strong></p>
+		</li>
+		<li>
+			<p>Select a device. Clicking on the button on the far right of the device field will let you select from a list
+				of your devices.</p>
+		</li>
+	</ol>
+	<p>Now trigger the Alexa Sequence Node with any message and your Alexa will say &quot;Hello World!&quot;. (Hopefully!)
+	</p>
+	<hr>
+	<h3 id="references"><strong>References</strong></h3>
+	<ul>
 		<li><a href="https://npmjs.com/package/node-red-contrib-alexa-remote2">npm</a> - the nodes npm repository</li>
-        <li><a href="https://github.com/586837r/node-red-contrib-alexa-remote2">GitHub</a> - the nodes github repository</li>
-    </ul>
+		<li><a href="https://github.com/586837r/node-red-contrib-alexa-remote2">GitHub</a> - the nodes GitHub repository
+		</li>
+	</ul>
 </script>
 
 <script type="text/javascript">

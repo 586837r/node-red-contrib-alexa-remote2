@@ -31,42 +31,37 @@
 </script>
 
 <script type="text/x-red" data-help-name="alexa-remote-sequence">
-	<p>Execute a sequence of voice commands.</p>
-
-	<h3>Outputs</h3>
-    <ol class="node-ports">
-		<dl class="message-properties">
-			<dt>payload <span class="property-type">Object</span></dt>
-			<dd>the standard output, is undefined on success</dd>
-		</dl>
-		<dl class="message-properties">
-			<dt>error <span class="property-type">Object</span></dt>
-			<dd>the standard error output, is undefined on success</dd>
-		</dl>
-	</ol>
-	
-	<h3>Details</h3>
-	You can also set the sequence by sending a message with <code>msg.sequence</code>.<br>
-	<code>msg.sequence</code> must be an array of Objects with a <code>command</code> property that must be one of
-	<code>'speak'</code>,
-	<code>'volume'</code>,
-	<code>'deviceStop'</code>,
-	<code>'ssml'</code>,
-	<code>'notification'</code>,
-	<code>'goodmorning'</code>,
-	<code>'weather'</code>,
-	<code>'traffic'</code>,
-	<code>'flashbriefing'</code>,
-	<code>'singasong'</code> or
-	<code>'tellstory'</code>.<br>
-	A <code>value</code> property must also be defined if the <code>command</code> is <code>'speak'</code>(<i>string</i>) or
-	<code>'volume'</code>(<i>number</i> 0-100).
-
-	<h3>References</h3>
-    <ul>
+	<p>Executes commands related to music.</p>
+	<h3 id="inputs"><strong>Inputs</strong></h3>
+	<ul>
+		<li><strong>sequence</strong> <em>(optional, overrides)</em>
+			<ul>
+				<li>must be an array of objects with a <code>command</code> property that must be one of
+					<code>speak</code>, <code>volume</code>, <code>deviceStop</code>, <code>notification</code>,
+					<code>ssml</code>, <code>goodmorning</code>, <code>weather</code>,<code>traffic</code>,
+					<code>flashbriefing</code>, <code>singasong</code>, <code>tellstory</code>, <code>calendarNext</code>,
+					<code>calendarToday</code>, <code>calendarTomorrow</code></li>
+				<li>value must also be defined if the <code>command</code> is <code>speak</code>, <code>ssml</code> or
+					<code>volume</code><em>(0-100)</em></li>
+			</ul>
+		</li>
+	</ul>
+	<hr>
+	<h3 id="outputs"><strong>Outputs</strong></h3>
+	<ul>
+		<li><strong>payload</strong>
+			<ul>
+				<li>response from amazon</li>
+			</ul>
+		</li>
+	</ul>
+	<hr>
+	<h3 id="references"><strong>References</strong></h3>
+	<ul>
 		<li><a href="https://npmjs.com/package/node-red-contrib-alexa-remote2">npm</a> - the nodes npm repository</li>
-        <li><a href="https://github.com/586837r/node-red-contrib-alexa-remote2">GitHub</a> - the nodes github repository</li>
-    </ul>
+		<li><a href="https://github.com/586837r/node-red-contrib-alexa-remote2">GitHub</a> - the nodes GitHub repository
+		</li>
+	</ul>
 </script>
 
 <script type="text/javascript">

@@ -10,35 +10,40 @@
 </script>
 
 <script type="text/x-red" data-help-name="alexa-remote-init">
-	<p>Initializes an alexa instance connected to an account.</p>
-	<p>
-		This is only necessary when the <code>manual</code> initialization behaviour is chosen
-		for the account. In all cases it can be used to check if initialization alone is successful.
-	</p>
-
-	<h3>Inputs</h3>
-    <dl class="message-properties">
-        <dt>payload<span class="property-type">any</span></dt>
-		<dd>"stop" to stop the initialisation</dd>
-		<dd>"refresh" refresh the cookie (only in proxy authentification mode)</dd>
-		<dd>Any other payload will initialise the account. 
-			If authentification mode is proxy, you can send 
-			the output of the last initialisation for automatic initialisation.</dd>
-    </dl>
-
-	<h3>Outputs</h3>
-    <ol class="node-ports">
-		<dl class="message-properties">
-			<dt>payload <span class="property-type">Object</span></dt>
-			<dd>the standard output, is undefined on success</dd>
-		</dl>
-	</ol>
-	
-	<h3>References</h3>
-    <ul>
+	<p>Enables control over Account Node intialisation.</p>
+	<hr>
+	<h3 id="inputs"><strong>Inputs</strong></h3>
+	<ul>
+		<li><strong>payload</strong>
+			<ul>
+				<li><code>&quot;stop&quot;</code> to stop the initialisation</li>
+				<li><code>&quot;refresh&quot;</code> to refresh the cookie (only in proxy authentication mode)</li>
+				<li>any other payload will initialise the account
+					<ul>
+						<li>if authentification mode is <em>proxy</em>, then you can send the output of the last
+							initialisation for automatic initialisation</li>
+					</ul>
+				</li>
+			</ul>
+		</li>
+	</ul>
+	<hr>
+	<h3 id="outputs"><strong>Outputs</strong></h3>
+	<ul>
+		<li><strong>payload</strong>
+			<ul>
+				<li>if authentication mode is <em>proxy</em> and on success this will be an object that you can
+					send to this node later for automatic initialisation</li>
+			</ul>
+		</li>
+	</ul>
+	<hr>
+	<h3 id="references"><strong>References</strong></h3>
+	<ul>
 		<li><a href="https://npmjs.com/package/node-red-contrib-alexa-remote2">npm</a> - the nodes npm repository</li>
-        <li><a href="https://github.com/586837r/node-red-contrib-alexa-remote2">GitHub</a> - the nodes github repository</li>
-    </ul>
+		<li><a href="https://github.com/586837r/node-red-contrib-alexa-remote2">GitHub</a> - the nodes GitHub repository
+		</li>
+	</ul>
 </script>
 
 <script type="text/javascript">
