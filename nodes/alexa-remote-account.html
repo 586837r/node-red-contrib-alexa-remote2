@@ -4,26 +4,42 @@
         <input type="text" id="node-config-input-name" placeholder="Optional">
 	</div>
 	<hr>
+	<div class="form-row">
+        <label for=""> Auth Method</label>
+        <select id="node-config-input-authMethod" style="width: 70%;">
+            <option value="proxy">Proxy</option>
+            <option value="cookie">Cookie</option>
+            <option value="password">Email & Password (deprecated)</option>
+		</select>
+    </div>
     <div class="form-row">
         <label for="node-config-input-cookie"><i class="fa fa-coffee"></i> Cookie</label>
-        <input type="text" id="node-config-input-cookie" placeholder="Optional if Email and Password are defined">
+        <input type="text" id="node-config-input-cookie" placeholder="Required">
     </div>
     <div class="form-row">
         <label for="node-config-input-email"><i class="fa fa-user"></i> Email</label>
-        <input type="text" id="node-config-input-email" placeholder="Optional if Cookie is defined">
+        <input type="text" id="node-config-input-email" placeholder="Required">
     </div>
     <div class="form-row">
         <label for="node-config-input-password"><i class="fa fa-key"></i> Password</label>
-        <input type="password" id="node-config-input-password" placeholder="Optional if Cookie is defined">
+        <input type="password" id="node-config-input-password" placeholder="Required">
+	</div>
+	<div class="form-row">
+        <label for="node-config-input-proxyPort"><i class="fa fa-ship"></i> Port</label>
+        <input type="number" id="node-config-input-proxyPort" placeholder="Required">
+	</div>
+	<div class="form-row">
+        <label for="node-config-input-cookieFile"><i class="fa fa-file"></i> File Path</label>
+        <input type="text" id="node-config-input-cookieFile" placeholder="Optional">
 	</div>
 	<hr>
     <div class="form-row">
         <label for="node-config-input-alexaServiceHost"><i class="fa fa-amazon"></i> Service Host</label>
-        <input type="text" id="node-config-input-alexaServiceHost">
+        <input type="text" id="node-config-input-alexaServiceHost" placeholder="Required">
     </div>
     <div class="form-row">
         <label for="node-config-input-amazonPage"><i class="fa fa-amazon"></i> Page</label>
-        <input type="text" id="node-config-input-amazonPage">
+        <input type="text" id="node-config-input-amazonPage" placeholder="Required">
     </div>
 	<div class="form-row">
 		<label for="node-config-input-acceptLanguage"><i class="fa fa-language"></i> Language</label>
@@ -35,23 +51,20 @@
     </div>
 	<hr>
     <div class="form-row">
-        <label for="node-config-input-useWsMqtt_value">Events</label>
-		<input type="checkbox" id="node-config-input-useWsMqtt_value">
-		<input type="hidden" id="node-config-input-useWsMqtt_type">
+        <label for="node-config-input-useWsMqtt"><i class="fa fa-rocket"></i> Events</label>
+		<select id="node-config-input-useWsMqtt" style="width: 70%;">
+			<option value="on">On</option>
+			<option value="off">Off</option>
+		</select>
 	</div>
 	<div class="form-row">
-        <label for="node-config-input-bluetooth_value">Bluetooth</label>
-		<input type="checkbox" id="node-config-input-bluetooth_value">
-		<input type="hidden" id="node-config-input-bluetooth_type">
-	</div>
-    <div class="form-row">
-        <label for="node-config-input-initType">Init Behaviour</label>
-		<select id="node-config-input-initType">
-			<option value="lazy">Lazy</option>
-			<option value="every">Every Request</option>
-			<option value="manual">Manual</option>
+        <label for="node-config-input-bluetooth"><i class="fa fa-bluetooth"></i> Bluetooth</label>
+		<select id="node-config-input-bluetooth" style="width: 70%;">
+			<option value="on">On</option>
+			<option value="off">Off</option>
 		</select>
-    </div>
+	</div>
+
 </script>
 
 <script type="text/x-red" data-help-name="alexa-remote-account">
@@ -99,16 +112,17 @@
             password: 	{ type: 'password' },
         },
         defaults: {
-            name:               { value: '' },
-            alexaServiceHost:   { value: 'pitangui.amazon.com' },
-            userAgent:          { value: '' },
-            acceptLanguage:     { value: 'en-US' },
-			amazonPage:         { value: 'amazon.com' },
-			initType:			{ value: 'lazy' },
-			useWsMqtt_type:		{ value: 'onoff' },
-			useWsMqtt_value:    { value: 'on' },
-			bluetooth_type: 	{ value: 'onoff' },
-			bluetooth_value: 	{ value: 'on' },
+			name:               { required: false, value: '' },
+			authMethod: 		{ required: true,  value: 'proxy' },
+			proxyPort:			{ required: true,  value: 3456, validate: x => 0 <= Number(x) && Number(x) <= 65535 },
+			cookieFile:			{ required: false, value: ''},
+            alexaServiceHost:   { required: true,  value: 'pitangui.amazon.com' },
+            userAgent:          { required: false, value: '' },
+            acceptLanguage:     { required: true,  value: 'en-US' },
+			amazonPage:         { required: true,  value: 'amazon.com' },
+			useWsMqtt:			{ required: true,  value: 'on' },
+			bluetooth: 			{ required: true,  value: 'off' },
+			autoInit:			{ required: true,  value: 'on' }
 		},
 		paletteLabel: 'Alexa Account',
         label: function () {
@@ -118,18 +132,20 @@
             return this.name ? 'node_label_italic' : '';
 		}, 
 		oneditprepare: function () {
-			let setupTypedInput = (x, types) => {
-				let input = $(`#node-config-input-${x}_value`).typedInput({
-					types: types,
-					typeField: $(`#node-config-input-${x}_type`)
-				});
-				input.typedInput('type', this[`${x}_type`]);
-				input.typedInput('value', this[`${x}_value`]);
-				input.change();
-			}
+			const getInput = x => $(`#node-config-input-${x}`);
+			const getRow = x => getInput(x).parent();
 			
-			setupTypedInput('useWsMqtt', [{ value: 'onoff', label: '', options: ['on', 'off'] }]);
-			setupTypedInput('bluetooth', [{ value: 'onoff', label: '', options: ['on', 'off'] }]);
-		},
-    });
+			let rowmap = {
+				proxy: [ getRow('proxyPort'), getRow('cookieFile') ],
+				cookie: [ getRow('cookie') ],
+				password: [ getRow('email'), getRow('password') ]
+			}
+
+			getInput('authMethod').change(event => {
+				Object.entries(rowmap).forEach(([k,v]) => {
+					k === event.target.value ? v.forEach(r => r.show()) : v.forEach(r => r.hide());
+				});
+			});
+		}
+	});
 </script>

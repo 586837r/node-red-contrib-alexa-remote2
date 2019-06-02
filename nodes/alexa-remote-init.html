@@ -7,6 +7,13 @@
 		<label for="node-input-account"><i class="fa fa-amazon"></i> Account</label>
 		<input id="node-input-account">
 	</div>
+	<div class="form-row">
+        <label for="node-input-autoInit"><i class="fa fa-wrench"></i> Auto Init</label>
+		<select id="node-input-autoInit" style="width: 70%;">
+			<option value="on">On</option>
+			<option value="off">Off</option>
+		</select>
+	</div>
 </script>
 
 <script type="text/x-red" data-help-name="alexa-remote-init">
@@ -41,7 +48,8 @@
 		color: '#6fbad8',
 		defaults: {
 			name: { value: '' },
-			account: { value: '', type: 'alexa-remote-account', required: false }
+			account: { value: '', type: 'alexa-remote-account', required: true },
+			autoInit: { value: 'on' }
 		},
 		inputs: 1,
 		outputs: 1,
@@ -52,6 +60,34 @@
 		},
 		labelStyle: function () {
 			return this.name ? "node_label_italic" : "";
-		}
+		},
+		button: {
+            enabled: function() {
+                return !this.changed
+            },
+            onclick: function() {
+                if (this.changed) {
+                    return RED.notify(RED._("notification.warning", {message:RED._("notification.warnings.undeployedChanges")}),"warning");
+				}
+                $.ajax({
+                    url: "alexa-remote-init/"+this.id,
+                    type:"POST",
+                    success: function(resp) {
+                        RED.notify("Alexa Init Requested","success");
+                    },
+					error: function(jqXHR,textStatus,errorThrown) {
+                        if (jqXHR.status == 404) {
+                            RED.notify(node._("common.notification.error",{message:node._("common.notification.errors.not-deployed")}),"error");
+                        } else if (jqXHR.status == 500) {
+                            RED.notify(node._("common.notification.error",{message:node._("inject.errors.failed")}),"error");
+                        } else if (jqXHR.status == 0) {
+                            RED.notify(node._("common.notification.error",{message:node._("common.notification.errors.no-response")}),"error");
+                        } else {
+                            RED.notify(node._("common.notification.error",{message:node._("common.notification.errors.unexpected",{status:jqXHR.status,message:textStatus})}),"error");
+                        }
+                    }
+                }); 
+            }
+        }
 	});
 </script>

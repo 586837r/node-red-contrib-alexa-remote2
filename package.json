@@ -15,16 +15,9 @@
 	"license": "MIT",
 	"node-red": {
 		"nodes": {
-			"alexa-remote-config": "nodes/alexa-remote-account.js",
+			"alexa-remote-account": "nodes/alexa-remote-account.js",
 			"alexa-remote-init": "nodes/alexa-remote-init.js",
-			"alexa-remote-command": "nodes/alexa-remote-command.js",
-			"alexa-remote-sequence": "nodes/alexa-remote-sequence.js",
-			"alexa-remote-get": "nodes/alexa-remote-get.js",
-			"alexa-remote-set": "nodes/alexa-remote-set.js",
-			"alexa-remote-action": "nodes/alexa-remote-action.js",
-			"alexa-remote-event": "nodes/alexa-remote-event.js",
-			"alexa-remote-get-account": "nodes/alexa-remote-get-account.js",
-			"alexa-remote-set-account": "nodes/alexa-remote-set-account.js"
+			"alexa-remote-get": "nodes/alexa-remote-get.js"
 		}
 	},
 	"repository": {
@@ -35,6 +28,7 @@
 		"url": "https://github.com/586837r/node-red-contrib-alexa-remote2/issues"
 	},
 	"dependencies": {
-		"alexa-remote2": "2.1.0"
+		"alexa-remote2": "2.2.0",
+		"fs": "0.0.1-security"
 	}
 }
