@@ -1,3 +1,5 @@
+- **2.0.1**
+  - fixed account file saving 
 - **2.0.0**
   - exposed proxy initialisation with refreshable cookie
   - proper catchable error handling
