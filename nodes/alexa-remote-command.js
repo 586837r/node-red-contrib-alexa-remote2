@@ -11,6 +11,10 @@ module.exports = function (RED) {
 
 		this.on('close', function () { this.status({}); });
 		this.on('input', function (msg) {
+			if(!this.account.initialised) {
+				return tools.nodeErrVal(this, msg, new Error('Account not initialised'));
+			}
+
 			const config = tools.assignTypedConvert(RED, this, msg, {}, ['serialOrName', 'command'], this);
 			let options = tools.assignTypedStructConvert(RED, this, msg, {}, this.options[config.command]); 
 			//console.log(options, node.options);

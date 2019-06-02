@@ -11,6 +11,10 @@ module.exports = function (RED) {
 
 		this.on('close', function (removed, done) { this.status({}); done(); });
 		this.on('input', function (msg) {
+			if(!this.account.initialised) {
+				return tools.nodeErrVal(this, msg, new Error('Account not initialised'));
+			}
+
 			const { target, serialOrName } = tools.assignTypedConvert(RED, this, msg, {}, ['target', 'serialOrName'], this);
 			const options = tools.assignTypedStructConvert(RED, this, msg, {}, this.options[target]);
 

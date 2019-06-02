@@ -10,6 +10,10 @@ module.exports = function (RED) {
 
 		this.on('close', function () { this.status({}); });
 		this.on('input', function (msg) {		
+			if(!this.account.initialised) {
+				return tools.nodeErrVal(this, msg, new Error('Account not initialised'));
+			}
+
 			let config = {};
 			tools.assignTypedConvert(RED, this, msg, config, ['serialOrName'], input);
 

@@ -16,6 +16,7 @@ module.exports = function (RED) {
 		this.emitter = new EventEmitter();
 		this.initing = false;
 		this.status = { code: 'uninitialized', message: 'uninitialized' }
+		this.initialised = false;
 
 		this._status = function(code, message) {
 			this.status = {
@@ -111,16 +112,23 @@ module.exports = function (RED) {
 						const text = `open ${url} in your browser`;
 				
 						this._status('wait-proxy', text);
-						return;
+						// we dont call callback
 					}
 					else {
+						this.initialised = false;
 						this._status('error', err.message);
+						callback && callback(err, val);
 					}
 				}
+				else {
+					console.log(`CALLBACK: _initAlexaFromObject`, err);
+					this.initialised = true;
+					this._status('ready');
+					callback && callback(err, val);
+				}
 
-				console.log(`CALLBACK: _initAlexaFromObject`, err);
-				this._status('ready');
-				callback && callback(err, val);
+				
+
 				// if (err) {
 				// 	callback && callback(err, val);
 				// 	return;
