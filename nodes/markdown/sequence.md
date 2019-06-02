@@ -1,5 +1,7 @@
 Executes commands related to music.
 
+---
+
 ### **Inputs**
  - **sequence** *(optional, overrides)*
    - must be an array of objects with a `command` property that must be one of 
