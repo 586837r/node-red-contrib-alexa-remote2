@@ -1,3 +1,5 @@
+- **2.1.0**
+  - added to Sequence: Calendar Next, Calendar Today, Calendar Tomorrow 
 - **2.0.1**
   - fixed account file saving 
 - **2.0.0**
