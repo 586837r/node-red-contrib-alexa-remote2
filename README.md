@@ -8,7 +8,6 @@ The goal is to expose all of [alexa-remote2](https://www.npmjs.com/package/alexa
  - [Examples](examples.md)
 
 ### Logging in with Proxy
-   - highly recommended
    - you will have to log in to amazon using the proxy, cookies will be automatically captured
    - cookie refresh is possible by sending a `msg.payload` of `"refresh"`
    - can setup a persistant automatic initialisation with **File Path**, and aforementioned refresh with an inject node
@@ -27,11 +26,11 @@ The goal is to expose all of [alexa-remote2](https://www.npmjs.com/package/alexa
 2. Create a new Account by pressing the edit button at the right side of the *Account* field.
 3. Choose a **Service Host** and **Page** and optionally **Language** depending on your location. For example:
 
-   ||Service Host|Page|Language
-   |---|---|---|---
-   |USA|pitangui.amazon.com|amazon.com|en-US
-   |UK|alexa.amazon.co.uk|amazon.co.uk|en-UK
-   |GER|layla.amazon.de|amazon.de|de-DE
+   |     | Service Host        | Page         | Language |
+   |-----|---------------------|--------------|----------|
+   | USA | pitangui.amazon.com | amazon.com   | en-US    |
+   | UK  | alexa.amazon.co.uk  | amazon.co.uk | en-UK    |
+   | GER | layla.amazon.de     | amazon.de    | de-DE    |
    
 4. **recommended:** Enter a file path to save the authentication result so following authentications will be automatic. 
 5. *Add* the new Account.
@@ -46,3 +45,4 @@ Now trigger the Alexa Sequence Node with any message and your Alexa will say "He
  - Enter a file path to save the authentication result.
  - To keep authentication working you should refresh the cookie every few days. 
 Simply attach an inject node with the payload `"refresh"` to do so.
+ - The output payload is the same object that is saved to file. You could save this some other way and initialise the Account with it again. This would have the same effect.
