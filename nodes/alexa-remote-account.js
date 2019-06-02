@@ -8,7 +8,7 @@ module.exports = function (RED) {
 	function AlexaRemoteAccountNode(input) {
 		RED.nodes.createNode(this, input);
 
-		tools.assign(this, ['authMethod', 'proxyPort', 'cookieFile', 'alexaServiceHost', 'userAgent', 'amazonPage'], input);
+		tools.assign(this, ['authMethod', 'proxyOwnIp', 'proxyPort', 'cookieFile', 'alexaServiceHost', 'userAgent', 'amazonPage'], input);
 		this.useWsMqtt = input.useWsMqtt === 'on';
 		this.bluetooth = input.bluetooth === 'on';
 		this.autoInit  = input.autoInit  === 'on';
@@ -53,11 +53,10 @@ module.exports = function (RED) {
 			this._stopAlexa();
 
 			const config = {}
-			tools.assign(config, ['proxyPort', 'alexaServiceHost', 'userAgent', 'amazonPage', 'useWsMqtt', 'bluetooth'], this);
+			tools.assign(config, ['proxyOwnIp', 'proxyPort', 'alexaServiceHost', 'userAgent', 'amazonPage', 'useWsMqtt', 'bluetooth'], this);
 
 			config.logger = DEBUG ? console.log : undefined;
 			config.refreshCookieInterval = 0;
-			config.proxyOwnIp = 'localhost';
 			config.proxyLogLevel = 'warn';
 			config.amazonPageProxyLanguage = config.acceptLanguage ? config.acceptLanguage.replace('-', '_') : undefined;
 			config.cookieJustCreated = true; // otherwise it just tries forever...

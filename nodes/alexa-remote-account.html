@@ -25,6 +25,10 @@
         <input type="password" id="node-config-input-password" placeholder="Required">
 	</div>
 	<div class="form-row">
+        <label for="node-config-input-proxyOwnIp"><i class="fa fa-server"></i> This IP</label>
+        <input type="text" id="node-config-input-proxyOwnIp" placeholder="Required">
+	</div>
+	<div class="form-row">
         <label for="node-config-input-proxyPort"><i class="fa fa-ship"></i> Port</label>
         <input type="text" id="node-config-input-proxyPort" placeholder="Required">
 	</div>
@@ -118,6 +122,7 @@
         defaults: {
 			name:               { required: false, value: '' },
 			authMethod: 		{ required: true,  value: 'proxy' },
+			proxyOwnIp:			{ required: true,  value: 'localhost' },
 			proxyPort:			{ required: true,  value: 3456, validate: x => 0 <= Number(x) && Number(x) <= 65535 },
 			cookieFile:			{ required: false, value: ''},
             alexaServiceHost:   { required: true,  value: 'pitangui.amazon.com' },
@@ -140,7 +145,7 @@
 			const getRow = x => getInput(x).parent();
 			
 			let rowmap = {
-				proxy: [ getRow('proxyPort'), getRow('cookieFile') ],
+				proxy: [ getRow('proxyIp'), getRow('proxyPort'), getRow('cookieFile') ],
 				cookie: [ getRow('cookie') ],
 				password: [ getRow('email'), getRow('password') ]
 			}

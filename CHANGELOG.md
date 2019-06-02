@@ -1,3 +1,5 @@
+- **2.2.0**
+  - added changable proxy ip to access from remote 
 - **2.1.0**
   - added to Sequence: Calendar Next, Calendar Today, Calendar Tomorrow 
 - **2.0.1**
