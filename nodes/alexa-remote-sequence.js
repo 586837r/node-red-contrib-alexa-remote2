@@ -3,41 +3,38 @@ const tools = require('../tools/tools.js');
 module.exports = function (RED) {
 	function AlexaRemoteSequenceNode(input) {
 		RED.nodes.createNode(this, input);
-		let node = this;
 
-		tools.assign(node, ['sequenceInputs'], input);
-		tools.assignTyped(node, ['serialOrName'], input);
-		tools.assignNode(RED, node, ['account'], input);
+		tools.assign(this, ['sequenceInputs'], input);
+		tools.assignTyped(this, ['serialOrName'], input);
+		tools.assignNode(RED, this, ['account'], input);
 
-		node.on('close', function (removed, done) { this.status({}); done(); });
-		node.on('input', function (msg) {		
+		this.on('close', function () { this.status({}); });
+		this.on('input', function (msg) {		
 			let config = {};
-			tools.assignTypedConvert(RED, node, msg, config, ['serialOrName'], input);
+			tools.assignTypedConvert(RED, this, msg, config, ['serialOrName'], input);
 
 			if(msg.sequence) {
 				config.sequenceCommands = msg.sequence;
 			}
 			else{
-				config.sequenceCommands = node.sequenceInputs.map(input => {
+				config.sequenceCommands = this.sequenceInputs.map(input => {
 					return {
 						command: input.command,
-						value: RED.util.evaluateNodeProperty(input.value_value, input.value_type, node, msg)
+						value: RED.util.evaluateNodeProperty(input.value_value, input.value_type, this, msg)
 					}
 				});
 			}
 
-			tools.initAndSend(node, msg, (alexa) => {
-				return new Promise((resolve, reject) => {
-					// fix because callback is not called in 
-					if (!alexa.find(config.serialOrName)){
-						return reject(new Error('Unknown Device or Serial number'));
-					}
-					alexa.sendMultiSequenceCommand(config.serialOrName, config.sequenceCommands, (err, val) => {
-						//console.log({node: {err: err, val: val}});
-						err ? reject([err, val]) : resolve(val);
-					});
-				})
-			})
+			const alexa = this.account.alexa;
+
+			// fix because callback is not called in sendSequenceCommand
+			if (!alexa.find(config.serialOrName)) {
+				return tools.nodeErrVal(this, msg, new Error('Unknown Device or Serial number'));
+			}
+
+			alexa.sendMultiSequenceCommand(config.serialOrName, config.sequenceCommands, (err, val) => {
+				tools.nodeErrVal(this, msg, err, val);
+			});
 		});
 	}
 	RED.nodes.registerType("alexa-remote-sequence", AlexaRemoteSequenceNode)

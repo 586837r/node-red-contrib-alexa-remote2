@@ -17,7 +17,8 @@
 		"nodes": {
 			"alexa-remote-account": "nodes/alexa-remote-account.js",
 			"alexa-remote-init": "nodes/alexa-remote-init.js",
-			"alexa-remote-get": "nodes/alexa-remote-get.js"
+			"alexa-remote-get": "nodes/alexa-remote-get.js",
+			"alexa-remote-sequence": "nodes/alexa-remote-sequence.js"
 		}
 	},
 	"repository": {
