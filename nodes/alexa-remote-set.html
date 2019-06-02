@@ -97,7 +97,11 @@
 				});
 				deviceInput.typedInput('width', '97.75%');
 
-				select.on('change', () => deviceInput.typedInput('value', select.val()))
+				select.on('change', () => {
+					deviceInput.typedInput('type', 'str');
+					deviceInput.typedInput('value', select.val());
+				})
+
 				button.click(function () {
 					if (select.is(':hidden')) {
 						inputdiv.hide();
@@ -106,6 +110,12 @@
 					else {
 						select.hide();
 						inputdiv.show();
+						// update size by switching type back and forth
+						const types = ['str', 'msg', 'flow', 'global', 'jsonata', 'env'];
+						const type = deviceInput.typedInput('type');
+						const other = types.find(x => x !== type);
+						deviceInput.typedInput('type', other);
+						deviceInput.typedInput('type', type);
 					}
 
 					const value = deviceInput.typedInput('value');
