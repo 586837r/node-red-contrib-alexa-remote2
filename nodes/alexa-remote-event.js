@@ -3,38 +3,44 @@ const tools = require('../tools/tools.js');
 module.exports = function (RED) {
 	function AlexaRemoteEventNode(input) {
 		RED.nodes.createNode(this, input);
-		let node = this;
 
-		tools.assign(node, ['event'], input);
-		tools.assignNode(RED, node, ['account'], input);
+		tools.assign(this, ['event'], input);
+		tools.assignNode(RED, this, ['account'], input);
 
-		node.initCallback = function() {
+		this.on('close', function () { this.status({}); });
+		this.onReady = function() {
 			//node.warn('account init');
-			node.status({ fill: "yellow", shape: "dot", text: "starting listening" });
-			setTimeout(() => node.status({ fill: "grey", shape: "dot", text: "listening" }), 2000);
-			node.account.alexa.addListener(node.event, val => {
-				node.status({ fill: "blue", shape: "dot", text: "event fired!" });
-				setTimeout(() => node.status({ fill: "grey", shape: "dot", text: "listening" }), 2000);
-				node.send({ payload: val });
+			this.status({ fill: "yellow", shape: "dot", text: "starting listening" });
+			setTimeout(() => this.status({ fill: "grey", shape: "dot", text: "listening" }), 2000);
+
+			this.account.alexa.addListener(this.event, val => {
+				this.status({ fill: "blue", shape: "dot", text: "event fired!" });
+				setTimeout(() => this.status({ fill: "grey", shape: "dot", text: "listening" }), 2000);
+				this.send({ payload: val });
 			});
 		};
+		this.onStatus = (code, message) => {
+			switch(code) {
+				case 'init-proxy': 
+				case 'init-cookie':
+				case 'init-password':
+				case 'wait-proxy': 		this.status({shape: 'ring', fill: 'grey', text: 'initialising' }); break;
+				case 'stopped':			this.status({shape: 'ring', fill: 'yellow', text: 'stopped'}); break;
+				case 'ready': 			this.onReady(); break;
+				case 'error':			this.status({shape: 'red', fill: 'red', text: message}); break;
+				default: 				this.status({shape: 'ring', fill: 'grey', text: 'uninitialized' }); break;
+			}
+		}
 
-		node.on('close', function (removed, done) { this.status({}); done(); });
+		this.account.emitter.removeListener('status', this.onStatus);
 
-		if(!node.account)
-			return node.status({ fill: "red", shape: "dot", text: "account missing" });
-
-		if(!node.account.useWsMqtt)
-			return node.status({ fill: "red", shape: "dot", text: "events not supported by account" });
-
-		node.account.emitter.removeListener('alexa-init', node.initCallback);
-		node.account.emitter.addListener('alexa-init', node.initCallback);
-		if (node.account.initType !== 'manual') {
-			node.account.initAlexa()
-			.catch(err => {
-				node.status({ shape: 'dot', fill: 'red', text: err.message });
-				node.error(err);
-			});
+		if(!this.account.useWsMqtt) {
+			return this.status({ fill: "red", shape: "dot", text: "events not supported by account" });
+		}
+		else {
+			this.account.emitter.addListener('status', this.onStatus);
+			const {code, message} = this.account.status;
+			this.onStatus(code, message);
 		}
 	}
 	RED.nodes.registerType("alexa-remote-event", AlexaRemoteEventNode)

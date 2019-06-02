@@ -18,7 +18,10 @@
 			"alexa-remote-account": "nodes/alexa-remote-account.js",
 			"alexa-remote-init": "nodes/alexa-remote-init.js",
 			"alexa-remote-get": "nodes/alexa-remote-get.js",
-			"alexa-remote-sequence": "nodes/alexa-remote-sequence.js"
+			"alexa-remote-sequence": "nodes/alexa-remote-sequence.js",
+			"alexa-remote-action": "nodes/alexa-remote-action.js",
+			"alexa-remote-command": "nodes/alexa-remote-command.js",
+			"alexa-remote-event": "nodes/alexa-remote-event.js"
 		}
 	},
 	"repository": {
@@ -29,7 +32,7 @@
 		"url": "https://github.com/586837r/node-red-contrib-alexa-remote2/issues"
 	},
 	"dependencies": {
-		"alexa-remote2": "2.2.0",
+		"alexa-remote2": "^2.2.0",
 		"fs": "0.0.1-security"
 	}
 }

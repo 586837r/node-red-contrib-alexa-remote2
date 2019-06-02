@@ -42,7 +42,7 @@ module.exports = function (RED) {
 			});
 		}
 
-		this.account.emitter.on('status', (code, message) => {
+		this.onStatus = (code, message) => {
 			this.stopBlinking(); 
 
 			switch(code) {
@@ -50,10 +50,19 @@ module.exports = function (RED) {
 				case 'init-cookie': 	this.status({shape: 'ring', fill: 'grey', text: 'init with cookie' }); break;
 				case 'init-password': 	this.status({shape: 'ring', fill: 'grey', text: 'init with password' }); break;
 				case 'wait-proxy': 		this.startBlinking(message); break;
-				case 'stop':			this.status({shape: 'ring', fill: 'yellow', text: 'stopped'}); break;
-				case 'done': 			this.status({shape: 'dot', fill: 'green', text: 'ready'}); break;
+				case 'stopped':			this.status({shape: 'ring', fill: 'yellow', text: 'stopped'}); break;
+				case 'ready': 			this.status({shape: 'dot', fill: 'green', text: 'ready'}); break;
+				case 'error':			this.status({shape: 'red', fill: 'red', text: message}); break;
+				default: 				this.status({shape: 'ring', fill: 'grey', text: 'uninitialized' }); break;
 			}
-		});
+		}
+
+		this.account.emitter.removeListener('status', this.onStatus);
+		this.account.emitter.addListener('status', this.onStatus);
+
+		// initial status update
+		const {code, message} = this.account.status;
+		this.onStatus(code, message);
 
 		if(this.autoInit) {
 			this.onInput({});

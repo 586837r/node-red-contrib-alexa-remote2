@@ -42,7 +42,7 @@ module.exports = function (RED) {
 				case 'smarthomeGroups':							return alexa.getSmarthomeGroups(callback);
 				case 'smarthomeEntities':						return alexa.getSmarthomeEntities(callback);
 				case 'smarthomeBehaviourActionDefinitions': 	return alexa.getSmarthomeBehaviourActionDefinitions(callback);
-				default: 										return callback(new Error('invalid get target'));
+				default: 										return callback(new Error('Invalid get target'));
 			}
 		});
 	}

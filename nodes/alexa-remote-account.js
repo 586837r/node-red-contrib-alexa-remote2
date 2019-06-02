@@ -20,7 +20,7 @@ module.exports = function (RED) {
 		this._status = function(code, message) {
 			this.status = {
 				code: code,
-				message: message
+				message: message || code
 			}
 			this.emitter.emit('status', code, message);
 			console.log(`STATUS: ${code} (${message})`)
@@ -41,7 +41,7 @@ module.exports = function (RED) {
 			this.alexa.removeAllListeners();
 			this.alexa.stop();
 			
-			this._status('stop')
+			this._status('stopped')
 			this.alexa = new AlexaRemote();
 
 			this.initing = false;
@@ -81,11 +81,20 @@ module.exports = function (RED) {
 				config.cookie = config.formerRegistrationData.localCookie;
 			}
 
-			if 		(config.cookie) 				 { this._status('init-cookie'); 	} 
-			else if (config.password) 				 { this._status('init-password'); 	}
-			else if (this.authMethod === 'cookie') 	 { this._status('init-cookie'); 	}
-			else if (this.authMethod === 'password') { this._status('init-password'); 	}
-			else									 { this._status('init-proxy');  	}
+			if(config.cookie) {
+				if(config.formerRegistrationData){
+					this._status('init-proxy');
+				}
+				else {
+					this._status('init-cookie');
+				}
+			} 
+			else if (config.email && config.password) {
+				this._status('init-password');
+			}
+			else {
+				this._status('init-proxy');
+			}
 
 			console.log({config: config, input: input});
 
@@ -104,10 +113,13 @@ module.exports = function (RED) {
 						this._status('wait-proxy', text);
 						return;
 					}
+					else {
+						this._status('error', err.message);
+					}
 				}
 
 				console.log(`CALLBACK: _initAlexaFromObject`, err);
-				this._status('done');
+				this._status('ready');
 				callback && callback(err, val);
 				// if (err) {
 				// 	callback && callback(err, val);
