@@ -7,10 +7,20 @@
 		<label for="node-input-account"><i class="fa fa-amazon"></i> Account</label>
 		<input id="node-input-account">
 	</div>
-	<div class="form-row">
+    <div class="form-row" id="node-config-input-device-row">
 		<label for="node-input-serialOrName_value"><i class="fa fa-circle"></i> Device</label>
-		<input id="node-input-serialOrName_value">
-		<input type="hidden" id="node-input-serialOrName_type">
+		<div style="display: inline-block; position: relative; width: 70%; height: 20px;">
+			<div style="position: absolute; left: 0px; right: 40px;">
+				<div>
+					<input id="node-input-serialOrName_value">
+					<input type="hidden" id="node-input-serialOrName_type">
+				</div>
+				<select id="node-config-input-device-select" placeholder="loading..." style="width: 100%;display:none;"/>
+			</div>
+			<a id="node-config-input-device-search" class="editor-button" style="position: absolute; right: 0px; top: 0px;">
+				<i class="fa fa-search"></i>
+			</a>
+		</div>
 	</div>
 	<div class="form-row" style="margin-bottom:0;">
 		<label><i class="fa fa-list"></i> Commands</label>
@@ -66,15 +76,17 @@
 		defaults: {
 			name: { value: '' },
 			account: { value: '', type: 'alexa-remote-account', required: true },
-			serialOrName_type: { value: '' },
+			serialOrName_type: { value: 'select' },
 			serialOrName_value: { value: '' },
-			sequenceInputs: { value: [
-				{
-					command:'speak', 
-					value_type: 'str', 
-					value_value: 'Hello World!'
-				}
-			]}
+			sequenceInputs: {
+				value: [
+					{
+						command: 'speak',
+						value_type: 'str',
+						value_value: 'Hello World!'
+					}
+				]
+			}
 		},
 		inputs: 1,
 		outputs: 1,
@@ -86,23 +98,78 @@
 		labelStyle: function () {
 			return this.name ? "node_label_italic" : "";
 		},
-		oneditprepare: function() {
-			let node = this;
+		oneditprepare: function () {
+			const node = this;
+
+			function setupDeviceField() {
+				const deviceInput = $(`#node-input-serialOrName_value`);
+				const deviceInputType = $(`#node-input-serialOrName_type`);
+				const accountInput = $(`#node-input-account`);
+				const select = $(`#node-config-input-device-select`);
+				const button = $(`#node-config-input-device-search`);
+				const inputdiv = deviceInput.parent();
+
+				deviceInput.typedInput({
+					types: ['str', 'msg', 'flow', 'global', 'jsonata', 'env'],
+					typeField: deviceInputType[0]
+				});
+				deviceInput.typedInput('width', '97.75%');
+
+				select.on('change', () => deviceInput.typedInput('value', select.val()))
+				button.click(function () {
+					if (select.is(':hidden')) {
+						inputdiv.hide();
+						select.show();
+					}
+					else {
+						select.hide();
+						inputdiv.show();
+					}
+
+					const value = deviceInput.typedInput('value');
+
+					if(!select.is(':hidden')) {
+						const account = $(`#node-input-account`).val();
+						$.get('alexa-remote-devices', { account: account })
+							.done((data) => {
+								const result = JSON.parse(data);
+								const devices = result.devices; 
+
+								console.log({ result: result });
+
+								select.empty();
+								devices.forEach(([serial, name]) => {
+									select.append($('<option/>').val(serial).text(name));
+								});
+								select.val(value);
+							})
+							.fail(function (res) {
+								console.log({ res: res });
+
+								try {
+									let result = JSON.parse(res.responseText);
+									console.log({ result: result });
+
+									if (typeof result.error !== 'string') throw 'oh no';
+									RED.notify(result.error, 'error');
+								}
+								catch {
+									RED.notify('alexa-remote2: Unknown error', 'error');
+								}
+							});
+					}
+				})
+			};
+			setupDeviceField();
 
 			let resizeRow = (row) => {
 				var newWidth = row.width();
 				row.find('.red-ui-typedInput').typedInput("width", newWidth - 145);
 			}
 
-			let device = $('#node-input-serialOrName_value').typedInput({
-				types: ['str', 'msg', 'flow', 'global', 'jsonata', 'env'],
-				typeField: $('#node-input-serialOrName_type')[0]
-			});
-			console.log(device);
-			
 			let container = $('#node-input-sequence-nodes-container').css('min-height', '250px').css('min-width', '100px').editableList({
-				addItem: function(row, index, data) {
-					if(!data.hasOwnProperty('command')){
+				addItem: function (row, index, data) {
+					if (!data.hasOwnProperty('command')) {
 						data = { command: 'speak', value_type: 'str', value_value: 'Hello World!' };
 					}
 					row.css({
@@ -114,24 +181,24 @@
 
 					let commandSelect = $('<select>', { class: "node-input-sequence-node-command", style: "margin-right:10px;" }).css('width', '125px').appendTo(subrow);
 					let selectOptions = [
-						{ value: 'speak', 			label: 'Speak' 			}, 
-						{ value: 'volume',			label: 'Volume'			},
-						{ valie: 'deviceStop',		label: 'Stop'			},
-						{ value: 'notification',	label: 'Notification'	},
-						{ value: 'ssml',			label: 'SSML'			},
-						{ value: 'goodmorning',		label: 'Good Morning' 	},
-						{ value: 'weather', 		label: 'Weather' 		}, 
-						{ value: 'traffic', 		label: 'Traffic' 		}, 
-						{ value: 'flashbriefing', 	label: 'Flash briefing' },
-						{ value: 'singasong',		label: 'Sing a song' 	},
-						{ value: 'tellstory',		label: 'Tell a story' 	},
+						{ value: 'speak', label: 'Speak' },
+						{ value: 'volume', label: 'Volume' },
+						{ valie: 'deviceStop', label: 'Stop' },
+						{ value: 'notification', label: 'Notification' },
+						{ value: 'ssml', label: 'SSML' },
+						{ value: 'goodmorning', label: 'Good Morning' },
+						{ value: 'weather', label: 'Weather' },
+						{ value: 'traffic', label: 'Traffic' },
+						{ value: 'flashbriefing', label: 'Flash briefing' },
+						{ value: 'singasong', label: 'Sing a song' },
+						{ value: 'tellstory', label: 'Tell a story' },
 					];
 					selectOptions.forEach(o => {
 						commandSelect.append($('<option>').val(o.value).text(o.label));
 					});
 
 					let emptyType = { value: 'empty', label: ' ', hasValue: false };
-					let ssml = { 
+					let ssml = {
 						value: "ssml",
 						label: "SSML",
 						expand: function () {
@@ -148,15 +215,15 @@
 					let valueTypedInput = $('<input>', { class: "node-input-sequence-node-value", type: "text" })
 						.appendTo(subrow)
 						.typedInput({ default: 'str', types: [emptyType] });
-					
-					commandSelect.change(function() {
+
+					commandSelect.change(function () {
 						let command = $(this).val();
 						let types = (() => {
-							switch(command){
-								case 'speak': case 'notification': 	return ['str', 'msg', 'flow', 'global', 'bool', 'date', 'jsonata', 'env'];
+							switch (command) {
+								case 'speak': case 'notification': return ['str', 'msg', 'flow', 'global', 'bool', 'date', 'jsonata', 'env'];
 								case 'ssml': return [ssml, 'msg', 'flow', 'global', 'bool', 'date', 'jsonata', 'env'];
-								case 'volume':	return ['num', 'msg', 'flow', 'global', 'jsonata', 'env'];
-								default: 		return [emptyType];
+								case 'volume': return ['num', 'msg', 'flow', 'global', 'jsonata', 'env'];
+								default: return [emptyType];
 							}
 						})();
 
@@ -178,28 +245,28 @@
 				sortable: true
 			});
 
-			if(!node.sequenceInputs)
+			if (!node.sequenceInputs)
 				node.sequenceInputs = [];
 
 			node.sequenceInputs.forEach(input => {
 				container.editableList('addItem', input);
 			});
 		},
-		oneditsave: function() {
-			let node = this;		
-			let rows = $('#node-input-sequence-nodes-container').editableList('items');
+		oneditsave: function () {
+			let node = this;
 
+			let rows = $('#node-input-sequence-nodes-container').editableList('items');
 			node.sequenceInputs = [];
 
-			rows.each(function() {
+			rows.each(function () {
 				let row = $(this);
-								
+
 				let sequenceInput = {
-					command: 		row.find('.node-input-sequence-node-command').val(),
-					value_type: 	row.find('.node-input-sequence-node-value').typedInput('type'),
-					value_value:	row.find('.node-input-sequence-node-value').typedInput('value')
+					command: row.find('.node-input-sequence-node-command').val(),
+					value_type: row.find('.node-input-sequence-node-value').typedInput('type'),
+					value_value: row.find('.node-input-sequence-node-value').typedInput('value')
 				};
-				
+
 				node.sequenceInputs.push(sequenceInput)
 			});
 		},

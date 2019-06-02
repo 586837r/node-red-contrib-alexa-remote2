@@ -13,10 +13,20 @@
 		<input type="hidden" id="node-input-target_type">
 	</div>
 	<hr>
-	<div class="form-row">
+    <div class="form-row" id="node-config-input-device-row">
 		<label for="node-input-serialOrName_value"><i class="fa fa-circle"></i> Device</label>
-		<input id="node-input-serialOrName_value">
-		<input type="hidden" id="node-input-serialOrName_type">
+		<div style="display: inline-block; position: relative; width: 70%; height: 20px;">
+			<div style="position: absolute; left: 0px; right: 40px;">
+				<div>
+					<input id="node-input-serialOrName_value">
+					<input type="hidden" id="node-input-serialOrName_type">
+				</div>
+				<select id="node-config-input-device-select" placeholder="loading..." style="width: 100%;display:none;"/>
+			</div>
+			<a id="node-config-input-device-search" class="editor-button" style="position: absolute; right: 0px; top: 0px;">
+				<i class="fa fa-search"></i>
+			</a>
+		</div>
 	</div>
 </script>
 
@@ -66,6 +76,66 @@
 			return this.name ? "node_label_italic" : "";
 		},
 		oneditprepare: function() {	
+			function setupDeviceField() {
+				const deviceInput = $(`#node-input-serialOrName_value`);
+				const deviceInputType = $(`#node-input-serialOrName_type`);
+				const accountInput = $(`#node-input-account`);
+				const select = $(`#node-config-input-device-select`);
+				const button = $(`#node-config-input-device-search`);
+				const inputdiv = deviceInput.parent();
+
+				deviceInput.typedInput({
+					types: ['str', 'msg', 'flow', 'global', 'jsonata', 'env'],
+					typeField: deviceInputType[0]
+				});
+				deviceInput.typedInput('width', '97.75%');
+
+				select.on('change', () => deviceInput.typedInput('value', select.val()))
+				button.click(function () {
+					if (select.is(':hidden')) {
+						inputdiv.hide();
+						select.show();
+					}
+					else {
+						select.hide();
+						inputdiv.show();
+					}
+
+					const value = deviceInput.typedInput('value');
+
+					if(!select.is(':hidden')) {
+						const account = $(`#node-input-account`).val();
+						$.get('alexa-remote-devices', { account: account })
+							.done((data) => {
+								const result = JSON.parse(data);
+								const devices = result.devices; 
+
+								console.log({ result: result });
+
+								select.empty();
+								devices.forEach(([serial, name]) => {
+									select.append($('<option/>').val(serial).text(name));
+								});
+								select.val(value);
+							})
+							.fail(function (res) {
+								console.log({ res: res });
+
+								try {
+									let result = JSON.parse(res.responseText);
+									console.log({ result: result });
+
+									if (typeof result.error !== 'string') throw 'oh no';
+									RED.notify(result.error, 'error');
+								}
+								catch {
+									RED.notify('alexa-remote2: Unknown error', 'error');
+								}
+							});
+					}
+				})
+			};
+			setupDeviceField();
 			/*
 				// inputconfigs may look like this:
 				let colorConfig = {

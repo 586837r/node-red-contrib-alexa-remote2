@@ -213,11 +213,44 @@ module.exports = function (RED) {
 			this.stopAlexa();
 		})
 	}
+
 	RED.nodes.registerType("alexa-remote-account", AlexaRemoteAccountNode, {
 		credentials: {
 			cookie: { type: 'text' },
 			email: { type: 'text' },
 			password: { type: 'password' },
+		}
+	});
+
+	RED.httpAdmin.get('/alexa-remote-devices', function(req, res, next)
+	{
+		const account = RED.nodes.getNode(req.query.account);
+		const result = {
+			error: null,
+			devices: null
+		}
+		
+		if(!account) {
+			res.statusCode = 500;
+			result.error = 'Account missing!';
+			return res.end(JSON.stringify(result));
+		}
+
+		if(!account.initialised) {
+			res.statusCode = 500;
+			result.error = 'Account not initialised!'
+			return res.end(JSON.stringify(result));
+		}
+
+		try {
+			const deviceBySerial = account.alexa.serialNumbers;
+			result.devices = Object.entries(deviceBySerial).map(([k,v]) => [k, v.accountName]);
+			res.end(JSON.stringify(result));
+		}
+		catch {
+			res.statusCode = 500;
+			result.error = 'Devices were not initialised?';
+			res.end(JSON.stringify(result));
 		}
 	});
 }

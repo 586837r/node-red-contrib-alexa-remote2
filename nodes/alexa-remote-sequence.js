@@ -20,7 +20,7 @@ module.exports = function (RED) {
 			if(msg.sequence) {
 				config.sequenceCommands = msg.sequence;
 			}
-			else{
+			else {
 				config.sequenceCommands = this.sequenceInputs.map(input => {
 					return {
 						command: input.command,
