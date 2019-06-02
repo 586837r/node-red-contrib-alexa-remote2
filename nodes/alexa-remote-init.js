@@ -24,13 +24,19 @@ module.exports = function (RED) {
 		this.onInput = function (msg) {
 			if(!msg) msg = {}
 
-			if(msg.debug) {
+			if(msg.payload === 'debug') {
 				console.log(this);
 				return;
 			}
 
-			if(msg.stop) {
+			if(msg.payload === 'stop') {
 				this.account.stopAlexa();
+				return;
+			}
+
+			if(msg.payload === 'refresh') {
+				const callback = (err, val) => tools.nodeErrVal(this, msg, err, val);
+				this.account.refreshAlexaCookie(callback);
 				return;
 			}
 
@@ -46,13 +52,14 @@ module.exports = function (RED) {
 			this.stopBlinking(); 
 
 			switch(code) {
-				case 'init-proxy': 		this.status({shape: 'ring', fill: 'grey', text: 'starting proxy' }); break;
-				case 'init-cookie': 	this.status({shape: 'ring', fill: 'grey', text: 'init with cookie' }); break;
-				case 'init-password': 	this.status({shape: 'ring', fill: 'grey', text: 'init with password' }); break;
+				case 'init-proxy': 		this.status({shape: 'dot', fill: 'grey', text: 'starting proxy' }); break;
+				case 'init-cookie': 	this.status({shape: 'dot', fill: 'grey', text: 'init with cookie' }); break;
+				case 'init-password': 	this.status({shape: 'dot', fill: 'grey', text: 'init with password' }); break;
+				case 'refreshing': 		this.status({shape: 'dot', fill: 'blue', text: 'refreshing' }); break;
 				case 'wait-proxy': 		this.startBlinking(message); break;
-				case 'stopped':			this.status({shape: 'ring', fill: 'yellow', text: 'stopped'}); break;
+				case 'stopped':			this.status({shape: 'dot', fill: 'yellow', text: 'stopped'}); break;
 				case 'ready': 			this.status({shape: 'dot', fill: 'green', text: 'ready'}); break;
-				case 'error':			this.status({shape: 'red', fill: 'red', text: message}); break;
+				case 'error':			this.status({shape: 'dot', fill: 'red', text: message}); break;
 				default: 				this.status({shape: 'ring', fill: 'grey', text: 'uninitialized' }); break;
 			}
 		}

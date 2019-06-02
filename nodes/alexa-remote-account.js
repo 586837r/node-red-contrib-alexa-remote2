@@ -190,9 +190,24 @@ module.exports = function (RED) {
 				callback && callback(err, val);
 			});
 		}
+		this._refreshAlexaCookie = function(callback) {
+			if (this.initing) {
+				const error = new Error('Already initialising');
+				error.warning = true;
+				return callback && callback(error);
+			}
+
+			this._status('refreshing');
+			this.alexa.refreshCookie((err, val) => {
+				this.alexa.setCookie(val);
+				this._status('ready');
+				callback && callback(err, val);
+			});
+		}
 
 		this.stopAlexa = this._stopAlexa;
 		this.initAlexa = this._initAlexaFromObjectOrFileLocked;
+		this.refreshAlexaCookie = this._refreshAlexaCookie;
 
 		this.on('close', function () {
 			this.stopAlexa();

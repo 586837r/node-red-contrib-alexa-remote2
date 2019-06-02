@@ -14,7 +14,7 @@ module.exports = function (RED) {
 			setTimeout(() => this.status({ fill: "grey", shape: "dot", text: "listening" }), 2000);
 
 			this.account.alexa.addListener(this.event, val => {
-				this.status({ fill: "blue", shape: "dot", text: "event fired!" });
+				this.status({ fill: "green", shape: "dot", text: "event fired!" });
 				setTimeout(() => this.status({ fill: "grey", shape: "dot", text: "listening" }), 2000);
 				this.send({ payload: val });
 			});
@@ -25,9 +25,10 @@ module.exports = function (RED) {
 				case 'init-cookie':
 				case 'init-password':
 				case 'wait-proxy': 		this.status({shape: 'ring', fill: 'grey', text: 'initialising' }); break;
-				case 'stopped':			this.status({shape: 'ring', fill: 'yellow', text: 'stopped'}); break;
+				case 'refreshing': 		this.status({shape: 'ring', fill: 'grey', text: 'refreshing' }); break;
+				case 'stopped':			this.status({shape: 'dot', fill: 'yellow', text: 'stopped'}); break;
 				case 'ready': 			this.onReady(); break;
-				case 'error':			this.status({shape: 'red', fill: 'red', text: message}); break;
+				case 'error':			this.status({shape: 'dot', fill: 'red', text: message}); break;
 				default: 				this.status({shape: 'ring', fill: 'grey', text: 'uninitialized' }); break;
 			}
 		}
