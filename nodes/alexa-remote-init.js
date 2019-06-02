@@ -88,9 +88,8 @@ module.exports = function (RED) {
             try {
 				const msg = {}
 				const proxyRunning = node.account.status.code === 'wait-proxy';
-				console.log({status: node.account.status, running:proxyRunning});
 				if(proxyRunning) {
-					msg.stop = true;
+					msg.payload = 'stop';
 				}
 				node.onInput(msg);
                 res.sendStatus(200);

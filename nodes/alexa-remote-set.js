@@ -20,8 +20,6 @@ module.exports = function (RED) {
 			const alexa = this.account.alexa;
 			const callback = (err, val) => tools.nodeErrVal(this, msg, err, val);
 
-			console.log({device:serialOrName, target:target});
-
 			switch (target) {
 				case 'tuneIn': 			return alexa.setTunein(serialOrName, options.guideId, options.contentType, callback);
 				case 'doNotDisturb':	return alexa.setDoNotDisturb(serialOrName, options.enabled, callback);

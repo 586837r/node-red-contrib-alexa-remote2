@@ -2,7 +2,7 @@ const EventEmitter = require('events');
 const tools = require('../tools/tools.js');
 const AlexaRemote = tools.AlexaRemote;
 const fs = require('fs');
-const DEBUG = true;
+const DEBUG = false;
 
 module.exports = function (RED) {
 	function AlexaRemoteAccountNode(input) {
@@ -24,7 +24,6 @@ module.exports = function (RED) {
 				message: message || code
 			}
 			this.emitter.emit('status', code, message);
-			console.log(`STATUS: ${code} (${message})`)
 		}
 		this._stopAlexa = function () {
 			if (!this.alexa) return;
@@ -48,7 +47,6 @@ module.exports = function (RED) {
 			this.initing = false;
 		}
 		this._initAlexaFromObject = function (input, callback) {
-			console.log({fun:'fromObject', callback:callback});
 			// start from blank slate
 			this._stopAlexa();
 
@@ -97,8 +95,6 @@ module.exports = function (RED) {
 				this._status('init-proxy');
 			}
 
-			console.log({config: config, input: input});
-
 			this.alexa.init(config, (err, val) => {
 				if (err) {
 					// proxy status message is not the final callback call
@@ -121,7 +117,15 @@ module.exports = function (RED) {
 					}
 				}
 				else {
-					console.log(`CALLBACK: _initAlexaFromObject`, err);
+					if(!this.cookieFile && this.status === 'init-proxy') {
+						fs.writeFile(this.cookieFile, val, 'utf8', (err, val) => {
+							if(err) {
+								err.warning = true;
+								callback && callback(err, val);
+							}
+						})
+					}
+
 					this.initialised = true;
 					this._status('ready');
 					callback && callback(err, val);
@@ -144,15 +148,12 @@ module.exports = function (RED) {
 			});
 		}
 		this._initAlexaFromObjectOrFile = function (input, callback) {
-			console.log({fun:'fromObjectOrFile', callback:callback});
 
-			if(input.formerRegistrationData || this.authMethod !== 'proxy' || !this.cookieFile) {
-				console.log(`FORWARD: _initAlexaFromObjectOrFile NOTHING`);
+			if(input.formerRegistrationData || input.loginCookie || this.authMethod !== 'proxy' || !this.cookieFile) {
 				return this._initAlexaFromObject(input, callback);
 			}
 
 			fs.readFile(this.cookieFile, 'utf8', (err, val) => {
-				console.log(`CALLBACK: _initAlexaFromObjectOrFile`, err);
 				let obj;
 				const config = tools.assign({}, input);
 
@@ -175,8 +176,6 @@ module.exports = function (RED) {
 			})
 		}
 		this._initAlexaFromObjectOrFileLocked = function(input={}, callback) {
-			console.log({fun:'fromObjectOrFileLocked', callback:callback});
-
 			if (this.initing) {
 				const error = new Error('Already initialising');
 				error.warning = true;
@@ -185,7 +184,6 @@ module.exports = function (RED) {
 
 			this.initing = true;
 			this._initAlexaFromObjectOrFile(input, (err, val) => {
-				console.log(`CALLBACK: _initAlexaFromObjectOrFileLocked`, err);
 				this.initing = false;
 				callback && callback(err, val);
 			});

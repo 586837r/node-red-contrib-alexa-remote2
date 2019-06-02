@@ -14,7 +14,7 @@
 	</div>
 	<hr>
     <div class="form-row" id="node-config-input-device-row">
-		<label for="node-input-serialOrName_value"><i class="fa fa-circle"></i> Device</label>
+		<label for="node-input-serialOrName_value"><i class="fa fa-list"></i> Device</label>
 		<div style="display: inline-block; position: relative; width: 70%; height: 20px;">
 			<div style="position: absolute; left: 0px; right: 40px;">
 				<div>
@@ -110,8 +110,6 @@
 								const result = JSON.parse(data);
 								const devices = result.devices; 
 
-								console.log({ result: result });
-
 								select.empty();
 								devices.forEach(([serial, name]) => {
 									select.append($('<option/>').val(serial).text(name));
@@ -119,11 +117,8 @@
 								select.val(value);
 							})
 							.fail(function (res) {
-								console.log({ res: res });
-
 								try {
 									let result = JSON.parse(res.responseText);
-									console.log({ result: result });
 
 									if (typeof result.error !== 'string') throw 'oh no';
 									RED.notify(result.error, 'error');
@@ -294,7 +289,7 @@
 				}, tools.isChrome() ? 200 : 0);
 
 				selectValue.data('alexa-remote-map', elementMap);
-				console.log(elementMap);
+				//console.log(elementMap);
 			}
 			
 			let targets = {

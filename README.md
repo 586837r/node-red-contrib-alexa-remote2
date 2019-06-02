@@ -1,7 +1,7 @@
 # node-red-contrib-alexa-remote2
 
 This is a collection of node-red nodes for interacting with alexa.
-All functionality is from the great [alexa-remote2](https://www.npmjs.com/package/alexa-remote2).
+All functionality is from [alexa-remote2](https://www.npmjs.com/package/alexa-remote2).
 The goal is to expose all of [alexa-remote2](https://www.npmjs.com/package/alexa-remote2)s functionality in node-red nodes.
 
  - [Changelog](CHANGELOG.md)

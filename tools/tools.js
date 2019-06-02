@@ -113,8 +113,6 @@ module.exports = {
 		);
 	},
 	nodeErrVal: function(node, msg, err, val, text = '') {
-		console.log({errval: arguments});
-
 		// filter out "no body" because it is a false positive
 		if(!err || err.message === 'no body') {
 			msg.payload = val;

@@ -26,7 +26,7 @@
 	</div>
 	<div class="form-row">
         <label for="node-config-input-proxyPort"><i class="fa fa-ship"></i> Port</label>
-        <input type="number" id="node-config-input-proxyPort" placeholder="Required">
+        <input type="text" id="node-config-input-proxyPort" placeholder="Required">
 	</div>
 	<div class="form-row">
         <label for="node-config-input-cookieFile"><i class="fa fa-file"></i> File Path</label>
@@ -70,12 +70,28 @@
 <script type="text/x-red" data-help-name="alexa-remote-account">
 	<p>Account configuration node.</p>
 
-	<h3>Credentials</h3>
-	<p>You can either enter your <b>Cookie</b> or your <b>Email</b> and <b>Password</b>
-		to access your Account.</p>
+	<h3>Authentication Methods</h3>
+	<ul>
+		<li><b>Proxy</b>
+			<ul>
+				<li>uses a proxy to retrieve the required cookies</li>
+			</ul>
+		</li>
+		<li><b>Cookie</b>
+			<ul>
+				<li>manually enter your cookie</li>
+			</ul>
+		</li>
+	</ul>
 
 	<h3>Request Details</h3>
 	<p>The <code>Service Host</code> and <code>Page</code> will depend on your location. For example:</p>
+		<table>
+			<tr><td></td><td>Service Host</td><td>Amazon Page</td></tr>
+			<tr><td><b>USA</b></td><td>pitangui.amazon.com</td><td>amazon.com</td></tr>
+			<tr><td><b>UK</b></td><td>alexa.amazon.co.uk</td><td>amazon.co.uk</td></tr>
+			<tr><td><b>GER</b></td><td>layla.amazon.de</td><td>amazon.de</td></tr>
+		</table>
 		<ul>
 			<li>USA: <code>pitangui.amazon.com</code> and <code>amazon.com</code></li>
 			<li>UK: <code>alexa.amazon.co.uk</code> and <code>amazon.co.uk</code></li>
@@ -85,16 +101,6 @@
 		   Language may look like <code>en-US</code>, <code>en-UK</code> or <code>de-DE</code> etc.
 		</p>
 	</p>
-	<h3>Behaviour Settings</h3>
-	<p><b>Events</b> needs to be <code>on</code> to use the Alexa Remote Event node with this account.</p>
-	<p><b>Bluetooth</b> needs to be <code>on</code> to use some bluetooth related commands.</p>
-	<p><b>Init Behaviour: </b>Each Alexa Remote Account has an <code>AlexaRemote</code> instance that does all the work. It needs to be initialized before
-	using it, to generate the cookie and request the devices to resolve device names and more.</p>
-	<ul>
-		<li><b>Lazy</b><i>(default)</i> means that AlexaRemote is initialized if it hasn't yet been initialized or if an error occured.</li>
-		<li><b>Manual</b> means that only the Alexa Init node will initialize AlexaRemote.</li>
-		<li><b>Every Request</b> means that AlexaRemote is (re)initialized before every request</li>
-	</ul>
 
 	<h3>References</h3>
     <ul>
