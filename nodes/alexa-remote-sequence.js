@@ -7,8 +7,8 @@ module.exports = function (RED) {
 		tools.assign(this, ['sequenceInputs'], input);
 		tools.assignTyped(this, ['serialOrName'], input);
 		tools.assignNode(RED, this, ['account'], input);
+		tools.nodeSetupForStatusReporting(this);
 
-		this.on('close', function () { this.status({}); });
 		this.on('input', function (msg) {		
 			if(!this.account.initialised) {
 				return tools.nodeErrVal(this, msg, new Error('Account not initialised'));

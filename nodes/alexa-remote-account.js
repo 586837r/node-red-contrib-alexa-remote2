@@ -2,7 +2,7 @@ const EventEmitter = require('events');
 const tools = require('../tools/tools.js');
 const AlexaRemote = tools.AlexaRemote;
 const fs = require('fs');
-const DEBUG = false;
+const DEBUG = true;
 
 module.exports = function (RED) {
 	function AlexaRemoteAccountNode(input) {
@@ -18,6 +18,7 @@ module.exports = function (RED) {
 		this.initing = false;
 		this.status = { code: 'uninitialized', message: 'uninitialized' }
 		this.initialised = false;
+		this.initialisationType = null;
 
 		this._status = function(code, message) {
 			this.status = {
@@ -59,10 +60,12 @@ module.exports = function (RED) {
 			config.proxyOwnIp = 'localhost';
 			config.proxyLogLevel = 'warn';
 			config.amazonPageProxyLanguage = config.acceptLanguage ? config.acceptLanguage.replace('-', '_') : undefined;
+			config.cookieJustCreated = true; // otherwise it just tries forever...
 
 			switch (this.authMethod) {
 				case 'proxy':
 					config.proxyOnly = true; // optional
+					break;
 				case 'cookie':
 					tools.assign(config, ['cookie'], this.credentials);
 					break;
@@ -83,69 +86,81 @@ module.exports = function (RED) {
 
 			if(config.cookie) {
 				if(config.formerRegistrationData){
-					this._status('init-proxy');
+					this.initialisationType = 'proxy';
 				}
 				else {
-					this._status('init-cookie');
+					this.initialisationType = 'cookie';
+					
 				}
 			} 
 			else if (config.email && config.password) {
-				this._status('init-password');
+				this.initialisationType = 'password';
 			}
 			else {
-				this._status('init-proxy');
+				this.initialisationType = 'proxy';
 			}
 
+			switch(this.initialisationType) {
+				case 'proxy': this._status('init-proxy'); break;
+				case 'cookie': this._status('init-cookie'); break;
+				case 'password': this._status('init-password'); break;
+			}
+
+			if(DEBUG) console.log({config:config});
+
 			this.alexa.init(config, (err, val) => {
-				if (err) {
-					// proxy status message is not the final callback call
-					const begin = `You can try to get the cookie manually by opening http://`;
-					const end = `/ with your browser.`;
-					const beginIdx = err.message.indexOf(begin);
-					const endIdx = err.message.indexOf(end);
+				if(DEBUG) console.log({err:err, val:val});
+
+				const afterInitCallback = (err, val) => {
+					if (err) {
+						// proxy status message is not the final callback call
+						const begin = `You can try to get the cookie manually by opening http://`;
+						const end = `/ with your browser.`;
+						const beginIdx = err.message.indexOf(begin);
+						const endIdx = err.message.indexOf(end);
+						
+						if(beginIdx !== -1 && endIdx !== -1) {
+							const url = err.message.substring(begin.length, endIdx);
+							const text = `open ${url} in your browser`;
 					
-					if(beginIdx !== -1 && endIdx !== -1) {
-						const url = err.message.substring(begin.length, endIdx);
-						const text = `open ${url} in your browser`;
-				
-						this._status('wait-proxy', text);
-						// we dont call callback
+							this._status('wait-proxy', text);
+							// we dont call callback
+						}
+						else {
+							this.initialised = false;
+							this._status('error', err.message);
+							callback && callback(err, val);
+						}
 					}
 					else {
-						this.initialised = false;
-						this._status('error', err.message);
+						if(!this.cookieFile && config.authMethod === 'proxy') {
+							fs.writeFile(this.cookieFile, val, 'utf8', (err, val) => {
+								if(err) {
+									err.warning = true;
+									callback && callback(err, val);
+								}
+							})
+						}
+	
+						this.initialised = true;
+						this._status('ready');
 						callback && callback(err, val);
 					}
 				}
-				else {
-					if(!this.cookieFile && this.status === 'init-proxy') {
-						fs.writeFile(this.cookieFile, val, 'utf8', (err, val) => {
-							if(err) {
-								err.warning = true;
-								callback && callback(err, val);
-							}
-						})
-					}
 
-					this.initialised = true;
-					this._status('ready');
-					callback && callback(err, val);
+				if(!err) {
+					// alexa-remote returns no err on authentication fail, so check again...
+					this.alexa.checkAuthentication((authenticated) => {
+						if (!authenticated) {
+							err = new Error('Authentication failed');
+						}
+
+						afterInitCallback(err);
+					});
 				}
-
-				
-
-				// if (err) {
-				// 	callback && callback(err, val);
-				// 	return;
-				// }
-
-				// // alexa-remote returns no err on authentication fail, so check again
-				// this.alexa.checkAuthentication((authenticated) => {
-				// 	if (!authenticated) {
-				// 		err = new Error('Authentication failed');
-				// 	}
-				// 	callback && callback(err, val);
-				// });
+				else {
+					afterInitCallback(err, val);
+				}
 			});
 		}
 		this._initAlexaFromObjectOrFile = function (input, callback) {
@@ -210,13 +225,8 @@ module.exports = function (RED) {
 
 		this.on('close', function () {
 			this.stopAlexa();
-		})
-
+		});
 		
-		console.log('\n-----------------------------------------------------------------\n');
-		console.log('\nACCOUNT INIT CALLED\n');
-		console.log('\n-----------------------------------------------------------------\n');
-
 		if(this.autoInit) {
 			this.initAlexa(undefined, (err, val) => {
 				if(err) {
@@ -250,7 +260,7 @@ module.exports = function (RED) {
 
 		if(!account.initialised) {
 			res.statusCode = 500;
-			result.error = 'Account not initialised!'
+			result.error = 'Account not initialised!';
 			return res.end(JSON.stringify(result));
 		}
 

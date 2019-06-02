@@ -16,15 +16,21 @@
 		for the account. In all cases it can be used to check if initialization alone is successful.
 	</p>
 
+	<h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt>payload<span class="property-type">any</span></dt>
+		<dd>"stop" to stop the initialisation</dd>
+		<dd>"refresh" refresh the cookie (only in proxy authentification mode)</dd>
+		<dd>Any other payload will initialise the account. 
+			If authentification mode is proxy, you can send 
+			the output of the last initialisation for automatic initialisation.</dd>
+    </dl>
+
 	<h3>Outputs</h3>
     <ol class="node-ports">
 		<dl class="message-properties">
 			<dt>payload <span class="property-type">Object</span></dt>
 			<dd>the standard output, is undefined on success</dd>
-		</dl>
-		<dl class="message-properties">
-			<dt>error <span class="property-type">Object</span></dt>
-			<dd>the standard error output, is undefined on success</dd>
 		</dl>
 	</ol>
 	
@@ -53,11 +59,12 @@
 		labelStyle: function () {
 			return this.name ? "node_label_italic" : "";
 		},
+		/*
 		button: {
             enabled: function() {
-                return !this.changed
-			},
-			/*
+                return !this.changed;
+			}
+			
             onclick: function() {
                 if (this.changed) {
                     return RED.notify(RED._("notification.warning", {message:RED._("notification.warnings.undeployedChanges")}),"warning");
@@ -81,7 +88,7 @@
                     }
                 }); 
 			}
-			*/
         }
+		*/
 	});
 </script>

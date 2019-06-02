@@ -47,13 +47,13 @@
 			<option value="off">Off</option>
 		</select>
 	</div>
-	<div class="form-row">
+	<!--<div class="form-row">
         <label for="node-config-input-bluetooth"><i class="fa fa-bluetooth"></i> Bluetooth</label>
 		<select id="node-config-input-bluetooth" style="width: 70%;">
 			<option value="on">On</option>
 			<option value="off">Off</option>
 		</select>
-	</div>
+	</div>-->
 	<hr>
     <div class="form-row">
         <label for="node-config-input-alexaServiceHost"><i class="fa fa-amazon"></i> Service Host</label>
@@ -74,39 +74,31 @@
 </script>
 
 <script type="text/x-red" data-help-name="alexa-remote-account">
+	<style>
+		table, th, td {
+			border-collapse: collapse;
+			border: 1px solid rgb(204, 204, 204);
+			padding: 4px 8px;
+		}
+	</style>
 	<p>Account configuration node.</p>
 
-	<h3>Authentication Methods</h3>
-	<ul>
-		<li><b>Proxy</b>
-			<ul>
-				<li>uses a proxy to retrieve the required cookies</li>
-			</ul>
-		</li>
-		<li><b>Cookie</b>
-			<ul>
-				<li>manually enter your cookie</li>
-			</ul>
-		</li>
-	</ul>
-
 	<h3>Request Details</h3>
-	<p>The <code>Service Host</code> and <code>Page</code> will depend on your location. For example:</p>
-		<table>
-			<tr><td></td><td>Service Host</td><td>Amazon Page</td></tr>
-			<tr><td><b>USA</b></td><td>pitangui.amazon.com</td><td>amazon.com</td></tr>
-			<tr><td><b>UK</b></td><td>alexa.amazon.co.uk</td><td>amazon.co.uk</td></tr>
-			<tr><td><b>GER</b></td><td>layla.amazon.de</td><td>amazon.de</td></tr>
-		</table>
-		<ul>
-			<li>USA: <code>pitangui.amazon.com</code> and <code>amazon.com</code></li>
-			<li>UK: <code>alexa.amazon.co.uk</code> and <code>amazon.co.uk</code></li>
-			<li>Germany: <code>layla.amazon.de</code> and <code>amazon.de</code></li>
-		</ul>
-		<p>You can optionally define the request Accept-<b>Language</b> Header and the <b>User Agent</b>.
-		   Language may look like <code>en-US</code>, <code>en-UK</code> or <code>de-DE</code> etc.
-		</p>
-	</p>
+	<ul>
+		<li>
+			<p>The <b>Service Host</b> and <b>Page</b> will depend on your location. For example:</p>
+			<table>
+				<tr><td></td><td><b>Service Host</b></td><td><b>Amazon Page</b></td></tr>
+				<tr><td><b>USA</b></td><td>pitangui.amazon.com</td><td>amazon.com</td></tr>
+				<tr><td><b>UK</b></td><td>alexa.amazon.co.uk</td><td>amazon.co.uk</td></tr>
+				<tr><td><b>GER</b></td><td>layla.amazon.de</td><td>amazon.de</td></tr>
+			</table>
+		</li>
+		<li>
+			You can optionally define the request Accept-<b>Language</b> Header and the <b>User Agent</b>.
+			Language may look like <b>en-US</b>, <b>en-UK</b> or <b>de-DE</b> etc.
+	 </li>		
+	</ul>
 
 	<h3>References</h3>
     <ul>
@@ -133,7 +125,7 @@
             acceptLanguage:     { required: true,  value: 'en-US' },
 			amazonPage:         { required: true,  value: 'amazon.com' },
 			useWsMqtt:			{ required: true,  value: 'on' },
-			bluetooth: 			{ required: true,  value: 'on' },
+			bluetooth: 			{ required: true,  value: 'off' },
 			autoInit:			{ required: true,  value: 'on' }
 		},
 		paletteLabel: 'Alexa Account',

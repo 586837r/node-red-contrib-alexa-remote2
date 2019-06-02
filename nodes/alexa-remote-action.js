@@ -7,9 +7,8 @@ module.exports = function (RED) {
 		tools.assignTyped(this, ['target', 'serialOrName'], input);
 		tools.assign(this, ['options'], input);
 		tools.assignNode(RED, this, ['account'], input);
-		// console.log(node.target_value, node.options);
+		tools.nodeSetupForStatusReporting(this);
 
-		this.on('close', function (removed, done) { this.status({}); done(); });
 		this.on('input', function (msg) {
 			if(!this.account.initialised) {
 				return tools.nodeErrVal(this, msg, new Error('Account not initialised'));

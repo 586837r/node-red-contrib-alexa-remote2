@@ -168,5 +168,54 @@ module.exports = {
 
 			alexa.sendSequenceCommand(serialOrName, command, callback);
 		});
+	},
+	nodeSetupForStatusReporting: function(node) {
+		
+		node.blinkState = false;
+
+		node._stopBlinking = function() {
+			if(this.blinkInterval) {
+				clearInterval(this.blinkInterval);
+				this.blinkInterval = null;
+			}
+			this.status({}); 
+		}
+		node._startBlinking = function(a, b) {
+			this.blinkInterval = setInterval(() => {
+				this.blinkState = !this.blinkState;
+				this.status(this.blinkState ? a : b);
+			}, 300);
+		}
+
+		node._onStatus = (code, message) => {
+			node._stopBlinking(); 
+			const text = typeof message === 'string' ? this.trim(message, 32) : '';
+
+			switch(code) {
+				case 'init-proxy': 		node.status({shape: 'dot', fill: 'grey', text: 'init with proxy' }); break;
+				case 'init-cookie': 	node.status({shape: 'dot', fill: 'grey', text: 'init with cookie' }); break;
+				case 'init-password': 	node.status({shape: 'dot', fill: 'grey', text: 'init with password' }); break;
+				case 'refreshing': 		node.status({shape: 'dot', fill: 'blue', text: 'refreshing' }); break;
+				case 'wait-proxy': 		node._startBlinking(
+					{ shape: 'dot', fill: 'blue', text: text }, 
+					{ shape: 'dot', fill: 'grey', text: text }); break;
+				case 'stopped':			node.status({shape: 'dot', fill: 'yellow', text: 'stopped'}); break;
+				case 'ready': 			node.status({shape: 'dot', fill: 'green', text: 'ready'}); break;
+				case 'error':			node.status({shape: 'dot', fill: 'red', text: message}); break;
+				default: 				node.status({shape: 'ring', fill: 'grey', text: 'uninitialized' }); break;
+			}
+		}
+
+		node.account.emitter.removeListener('status', node._onStatus);
+		node.account.emitter.addListener('status', node._onStatus);
+
+		// initial status update
+		const {code, message} = node.account.status;
+		node._onStatus(code, message);
+
+		node.on('close', function () { 
+			node.account.emitter.removeListener('status', node._onStatus);
+			this._stopBlinking();
+		});
 	}
 };
