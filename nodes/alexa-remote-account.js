@@ -2,7 +2,7 @@ const EventEmitter = require('events');
 const tools = require('../tools/tools.js');
 const AlexaRemote = tools.AlexaRemote;
 const fs = require('fs');
-const DEBUG = true;
+const DEBUG = false;
 
 module.exports = function (RED) {
 	function AlexaRemoteAccountNode(input) {
@@ -83,8 +83,6 @@ module.exports = function (RED) {
 			if(!config.cookie && config.formerRegistrationData) {
 				config.cookie = config.formerRegistrationData.localCookie;
 			}
-
-			console.log({that:this, config:config});
 
 			if(config.cookie) {
 				if(config.formerRegistrationData){

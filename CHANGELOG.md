@@ -1,3 +1,5 @@
+- **2.2.2**
+  - fix language being ignored
 - **2.2.1**
   - fix display bugs (device input, this ip)
   - update and improve documentation
