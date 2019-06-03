@@ -10,7 +10,6 @@ module.exports = function (RED) {
 
 		tools.assign(this, ['authMethod', 'proxyOwnIp', 'proxyPort', 'cookieFile', 'alexaServiceHost', 'amazonPage', 'acceptLanguage', 'userAgent'], input);
 		this.useWsMqtt = input.useWsMqtt === 'on';
-		this.bluetooth = input.bluetooth === 'on';
 		this.autoInit  = input.autoInit  === 'on';
 
 		this.alexa = new AlexaRemote();
@@ -53,12 +52,13 @@ module.exports = function (RED) {
 			this._stopAlexa();
 
 			const config = {}
-			tools.assign(config, ['proxyOwnIp', 'proxyPort', 'alexaServiceHost', 'amazonPage', 'acceptLanguage', 'userAgent', 'useWsMqtt', 'bluetooth'], this);
+			tools.assign(config, ['proxyOwnIp', 'proxyPort', 'alexaServiceHost', 'amazonPage', 'acceptLanguage', 'userAgent', 'useWsMqtt'], this);
 
 			config.logger = DEBUG ? console.log : undefined;
 			config.refreshCookieInterval = 0;
 			config.proxyLogLevel = 'warn';
 			config.cookieJustCreated = true; // otherwise it just tries forever...
+			config.bluetooth = false;
 
 			switch (this.authMethod) {
 				case 'proxy':
