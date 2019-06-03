@@ -22,7 +22,7 @@ module.exports = function (RED) {
 			const callback = (err, val) => tools.nodeErrVal(this, msg, err, val);
 
 			switch (target) {
-				case 'devices': 								return alexa.getDevices(callback);
+				case 'devices': 								return options.cached ? callback(null, Object.values(alexa.serialNumbers)) : alexa.getDevices(callback);
 				case 'cards':									return alexa.getCards(options.limit, options.beforeCreationTime, callback);
 				case 'media':									return alexa.getMedia(serialOrName, callback);
 				case 'playerInfo':								return alexa.getPlayerInfo(serialOrName, callback);
