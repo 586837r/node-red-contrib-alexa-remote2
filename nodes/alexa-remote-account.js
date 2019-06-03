@@ -2,13 +2,13 @@ const EventEmitter = require('events');
 const tools = require('../tools/tools.js');
 const AlexaRemote = tools.AlexaRemote;
 const fs = require('fs');
-const DEBUG = false;
+const DEBUG = true;
 
 module.exports = function (RED) {
 	function AlexaRemoteAccountNode(input) {
 		RED.nodes.createNode(this, input);
 
-		tools.assign(this, ['authMethod', 'proxyOwnIp', 'proxyPort', 'cookieFile', 'alexaServiceHost', 'userAgent', 'amazonPage'], input);
+		tools.assign(this, ['authMethod', 'proxyOwnIp', 'proxyPort', 'cookieFile', 'alexaServiceHost', 'amazonPage', 'acceptLanguage', 'userAgent'], input);
 		this.useWsMqtt = input.useWsMqtt === 'on';
 		this.bluetooth = input.bluetooth === 'on';
 		this.autoInit  = input.autoInit  === 'on';
@@ -53,12 +53,11 @@ module.exports = function (RED) {
 			this._stopAlexa();
 
 			const config = {}
-			tools.assign(config, ['proxyOwnIp', 'proxyPort', 'alexaServiceHost', 'userAgent', 'amazonPage', 'useWsMqtt', 'bluetooth'], this);
+			tools.assign(config, ['proxyOwnIp', 'proxyPort', 'alexaServiceHost', 'amazonPage', 'acceptLanguage', 'userAgent', 'useWsMqtt', 'bluetooth'], this);
 
 			config.logger = DEBUG ? console.log : undefined;
 			config.refreshCookieInterval = 0;
 			config.proxyLogLevel = 'warn';
-			config.amazonPageProxyLanguage = config.acceptLanguage ? config.acceptLanguage.replace('-', '_') : undefined;
 			config.cookieJustCreated = true; // otherwise it just tries forever...
 
 			switch (this.authMethod) {
@@ -77,11 +76,15 @@ module.exports = function (RED) {
 			if(input.loginCookie) {
 				input = { formerRegistrationData: input };
 			}
+
 			if (input) tools.assign(config, input);
+			if (!config.amazonPageProxyLanguage) config.amazonPageProxyLanguage = config.acceptLanguage ? config.acceptLanguage.replace('-', '_') : undefined;
 
 			if(!config.cookie && config.formerRegistrationData) {
 				config.cookie = config.formerRegistrationData.localCookie;
 			}
+
+			console.log({that:this, config:config});
 
 			if(config.cookie) {
 				if(config.formerRegistrationData){

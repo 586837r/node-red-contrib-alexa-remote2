@@ -224,9 +224,9 @@
 			proxyPort:			{ required: true,  value: 3456, validate: x => 0 <= Number(x) && Number(x) <= 65535 },
 			cookieFile:			{ required: false, value: ''},
             alexaServiceHost:   { required: true,  value: 'pitangui.amazon.com' },
-            userAgent:          { required: false, value: '' },
-            acceptLanguage:     { required: false,  value: 'en-US' },
 			amazonPage:         { required: true,  value: 'amazon.com' },
+            acceptLanguage:     { required: false,  value: 'en-US' },
+            userAgent:          { required: false, value: '' },
 			useWsMqtt:			{ required: true,  value: 'on' },
 			bluetooth: 			{ required: true,  value: 'off' },
 			autoInit:			{ required: true,  value: 'on' }
