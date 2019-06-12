@@ -270,7 +270,7 @@ module.exports = function (RED) {
 			result.devices = Object.entries(deviceBySerial).map(([k,v]) => [k, v.accountName]);
 			res.end(JSON.stringify(result));
 		}
-		catch {
+		catch (e) {
 			res.statusCode = 500;
 			result.error = 'Devices were not initialised?';
 			res.end(JSON.stringify(result));

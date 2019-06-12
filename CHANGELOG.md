@@ -1,3 +1,5 @@
+- **2.2.3**
+  - fix syntax error in node v8 (#23) 
 - **2.2.2**
   - fix language being ignored
 - **2.2.1**
