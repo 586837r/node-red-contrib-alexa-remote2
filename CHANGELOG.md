@@ -1,3 +1,5 @@
+- **2.3.0**
+  - update dependency to fix 'no csrf' error
 - **2.2.3**
   - fix syntax error in node v8 (#23) 
 - **2.2.2**
