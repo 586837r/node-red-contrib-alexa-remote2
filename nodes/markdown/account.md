@@ -1,4 +1,4 @@
-Alexa ccount configuration node. 
+Alexa Account configuration node. 
 
 ---
 
@@ -8,6 +8,7 @@ Alexa ccount configuration node.
      - automatically captures your cookies using a proxy
      - enables cookie refreshing by sending a `msg.payload` of `refresh`
      - can setup persistant automatic initialisation with **File Path** and a refresh every few days
+     - **File Path** to a text file like (like `alexa-cookie.json` or `~/alexa/cookie.json`)
    - **Cookie**
      - login with manually entering your cookie
      - [How do i get my cookie?](get_cookie.md)

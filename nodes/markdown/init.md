@@ -1,4 +1,5 @@
 Enables control over Account Node intialisation.
+The associated Account Node should have *Auto Init* turned off to use this node.
 
 ---
 

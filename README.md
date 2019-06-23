@@ -1,5 +1,7 @@
 # node-red-contrib-alexa-remote2
 
+![npm](https://img.shields.io/npm/v/node-red-contrib-alexa-remote2.svg) ![downloads](https://img.shields.io/npm/dt/node-red-contrib-alexa-remote2.svg)
+
 This is a collection of node-red nodes for interacting with alexa.
 All functionality is from [alexa-remote2](https://www.npmjs.com/package/alexa-remote2).
 The goal is to expose all of [alexa-remote2](https://www.npmjs.com/package/alexa-remote2)s functionality in node-red nodes.
@@ -33,7 +35,7 @@ The goal is to expose all of [alexa-remote2](https://www.npmjs.com/package/alexa
    
 4. Set **This IP** to the ip of your Node-RED server
 5. Enter a **File Path** to save the authentication result so following authentications will be 
-automatic. 
+automatic (like `alexa-cookie.json` or `~/alexa/cookie.json`). 
 6. *Add* the new Account.
 7. Deploy
 8. Follow the url you see in the node status
