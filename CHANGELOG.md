@@ -1,3 +1,5 @@
+- **2.3.1**
+  - update depencency alexa-remote2 to 2.3.2 to fix ssml
 - **2.3.0**
   - update dependency to fix 'no csrf' error
 - **2.2.3**
