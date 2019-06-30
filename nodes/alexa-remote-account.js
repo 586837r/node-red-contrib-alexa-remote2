@@ -107,60 +107,44 @@ module.exports = function (RED) {
 			}
 
 			this.alexa.init(config, (err, val) => {
-				const afterInitCallback = (err, val) => {
-					if (err) {
-						// proxy status message is not the final callback call
-						const begin = `You can try to get the cookie manually by opening http://`;
-						const end = `/ with your browser.`;
-						const beginIdx = err.message.indexOf(begin);
-						const endIdx = err.message.indexOf(end);
-						
-						if(beginIdx !== -1 && endIdx !== -1) {
-							const url = err.message.substring(begin.length, endIdx);
-							const text = `open ${url} in your browser`;
+				if (err) {
+					// proxy status message is not the final callback call
+					const begin = `You can try to get the cookie manually by opening http://`;
+					const end = `/ with your browser.`;
+					const beginIdx = err.message.indexOf(begin);
+					const endIdx = err.message.indexOf(end);
 					
-							this.warn(text);
-							this._status('wait-proxy', text);
-							// we dont call callback
-						}
-						else {
-							this.initialised = false;
-							this._status('error', err.message);
-							callback && callback(err, val);
-						}
+					if(beginIdx !== -1 && endIdx !== -1) {
+						const url = err.message.substring(begin.length, endIdx);
+						const text = `open ${url} in your browser`;
+				
+						this.warn(text);
+						this._status('wait-proxy', text);
+						// we dont call callback
 					}
 					else {
-						if(this.cookieFile && this.authMethod === 'proxy') {
-							const options = this.alexa._options;
-							const regData = options && options.formerRegistrationData;
-							const string = JSON.stringify(regData);
-
-							fs.writeFile(this.cookieFile, string, 'utf8', (err, val) => {
-								if(err) {
-									err.warning = true;
-									callback && callback(err, val);
-								}
-							})
-						}
-	
-						this.initialised = true;
-						this._status('ready');
+						this.initialised = false;
+						this._status('error', err.message);
 						callback && callback(err, val);
 					}
 				}
-
-				if(!err) {
-					// alexa-remote returns no err on authentication fail, so check again...
-					this.alexa.checkAuthentication((authenticated) => {
-						if (!authenticated) {
-							err = new Error('Authentication failed');
-						}
-
-						afterInitCallback(err, val);
-					});
-				}
 				else {
-					afterInitCallback(err, val);
+					if(this.cookieFile && this.authMethod === 'proxy') {
+						const options = this.alexa._options;
+						const regData = options && options.formerRegistrationData;
+						const string = JSON.stringify(regData);
+
+						fs.writeFile(this.cookieFile, string, 'utf8', (err, val) => {
+							if(err) {
+								err.warning = true;
+								callback && callback(err, val);
+							}
+						})
+					}
+
+					this.initialised = true;
+					this._status('ready');
+					callback && callback(err, val);
 				}
 			});
 		}
