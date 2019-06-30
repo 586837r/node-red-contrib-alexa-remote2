@@ -19,6 +19,7 @@ module.exports = function (RED) {
 			this.status({ fill: "yellow", shape: "dot", text: "starting listening" });
 			setTimeout(() => this.status({ fill: "grey", shape: "dot", text: "listening" }), 2000);
 
+			this.account.alexa.removeListener(this.event, this.onAlexaEvent);
 			this.account.alexa.addListener(this.event, this.onAlexaEvent);
 		}
 

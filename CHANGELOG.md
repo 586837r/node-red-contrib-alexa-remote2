@@ -1,5 +1,13 @@
+
+- **2.3.2**
+  - update dependency alexa-remote2 to 2.3.4
+    - better error reporting on authentication check
+    - fixes potential error on event "Media Progress Change"
+  - add missing event "Media Progress Change"
+  - improve event node label
 - **2.3.1**
-  - update depencency alexa-remote2 to 2.3.2 to fix ssml
+  - update depencency alexa-remote2 to 2.3.2
+    - fix ssml
 - **2.3.0**
   - update dependency to fix 'no csrf' error
 - **2.2.3**

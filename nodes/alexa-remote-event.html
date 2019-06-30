@@ -9,21 +9,22 @@
 	</div>
 	<div class="form-row">
 		<label for="node-input-event"><i class="fa fa-sort"></i> Command</label>
-		<select id="node-input-event">
+		<select id="node-input-event" style="width: 70%">
 			<option value="ws-disconnect"				>Disconnect					</option>
 			<option value="ws-error"					>Error						</option>
 			<option value="ws-connect"					>Connect					</option>
+			<option value="ws-unknown-message"			>Unknown Message			</option>
 			<option value="ws-device-connection-change"	>Device Connection Change	</option>
 			<option value="ws-bluetooth-state-change"	>Bluetooth State Change		</option>
 			<option value="ws-audio-player-state-change">Audioplayer State Change	</option>
 			<option value="ws-media-queue-change"		>Media Queue Change			</option>
 			<option value="ws-media-change"				>Media Change				</option>
+			<option value="ws-media-progress-change"	>Media Progress Change 		</option>
 			<option value="ws-volume-change"			>Volume Change				</option>
 			<option value="ws-content-focus-change"		>Content Focus Change		</option>
 			<option value="ws-equilizer-state-change"	>Equalizer State Change		</option>	
 			<option value="ws-notification-change"		>Notification Change		</option>	
 			<option value="ws-device-activity"			>Device Activity			</option>	
-			<option value="ws-unknown-message"			>Unknown Message			</option>
 			<option value="ws-unknown-command"			>Unknown Command			</option>	
 		</select>
 	</div>
@@ -57,14 +58,20 @@
 		defaults: {
 			name: { value: '' },
 			account: { value: '', type: 'alexa-remote-account', required: true },
-			event: { value: 'ws-device-activity' }
+			event: { value: 'ws-device-activity', required: true }
 		},
 		inputs: 0,
 		outputs: 1,
 		icon: 'alexa-remote-icon.png',
 		paletteLabel: 'Alexa Event',
 		label: function () {
-			return this.name || ("Alexa Event " + this.event.slice(3));
+            function keyToLabel(str) {
+                const match = str.match(/[A-Z]?[^A-Z_-\s]+/g);
+                if(match) str = match.map(s => s[0].toUpperCase() + s.slice(1)).join(' ');
+                return str;
+			}
+			
+			return this.name || `On ${keyToLabel(this.event.slice(3))}`;
 		},
 		labelStyle: function () {
 			return this.name ? "node_label_italic" : "";
