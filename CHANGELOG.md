@@ -1,4 +1,8 @@
-
+- **2.3.3**
+  - update dependency alexa-remote2 to 2.3.5
+    - fix special case on authentication check
+  - fix event node memory leak 
+  - set reasonable event max listener count
 - **2.3.2**
   - update dependency alexa-remote2 to 2.3.4
     - better error reporting on authentication check

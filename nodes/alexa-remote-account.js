@@ -12,8 +12,8 @@ module.exports = function (RED) {
 		this.useWsMqtt = input.useWsMqtt === 'on';
 		this.autoInit  = input.autoInit  === 'on';
 
-		this.alexa = new AlexaRemote();
-		this.emitter = new EventEmitter();
+		this.alexa = new AlexaRemote().setMaxListeners(32);
+		this.emitter = new EventEmitter().setMaxListeners(64);
 		this.initing = false;
 		this.status = { code: 'uninitialized', message: 'uninitialized' }
 		this.initialised = false;
@@ -43,7 +43,7 @@ module.exports = function (RED) {
 			this.alexa.stop();
 			
 			this._status('stopped')
-			this.alexa = new AlexaRemote();
+			this.alexa = new AlexaRemote().setMaxListeners(32);
 
 			this.initing = false;
 		}

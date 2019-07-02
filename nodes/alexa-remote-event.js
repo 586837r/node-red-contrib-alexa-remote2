@@ -35,6 +35,7 @@ module.exports = function (RED) {
 		}
 
 		this.on('close', function() {
+			this.account.emitter.removeListener('status', this.onStatus);
 			this.account.alexa.removeListener(this.event, this.onAlexaEvent);
 		})
 	}
