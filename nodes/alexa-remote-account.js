@@ -132,7 +132,7 @@ module.exports = function (RED) {
 					this.alexa.checkAuthentication((authenticated, err) => {
 						if(err || !authenticated) {
 							if(!err) err = new Error('Authentication failed.')
-							else err.message = `Authentication failed: ${err.message}`;
+							else err.message = `Authentication failed (${err.message})`;
 							this.initialised = false;
 							this._status('error', err.message);
 							return callback && callback(err, {authenticated:authenticated});
@@ -161,7 +161,10 @@ module.exports = function (RED) {
 			if(this.initialisationType === 'proxy') {
 				tools.portInUseAsync(this.proxyPort)
 					.then(() => this.alexa.init(config, alexaInitCallback))
-					.catch((err) => callback && callback(err));
+					.catch((err) => {
+						err.message = `Port ${this.proxyPort} already in use (${err.message})`;
+						callback && callback(err);
+					});
 			}
 			else {
 				this.alexa.init(config, alexaInitCallback);
