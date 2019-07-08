@@ -129,22 +129,32 @@ module.exports = function (RED) {
 					}
 				}
 				else {
-					if(this.cookieFile && this.authMethod === 'proxy') {
-						const options = this.alexa._options;
-						const regData = options && options.formerRegistrationData;
-						const string = JSON.stringify(regData);
+					this.alexa.checkAuthentication((authenticated, err) => {
+						if(err || !authenticated) {
+							if(!err) err = new Error('Authentication failed.')
+							else err.message = `Authentication failed: ${err.message}`;
+							this.initialised = false;
+							this._status('error', err.message);
+							return callback && callback(err, {authenticated:authenticated});
+						}
 
-						fs.writeFile(this.cookieFile, string, 'utf8', (err, val) => {
-							if(err) {
-								err.warning = true;
-								callback && callback(err, val);
-							}
-						})
-					}
-
-					this.initialised = true;
-					this._status('ready');
-					callback && callback(err, val);
+						if(this.cookieFile && this.authMethod === 'proxy') {
+							const options = this.alexa._options;
+							const regData = options && options.formerRegistrationData;
+							const string = JSON.stringify(regData);
+	
+							fs.writeFile(this.cookieFile, string, 'utf8', (err, val) => {
+								if(err) {
+									err.warning = true;
+									callback && callback(err, val);
+								}
+							})
+						}
+	
+						this.initialised = true;
+						this._status('ready');
+						callback && callback(err, val);
+					});
 				}
 			}
 
