@@ -106,7 +106,7 @@ module.exports = function (RED) {
 				case 'password': this._status('init-password'); break;
 			}
 
-			this.alexa.init(config, (err, val) => {
+			const alexaInitCallback = (err, val) => {
 				if (err) {
 					// proxy status message is not the final callback call
 					const begin = `You can try to get the cookie manually by opening http://`;
@@ -146,7 +146,16 @@ module.exports = function (RED) {
 					this._status('ready');
 					callback && callback(err, val);
 				}
-			});
+			}
+
+			if(this.initialisationType === 'proxy') {
+				tools.portInUseAsync(this.proxyPort)
+					.then(() => this.alexa.init(config, alexaInitCallback))
+					.catch((err) => callback && callback(err));
+			}
+			else {
+				this.alexa.init(config, alexaInitCallback);
+			}			
 		}
 		this._initAlexaFromObjectOrFile = function (input, callback) {
 

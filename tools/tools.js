@@ -1,4 +1,5 @@
 const AlexaRemoteBase = require('alexa-remote2');
+const net = require('net');
 
 function requireUncached(mod) {
 	delete require.cache[require.resolve(mod)];
@@ -37,6 +38,22 @@ module.exports = {
 			//console.log(ex);
 		}
 		return obj;
+	},
+	portInUseAsync: async function(port) {
+		return new Promise((resolve, reject) => {
+			const server = net.createServer((socket) => {
+				socket.write('Port In Use Test\r\n');
+				socket.pipe(socket);
+			});
+			server.on('error', (err) => {
+				reject(err)
+			});
+			server.on('listening', () => {
+				server.close();
+				resolve();
+			});
+			server.listen(port);
+		});
 	},
 	// assign properties of source objects to a destination object
 	// example: 
