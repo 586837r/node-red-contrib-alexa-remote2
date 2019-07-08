@@ -1,3 +1,8 @@
+- **2.3.4**
+  - update depencency alexa-remote2 to 2.3.7
+    - fix special case on authentication check
+  - fix crash on EADDRINUSE
+  - fix "success" status on authentication error
 - **2.3.3**
   - update dependency alexa-remote2 to 2.3.5
     - fix special case on authentication check
