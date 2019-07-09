@@ -1,3 +1,5 @@
+- **2.3.5**
+  - fix cookie refresh causing 'no JSON' error
 - **2.3.4**
   - update depencency alexa-remote2 to 2.3.7
     - fix special case on authentication check
