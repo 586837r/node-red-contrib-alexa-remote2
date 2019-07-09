@@ -30,6 +30,8 @@ module.exports = function (RED) {
 			if (!this.alexa) return;
 
 			if (this.alexa.alexaWsMqtt) {
+				// suppress crash
+				this.alexa.alexaWsMqtt.on('error', (err) => console.log(err));
 				this.alexa.alexaWsMqtt.removeAllListeners();
 			}
 			if (this.alexa.alexaCookie) {
@@ -55,7 +57,8 @@ module.exports = function (RED) {
 			tools.assign(config, ['proxyOwnIp', 'proxyPort', 'alexaServiceHost', 'amazonPage', 'acceptLanguage', 'userAgent', 'useWsMqtt'], this);
 
 			config.logger = DEBUG ? console.log : undefined;
-			config.refreshCookieInterval = 0;
+			config.refreshCookieInterval = 0; // wrong name
+			config.cookieRefreshTimeout = 0;
 			config.proxyLogLevel = 'warn';
 			config.cookieJustCreated = true; // otherwise it just tries forever...
 			config.bluetooth = false;
@@ -217,12 +220,24 @@ module.exports = function (RED) {
 				error.warning = true;
 				return callback && callback(error);
 			}
+	
+			if(this.status.code !== 'ready') {
+				const error = new Error('Not initialised');
+				error.warning = true;
+				return callback && callback(error);
+			}
 
-			this._status('refreshing cookie');
-			this.alexa.refreshCookie((err, val) => {
-				this.alexa.setCookie(val);
-				this._status('ready');
-				callback && callback(err, val);
+			this._status('refresh');
+			this.alexa._options.cookie = this.alexa.cookieData;
+			delete this.alexa._options.csrf;
+			this.alexa.init(this.alexa._options, (err, val) => {
+				if(err) {
+					this._status('error', 'Refreshing Cookie failed!');
+					return callback && callback(err, val);
+				}
+
+				this._status('ready')
+				return callback && callback(err, val);
 			});
 		}
 

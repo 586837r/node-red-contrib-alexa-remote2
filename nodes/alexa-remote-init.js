@@ -21,8 +21,11 @@ module.exports = function (RED) {
 			}
 
 			if(msg.payload === 'refresh') {
-				const callback = (err, val) => tools.nodeErrVal(this, msg, err, val);
-				this.account.refreshAlexaCookie(callback);
+				this.account.refreshAlexaCookie((err) => {
+					const options = this.account.alexa._options;
+					const regData = options && options.formerRegistrationData;
+					tools.nodeErrVal(this, msg, err, regData);
+				});
 				return;
 			}
 

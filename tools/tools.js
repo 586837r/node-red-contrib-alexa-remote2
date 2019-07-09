@@ -212,7 +212,7 @@ module.exports = {
 				case 'init-proxy': 		node.status({shape: 'dot', fill: 'grey', text: 'init with proxy' }); break;
 				case 'init-cookie': 	node.status({shape: 'dot', fill: 'grey', text: 'init with cookie' }); break;
 				case 'init-password': 	node.status({shape: 'dot', fill: 'grey', text: 'init with password' }); break;
-				case 'refreshing': 		node.status({shape: 'dot', fill: 'blue', text: 'refreshing' }); break;
+				case 'refresh': 		node.status({shape: 'dot', fill: 'blue', text: 'refreshing cookie' }); break;
 				case 'wait-proxy': 		node._startBlinking(
 					{ shape: 'dot', fill: 'blue', text: text }, 
 					{ shape: 'dot', fill: 'grey', text: text }); break;
