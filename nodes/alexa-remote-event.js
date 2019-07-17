@@ -1,12 +1,11 @@
-const tools = require('../tools/tools.js');
+const tools = require('../lib/common.js');
 
 module.exports = function (RED) {
 	function AlexaRemoteEventNode(input) {
 		RED.nodes.createNode(this, input);
-
 		tools.assign(this, ['event'], input);
 		tools.assignNode(RED, this, ['account'], input);
-		tools.nodeSetupForStatusReporting(this);
+		if(!tools.nodeSetup(this, input, true)) return;
 
 		this.onAlexaEvent = (val) => {
 			this.status({ fill: "green", shape: "dot", text: "event fired!" });
@@ -14,7 +13,7 @@ module.exports = function (RED) {
 			this.send({ payload: val });
 		}
 		this.onStatus = (code) => {
-			if(code !== 'ready') return;
+			if(code !== 'READY') return;
 
 			this.status({ fill: "yellow", shape: "dot", text: "starting listening" });
 			setTimeout(() => this.status({ fill: "grey", shape: "dot", text: "listening" }), 2000);
@@ -23,19 +22,19 @@ module.exports = function (RED) {
 			this.account.alexa.addListener(this.event, this.onAlexaEvent);
 		}
 
-		this.account.emitter.removeListener('status', this.onStatus);
-
 		if(!this.account.useWsMqtt) {
 			return this.status({ fill: "red", shape: "dot", text: "events not supported by account" });
 		}
 		else {
-			this.account.emitter.addListener('status', this.onStatus);
-			const {code, message} = this.account.status;
+			this.account.emitter.removeListener('state', this.onStatus);
+			this.account.emitter.addListener('state', this.onStatus);
+			const {code, message} = this.account.state;
 			this.onStatus(code, message);
 		}
 
 		this.on('close', function() {
 			this.account.alexa.removeListener(this.event, this.onAlexaEvent);
+			this.account.emitter.removeListener('state', this.onStatus);
 		})
 	}
 	RED.nodes.registerType("alexa-remote-event", AlexaRemoteEventNode)

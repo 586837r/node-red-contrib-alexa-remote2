@@ -6,892 +6,1004 @@
 	<div class="form-row">
 		<label for="node-input-account"><i class="fa fa-amazon" style="width: 14px; text-align: center"></i> Account</label>
 		<input id="node-input-account">
-    </div>
-    <!--<div class="form-row">
-		<label for="node-input-select"><i class="fa fa-sort" style="width: 14px; text-align: center"></i> Select</label>
-		<select id="node-input-select">
-            <option value="get">Get</option>
-            <option value="query">Query</option>
-            <option value="action">Action</option>
-            <option value="discover">Discover</option>
-            <option value="delete">Delete</option>
-        </select>
-    </div>-->
-
-    <div id="node-input-config-container" />
-    <div class="form-row" style="margin-bottom: 0px">
-        <label for="node-input-outputs"><i class="fa fa-random"></i> Outputs</label>
-        <input id="node-input-outputs" style="width: 60px;" value="1">
-    </div>
-	<!--<div class="form-tips"><b>Note:</b> Volume ranges from 0 - 100</div>-->
+	</div>
+	<div id="node-input-inputs" />
+	<div class="form-row" style="margin-bottom: 0px">
+		<label for="node-input-outputs"><i class="fa fa-random"></i> Outputs</label>
+		<input id="node-input-outputs" style="width: 60px;" value="1">
+	</div>
 </script>
 
 <script type="text/x-red" data-help-name="alexa-remote-smarthome">
 </script>
 
 <script type="text/javascript">
-    RED.nodes.registerType('alexa-remote-smarthome', {
-        category: 'alexa',
-        color: '#6fbad8',
-        defaults: {
-			name:		{ value: '' },
-            account:	{ value: '', type: 'alexa-remote-account', required: true },
-            config:     { value: { option: 'get', what: 'simplified' } },
-            outputs:    { value: 1 }
-        },
-        inputs: 1,
-        outputs: 1,
+	RED.nodes.registerType('alexa-remote-smarthome', {
+		category: 'alexa',
+		color: '#6fbad8',
+		defaults: {
+			name: { value: '' },
+			account: { value: '', type: 'alexa-remote-account', required: true },
+			config: { value: { option: 'get', what: 'simplified' } },
+			outputs: { value: 1 }
+		},
+		inputs: 1,
+		outputs: 1,
 		icon: 'alexa-remote-icon.png',
 		paletteLabel: 'Alexa Smarthome',
-        label: function () {
-            function keyToLabel(str) {
-                const match = str.match(/[A-Z]?[^A-Z_-\s]+/g);
-                if(match) str = match.map(s => s[0].toUpperCase() + s.slice(1)).join(' ');
-                return str;
-            }
+		label: function () {
+			function keyToLabel(str) {
+				const match = str.match(/(?:[A-Z]?[a-z]+)|[A-Z]|[0-9]+/g);
+				if (match) str = match.map(s => s.slice(0, 1).toUpperCase() + s.slice(1)).join(' ');
+				return str;
+			}
 
-            if(this.name) return this.name;
+			if (this.name) return this.name;
 
-            const prefix = `Smarthome`;
-            const option = this.config && this.config.option && keyToLabel(this.config.option);
+			const prefix = `Smarthome`;
+			const option = this.config && this.config.option && keyToLabel(this.config.option);
 
-            switch(this.config && this.config.option) {
-                case 'get':
-                case 'delete': {
-                    const what = this.config && this.config.value && this.config.value.what;
-                    return what ? `${prefix} ${option} ${keyToLabel(what)}` : `${prefix} ${option}`;
-                }
-                case 'query': {
-                    const list = this.config && this.config.value && this.config.value.list && this.config.value.list || [];
-                    const property = list.every(o => o.property === list[0].property) && list[0] && list[0].property;
-                    const label = property ? `${option} ${keyToLabel(property)}` : option;
-                    return list.length > 1 ? `${prefix} ${label} ${list.length}` : `${prefix} ${label}`;
-                }
-                case 'action': {
-                    const list = this.config && this.config.value && this.config.value.list && this.config.value.list || [];
-                    const action = list.every(o => o.action === list[0].action) && list[0] && list[0].action;
-                    const label = action ? keyToLabel(action) : option;
-                    return list.length > 1 ? `${prefix} ${label} ${list.length}` : `${prefix} ${label}`;
-                }
-                default: {
-                    return option ? `${prefix} ${option}` : prefix;
-                }
-            }
-        },
-        labelStyle: function () {
-            return this.name ? 'node_label_italic' : '';
+			switch (this.config && this.config.option) {
+				case 'get': {
+					const what = this.config && this.config.value;
+					return what ? `${prefix} ${option} ${keyToLabel(what)}` : `${prefix} ${option}`;
+				}
+				case 'forget': {
+					const what = this.config && this.config.value && this.config.value.what;
+					return what ? `${prefix} ${option} ${keyToLabel(what)}` : `${prefix} ${option}`;
+				}
+				case 'query': {
+					const array = this.config && this.config.value || [];
+					const property = array.every(o => $.isPlainObject(o) && o.property === array[0].property) && array[0] && array[0].property;
+					const label = property ? `${option} ${keyToLabel(property)}` : option;
+					return array.length > 1 ? `${prefix} ${label} ${array.length}` : `${prefix} ${label}`;
+				}
+				case 'action': {
+					const array = this.config && this.config.value || [];
+					const action = array.every(o => $.isPlainObject(o) && o.action === array[0].action) && array[0] && array[0].action;
+					const label = action ? keyToLabel(action) : option;
+					return array.length > 1 ? `${prefix} ${label} ${array.length}` : `${prefix} ${label}`;
+				}
+				default: {
+					return option ? `${prefix} ${option}` : prefix;
+				}
+			}
+		},
+		labelStyle: function () {
+			return this.name ? 'node_label_italic' : '';
 		},
 		oneditprepare: function () {
-            class EventEmitter {
-                constructor() {
-                    this.listeners = {};
-                }
+			console.log('loaded', this.config);
 
-                on(type, callback) {
-                    if (!(type in this.listeners)) this.listeners[type] = [];
-                    this.listeners[type].push(callback);
-                }
+			class EventEmitter {
+				constructor() {
+					this.clear();
+				}
 
-                off(type, callback){
-                    if(!(type in this.listeners)) return;
-                    this.listeners[type] = this.listeners[type].filter(cb => cb !== callback);
-                    if(!this.listeners[type].length) delete this.listeners[type];
-                }
+				once(type, callback) {
+					let set = this.onceListeners.get(type);
+					if(!set) { 
+						set = new Set(); 
+						this.onceListeners.set(type, set); 
+					}
+					set.add(callback);
+				}
 
-                emit(type) {
-                    if(!(type in this.listeners)) return;
-                    this.listeners[type].forEach(cb => cb(...[...arguments].slice(1)));
-                }
-            }
+				on(type, callback) {
+					let set = this.listeners.get(type);
+					if(!set) { 
+						set = new Set(); 
+						this.listeners.set(type, set); 
+					}
+					set.add(callback);
+				}
 
-            function keyToLabel(str) {
-                const match = str.match(/[A-Z]?[^A-Z_-\s]+/g);
-                if(match) str = match.map(s => s[0].toUpperCase() + s.slice(1)).join(' ');
-                return str;
-            }
-            function objectToOptions(obj){
-                return Object.entries(obj).map(([k,v]) => (
-                    [k, `${keyToLabel(k)} (${v})`]
-                )) ;
-            }          
-            function createFormRow({element, label='', icon='', div=$('<div>')} = {}) {
-                return div.addClass('form-row').append(
-                    $('<label>').text(' ' + label).prepend(
-                        $('<i>').attr('class', icon).attr('style', 'width: 14px; text-align: center')
-                    ),
-                    $(document.createTextNode(' ')),
-                    $('<div>').attr('style', 'display: inline-block; position: relative; width: 70%; height: 20px;').append(
-                        $(element).css({width: '70%'})
-                    )
-                );
-            }
-            function createListRow(element, label='', div=$('<div>')) {
-                return div.append(
-                    $('<label>').css({flex: '1', display: 'flex', alignItems: 'center', justifyContent: 'flex-end'}).html(label),
-                    $('<div>').css({width: 10}),
-                    element.css({flex: '1.5', width: 100})
-                )
-            }
-            function refreshTypedInput(input) {
-                const type = input.typedInput('type');
-                this.typedInput('type', type === 'msg' ? 'flow' : 'msg');
-                this.typedInput('type', type);
-            }
-           
-            $.widget('alexaRemote.arBase', {
-                options: {
-                    label: '',
-                    icon: '',
-                    layout: ''
-                },
-                _create: function() {},
-                _setupLayout: function(element) {
-                    // element is assumed to be able to be styled like a div
-                    // automatically deduct layout from label and icon for convenience
-                    if(!this.options.layout) this.options.layout = this.options.label ? (this.options.icon ? 'form-row' : 'list-row') : 'default';
+				off(type, callback) {
+					let set;
 
-                    switch(this.options.layout) {
-                        case 'form-row': {
-                            this.element.addClass('form-row').append(
-                                $('<label>').text(' ' + this.options.label).prepend(
-                                    $('<i>').attr('class', this.options.icon).attr('style', 'width: 14px; text-align: center')
-                                ),
-                                $(document.createTextNode(' ')),
-                                $(element).css({width: '70%', display: 'inline-block'})
-                            );
-                            break;
-                        }
-                        case 'list-row': {
-                            this.element.css({flex: '1', display: 'flex'}).append(
-                                $('<label>').css({flex: '1', display: 'flex', alignItems: 'center', justifyContent: 'flex-end'}).html(this.options.label),
-                                $('<div>').css({width: 10}),
-                                element.css({flex: '1.5'})
-                            );
-                            break;
-                        }
-                        default: {
-                            this.element.css({display: 'flex'}).append(element.css({width: '100%'}));
-                            break;
-                        }
-                    }
-                }
-            });
-            $.widget('alexaRemote.arSelect', $.alexaRemote.arBase, {
-                _create: function() {
-                    this.select = $('<select>').css({fontFamily: 'FontAwesome, "Helvetica Neue", Helvetica, Arial, sans-serif'});
-                    this._setupLayout(this.select);
-                    this.selectOptions([]);
-                    this.element.addClass('alexaRemote-selectField');
-                },
-                selectOptions: function(entries) {
-                    if(entries === undefined) {
-                        return this.select.children().toArray().map(o => [$(o).val(), $(o).html()]);
-                    }
+					if(set = this.listeners.get(type)) {
+						set.delete(callback);
+						if(set.length === 0) this.listeners.delete(type);
+					}
 
-                    this.select.empty();
+					if(set = this.onceListeners.get(type)) {
+						set.delete(callback);
+						if(set.length === 0) this.onceListeners.delete(type);
+					}
+				}
+
+				emit(type) {
+					const args = [...arguments].slice(1);
+					let set;
+
+					if (set = this.listeners.get(type)) {
+						for(const cb of set) cb(...args);
+					}
+
+					if (set = this.onceListeners.get(type)) {
+						this.onceListeners.delete(type);
+						for(const cb of set) cb(...args);
+					}
+				}
+
+				clear() {
+					this.listeners = new Map();
+					this.onceListeners = new Map();
+				}
+			}
+
+			function keyToLabel(str) {
+				const match = str.match(/(?:[A-Z]?[a-z]+)|[A-Z]|[0-9]+/g);
+				if (match) str = match.map(s => s.slice(0, 1).toUpperCase() + s.slice(1)).join(' ');
+				return str;
+			}
+			function template(source, templ, depth = Infinity) {
+				function isObject(x) {
+					return typeof x == 'object' && x !== null && !Array.isArray(x)
+				}
+
+				if(templ === undefined) {
+					return source;
+				}
+
+				// are they different types?
+				if (typeof templ !== typeof source || Array.isArray(templ) !== Array.isArray(source) || isObject(templ) !== isObject(source)) {
+					return templ;
+				}
+
+				if (depth !== 0) {
+					if (Array.isArray(templ)) {
+						if (templ.length === 0) {
+							return source;
+						}
+
+						if (source.length === 0 && !arrayMayBeEmpty) {
+							return templ;
+						}
+
+						const result = [];
+						for (let i = 0; i < source.length; i++) {
+							result[i] = template(source[i], templ[0], depth - 1);
+						}
+						return result;
+					}
+
+					if (isObject(templ)) {
+						const result = {};
+						for (const k of Object.keys(templ)) {
+							result[k] = template(source[k], templ[k], depth - 1);
+						}
+						return result;
+					}
+				}
+
+				return source;
+			}
+			function inDocument(element) {
+				return document.contains(element instanceof $ ? element[0] : element);
+			}
+			function zip(a,b) {
+				const arr = [];
+				for (let i = 0; i < a.length; i++) {
+					arr[i] = [a[i], b[i]];
+				}
+				return arr;
+			}
+			function expand(a) {
+				return zip(a,a);
+			}
+			function clean(obj) {
+				return Object.entries(obj).filter(([k,v]) => v || (typeof v === 'number')).reduce((o,[k,v]) => (o[k] = v, o), {});
+			}
+
+			$.widget('alexaRemote.arBase', {
+				options: {
+					label: '',
+					icon: '',
+					layout: '',
+					flex: '1.5'
+				},
+				_create: function () { },
+				_setupLayout: function (element) {
+					// automatically deduct layout from label and icon for convenience
+					if (!this.options.layout) this.options.layout = this.options.label ? (this.options.icon ? 'form-row' : 'list-row') : 'default';
+
+					switch (this.options.layout) {
+						case 'form-row': {
+							this.element.addClass('form-row').append(
+								$('<label>').text(' ' + this.options.label).prepend(
+									$('<i>').attr('class', this.options.icon).attr('style', 'width: 14px; text-align: center')
+								),
+								$(document.createTextNode(' ')),
+								$('<div>').css({ width: '70%', display: 'inline-block' }).append(element.css({width: '100%'}))
+							);
+							break;
+						}
+						case 'list-row': {
+							this.element.css({ flex: '1', display: 'flex' }).append(
+								$('<label>').css({ flex: '1', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }).html(this.options.label),
+								$('<div>').css({ width: 10 }),
+								element.css({ flex: this.options.flex })
+							);
+							break;
+						}
+						default: {
+							this.element.css({ display: 'flex' }).append(element.css({ width: '100%' }));
+							break;
+						}
+					}
+				}
+			});
+			$.widget('alexaRemote.arSelect', $.alexaRemote.arBase, {
+				_create: function () {
+					this.select = $('<select>').css({ fontFamily: 'FontAwesome, "Helvetica Neue", Helvetica, Arial, sans-serif' });
+					this._setupLayout(this.select);
+					this.selectOptions([]);
+					this.element.addClass('alexaRemote-selectField');
+				},
+				selectOptions: function (entries) {
+					if (arguments.length === 0) {
+						return this.select.children().toArray().map(o => [$(o).val(), $(o).html()]);
+					}
+
+					this.select.empty();
 					for (const entry of entries) {
 						const [v, t] = Array.isArray(entry) ? entry : [entry, keyToLabel(entry)];
 						$('<option>').val(v).html(t).appendTo(this.select);
 					}
-                },
-                value: function(arg) {
-                    if(arg === undefined) {
-                        return this.select.val();
-                    }
-
-					this.select.val(arg);
-                }
-            });
-            $.widget('alexaRemote.arTypedInput', $.alexaRemote.arBase, {
-                options: {
-                    types: [],
-                },
-                _create: function() {
-                    this.container = $('<div>')
-                    this.input = $('<input>').appendTo(this.container)
-                        .typedInput({types: this.options.types.concat(['msg', 'flow', 'global', 'jsonata', 'env'])})
-                        .typedInput('width', '98%'); // alright what the heck, typedInput adds +2% on its own
-
-                    this._setupLayout(this.container);
-                    this.element.addClass('alexaRemote-arTypedInput');
-                },
-                value: function(arg) {
-                    if(arg === undefined) {
-                        return this.input.typedInput('value');
-                    }
-
-					this.input.typedInput('value', arg);
-                },
-                type: function(arg) {
-                    if(arg === undefined) {
-                        return this.input.typedInput('type');
-                    }
-
-                    this.input.typedInput('type', arg);
-                },
-                types: function(arg) {
-                    this.input.typedInput('types', arg.concat(['msg', 'flow', 'global', 'jsonata', 'env']));
-                },
-                refresh: function() {
-                    // fix display bug
-                    const type = this.type();
-                    this.type(type === 'msg' ? 'flow' : 'msg');
-                    this.type(type);
-                }           
-            });
-            $.widget('alexaRemote.arBaseOrSelect', $.alexaRemote.arBase, {
-                options: {
-                    button: false,
-                },
-                _setup: function(element) {
-                    this.notSelect = element;
-                    this.select = $('<select>').css({width: '100px', fontFamily: 'FontAwesome, "Helvetica Neue", Helvetica, Arial, sans-serif'});
-                        
-                    this.select.on('change', () => { this._setInputValue(this.select.val()); });
-
-                    if(this.options.button) {
-                        const container = $('<div>');
-                        this.button = $('<a>').addClass('editor-button');
-                        
-                        container.css({display: 'flex'}).append(
-                            this.notSelect.css({flex: '1'}), 
-                            this.select.css({flex: '1'}),
-                            $('<div>').css({width: 8}),
-                            this.button.append($('<i>').attr('class', 'fa fa-list'))
-                        );
-
-                        if (this.options.button) this.button.click(() => {
-                            const active = this.selectActive();
-                            this.selectActive(!active);
-                        });
-
-                        this._setupLayout(container);
-                    }
-                    else {
-                        this._setupLayout(this.notSelect.add(this.select));
-                    }
-
-                    this.selectOptions([]);
-                    this.selectActive(false);
-                },
-                _setInputValue: function(value) { throw 'abstract widget you dingus'; },
-                _getInputValue: function(value) { throw 'abstract widget you dingus'; },
-                selectActive: function(arg) {
-                    const visible = this.select.is(':visible');
-
-                    if(arg === undefined) {
-                        return visible;
-                    }             
-
-                    if(arg) {
-                        this.notSelect.hide();
-                        this.select.show();
-                    }
-                    else {
-                        this.select.hide();
-                        this.notSelect.show();
-                    }
-                },
-                selectOptions: function(options) {
-                    if(options === undefined) {
-                        return this.select.children(':not(:disabled)').toArray().map(o => [$(o).val(), $(o).html()]);
-                    } 
-
-                    // allows [['myval', 'My Label'], 'myValAndLabel_special'] => [.., ['myValAndLabel_special', 'My Val And Label Special']]
-                    options = options.map(o => Array.isArray(o) ? o : [o, keyToLabel(o)]);
-                    
-                    this.select.empty();
-					for (const [value, label] of options) {
-						$('<option>').val(value).html(label).appendTo(this.select);
-                    }
-                    this.select.append('<option hidden disabled selected value="???">???</option>');
-                    this.value(this.value()); // update 
-                },
-                choose: function() {
-                    const value = this.value();
-                    const options = this.selectOptions();
-                    if(value) {
-                        const found = value && options.find(([v,l]) => v === value);
-                        this.selectActive(found);
-                    }
-                    else {
-                        const [first] = options[0] || [];
-                        if(first) this.value(first);
-                    }
-                },
-                value: function(value) {
-                    if(value === undefined) {
-                        return this._getInputValue();
-                    }
-
-                    const options = this.selectOptions();
-                    let found = options.find(([v,t]) => v === value);
-
-                    // use first option if falsy value
-                    if(!value && !found && options[0]) {
-                        value = options[0][0];
-                        found = true;
-                    }
-                    
-                    // ??? is a special value signifying no match, see selectOptions
-                    this.select.val(found ? value : '???');
-                    this._setInputValue(value);
-                }     
-            }) 
-            $.widget('alexaRemote.arInputOrSelect', $.alexaRemote.arBaseOrSelect, {
-                options: {
-                    button: false,
-                },
-                _create: function() {
-                    this.input = $('<input>').css({width: '100%'}).attr('type', 'text')
-                        .on('change', () => this.element.trigger('change', this.input.val(), this));
-                    this._setup(this.input);
-                    this.element.addClass('alexaRemote-arInputOrSelect');            
-                },
-                _setInputValue: function(value) {
-                    this.input.val(value);
-                },
-                _getInputValue: function(value) {
-                    return this.input.val();
-                }
-            });
-            $.widget('alexaRemote.arTypedInputOrSelect', $.alexaRemote.arBaseOrSelect, {
-                options: {
-                    optionType: 'str',
-                },
-                _create: function() {
-                    const container = $('<div>')
-                    this.input = $('<input>').appendTo(container)
-                        .typedInput({types: [this.options.optionType, 'msg', 'flow', 'global', 'jsonata', 'env'], default: this.options.optionType})
-                        .typedInput('width', '98%') // alright what the heck, typedInput adds +2% on its own
-                        .on('change', () => this.element.trigger('change', this.input.typedInput('type'), this.input.typedInput('value'), this));
-                    this._setup(container);
-                    this.element.addClass('alexaRemote-arTypedInputOrSelect');
-                },
-                _getInputValue: function(value) {
-                    return this.input.typedInput('value');
-                },
-                _setInputValue: function(value) {
-                    this.input.typedInput('value', value);
-                },
-                selectActive: function(arg) {
-                    if(!arg) this.refresh();
-                    return this._super(arg);
-                },
-                choose: function() {
-                    const type = this.input.typedInput('type');
-                    type === this.options.optionType ? this._super() : this.selectActive(false);
-                },
-                type: function(arg) {
-                    if(arg === undefined) {
-                        return this.input.typedInput('type');
-                    }
-
-                    this.input.typedInput('type', arg);
-                    if(this.type() !== this.options.optionType) this.selectActive(false);
-                },
-                types(arg) {
-                    this.input.typedInput('types', arg.concat(['msg', 'flow', 'global', 'jsonata', 'env']));
-                },
-                refresh() {
-                    // fix display bug
-                    const type = this.input.typedInput('type');
-                    this.input.typedInput('type', type === 'msg' ? 'flow' : 'msg');
-                    this.input.typedInput('type', type);
-                }
-            });
-            $.widget('alexaRemote.arInputGroups', {
-                options: {
-                    groups: {},
-                    group: '',
-                    value: {},
-                    css: undefined,
-                    select: undefined,
-                    divider: false,
-                    label: '',
-                    icon: ''
-                },
-                _create: function() {
-                    if(this.options.select !== false && this.options.label) {
-                        select = $('<div>')
-                            .arSelect({label: this.options.label, icon: this.options.icon})
-                            .arSelect('selectOptions', Object.keys(this.options.groups))
-                            .arSelect('value', this.options.group || Object.keys(this.options.groups)[0])
-                            .insertBefore(this.element);
-
-                        select.on('change', () => this.group(select.arSelect('value')));                                
-                        if(this.options.divider) $('<hr>').css({margin: '16px 0px'}).insertBefore(this.element);
-                    }
-                        
-                    this.map = {};
-                    for(const [id, options] of Object.entries(this.options.groups)) {
-                        const group = this.map[id] = {};
-                        group.element = $('<div>').appendTo(this.element);
-                        if(this.options.css) group.element.css(this.options.css);
-                        group.element.hide();
-                        group.emitter = new EventEmitter();
-
-                        // prepare returns callback that returns the values as object
-                        const prepare = typeof options === 'function' ? options : options.prepare;
-                        const value = id === this.options.group ? this.options.value : {};
-                        group.callback = prepare.bind(this)(group.element, value, group.emitter) || (() => ({}));
-
-                        //group.label = ($.isPlainObject(group) && group.label) || keyToLabel(id);
-                    };
-
-                    this.element.addClass('alexaRemote-arInputGroups');
-                    this.group(this.options.group);
-                },
-                _destroy: function() {
-                    this.element.empty();
-                },
-                group: function(arg) {
-                    if(arg === undefined) {
-                        return this.activeGroup;
-                    }
-
-                    for(const [id, group] of Object.entries(this.map)) {
-                        if(id === arg) {
-                            group.element.show();
-                            group.emitter.emit('visible');
-                            if(this.activeHeight) group.emitter.emit('height', this.activeHeight);
-                        }
-                        else {
-                            group.element.hide();
-                        }
-                    };
-
-                    this.activeGroup = arg;
-                    this.element.trigger('change', arg);
-                },
-                groups: function(arg) {
-                    if(arg === undefined) {
-                        return Object.keys(this.map);
-                    }
-
-                    throw new Error('NOT IMPLEMENTED');
-                },
-                value: function() {
-                    const entry = this.map[this.activeGroup];
-                    const value = entry && entry.callback();
-                    return value || null;
-                },
-                height: function(height) {
-                    this.activeHeight = height;
-
-                    const group = this.map[this.activeGroup];
-                    group && group.emitter.emit('height', height);
-                },
-                visible: function(visible) {
-                    const group = this.map[this.activeGroup];
-                    group && group.emitter.emit('visible');
-                }
-            });
-
-            const loader = new EventEmitter();
-            console.log('loaded', this.config);
-
-            this.config = $.extend(true, { option: '', value: {} }, this.config);
-
-            const inputs = $('#node-input-config-container')
-                .arInputGroups({
-                    label: 'Select',
-                    icon: 'fa fa-sort',
-                    divider: true,
-                    group: this.config.option,
-                    value: this.config.value,
-                    groups: {
-                        get: function(parent, data, emitter) {
-                            data = $.extend(true, { what: 'simplified' }, data);
-                            
-                            const what = $('<div>').appendTo(parent)
-                                .arSelect({ label: 'What', icon: 'fa fa-question-circle', button: true})
-                                .arSelect('selectOptions', ['devices', 'groups', 'entities', 'definitions', ['simplified', 'Simplified (cached)']])
-                                .arSelect('value', data.what);
-
-                            return () => ({ 
-                                what: what.arSelect('value')
-                            });
-                        },
-                        query: function(parent, data, emitter) {
-                            data = $.extend(true, { list: [{}] }, data);
-
-                            const list = $('<ol>').appendTo(parent).css({ minHeight: 100, minWidth: 150}).editableList({
-                                addItem: (row, index, data) => {
-                                    data = $.extend(true, { entity: '', property: '' }, data);
-
-                                    const entity = $('<div>').arInputOrSelect().arInputOrSelect('value', data.entity);
-                                    const property = $('<div>').arInputOrSelect().arInputOrSelect('value', data.property);
-
-                                    row.css({ display: 'flex' }).append(
-                                        entity.css({ flex: '1' }),
-                                        $('<div>').css({ minWidth: 10 }),
-                                        property.css({ flex: '1'})
-                                    )
-
-                                    row.data({
-                                        entity: entity,
-                                        property: property
-                                    });
-
-                                    const updateProperty = () => {
-                                        if (!loader.ready) return;
-
-                                        const [label, properties, actions] = loader.entitiesById[entity.arInputOrSelect('value')] || [];
-                                        property.arInputOrSelect('selectOptions', [['', 'All Properties']].concat(properties || []));
-                                        property.arInputOrSelect('selectActive', true);
-                                    }
-                                    const updateEntity = () => {
-                                        if (!loader.ready) return;
-
-                                        const entities = loader.entities.filter(([id, label, properties, actions]) => properties.length !== 0);
-                                        entity.arInputOrSelect('selectOptions', entities);
-                                        entity.arInputOrSelect('selectActive', true);
-                                        updateProperty();
-                                    };
-                                    entity.on('change', updateProperty);
-                                    loader.on('done', updateEntity);
-                                    updateEntity();
-                                },
-                                scrollOnAdd: true,
-                                removable: true,
-                                sortable: true,
-                                header: $("<div>").css({ display: 'flex', paddingTop: 4 }).append(
-                                    $('<div>').css({ display: 'inline-grid', flex: '1', marginLeft: 20 + 5 }).text('Appliance / Group')
-                                ).append(
-                                    $('<div>').css({ minWidth: 10 })
-                                ).append(
-                                    $('<div>').css({ display: 'inline-grid', flex: '1', marginRight: 28 + 5 }).text('Property')
-                                )
-                            });
-
-                            const marginBottom = 12;
-                            parent.css({marginBottom: marginBottom});
-                            emitter.on('height', height => list.editableList('height', Math.max(height-marginBottom, 200)));
-                            data.list.forEach(d => list.editableList('addItem', d));
-
-                            return () => ({
-                                list: list.editableList('items').toArray().map(e => ({
-                                    entity: e.data('entity').arInputOrSelect('value'),
-                                    property: e.data('property').arInputOrSelect('value'),
-                                }))
-                            });
-                        },
-                        action: function(parent, data, emitter) {
-                            data = $.extend(true, { list: [{}] }, data);
-
-                            const list = $('<ol>').appendTo(parent).css({ minHeight: 100, minWidth: 150}).editableList({
-                                addItem: (row, index, data) => {
-                                    data = $.extend(true, { entity: '', action: '', parameters: {}}, data);
-
-                                    const entity = $('<div>').arInputOrSelect().arInputOrSelect('value', data.entity);
-                                    const action = $('<div>').arInputOrSelect().arInputOrSelect('value', data.action);
-                                    const parameters = $('<div>').arInputGroups({
-                                        select: action,
-                                        group: data.action,
-                                        value: data.parameters,
-                                        css: {display: 'flex', flex: '1', flexDirection: 'column'},
-                                        groups: {
-                                            setColor: function(parent, data, emitter) {
-                                                console.log({data:data});
-                                                data = $.extend(true, {value: {type: 'str', value: ''}}, data);
-                                                console.log({data:data});
- 
-
-                                                const value = $('<div>').css({marginTop: 10}).appendTo(parent)
-                                                    .arTypedInputOrSelect({label: 'Color', button: true})
-                                                    .arTypedInputOrSelect('type', data.value.type)
-                                                    .arTypedInputOrSelect('value', data.value.value)
-                                                    .arTypedInputOrSelect('choose');
-
-                                                console.log({value:value.arTypedInputOrSelect('value')});
-
-                                                const updateValue = () => {
-                                                    if (!loader.ready) return;
-
-                                                    value.arTypedInputOrSelect('selectOptions', loader.colorNames)
-                                                        .arTypedInputOrSelect('choose');
-                                                }
-
-                                                emitter.on('visible', () => value.arTypedInputOrSelect('refresh'));
-                                                loader.on('done', updateValue);
-                                                updateValue();
-
-                                                return () => ({value : { type: value.arTypedInputOrSelect('type'), value: value.arTypedInputOrSelect('value') }});
-                                            },
-                                            setColorTemperature: function(parent, data, emitter) {
-                                                data = $.extend(true, {value: {type: 'str', value: ''}}, data);
-
-                                                const value = $('<div>').css({marginTop: 10}).appendTo(parent)
-                                                    .arTypedInputOrSelect({label: 'Color Temperature', button: true})
-                                                    .arTypedInputOrSelect('type', data.value.type)
-                                                    .arTypedInputOrSelect('value', data.value.value)
-                                                    .arTypedInputOrSelect('choose');
-
-                                                const updateValue = () => {
-                                                    if (!loader.ready) return;
-                                                    value.arTypedInputOrSelect('selectOptions', loader.colorTemperatureNames)
-                                                        .arTypedInputOrSelect('choose');
-                                                }
-
-                                                emitter.on('visible', () => value.arTypedInputOrSelect('refresh'));
-                                                loader.on('done', updateValue);
-                                                updateValue();
-
-                                                return () => ({value : { type: value.arTypedInputOrSelect('type'), value: value.arTypedInputOrSelect('value') }});
-                                            },
-                                            setBrightness: function(parent, data, emitter) {
-                                                data = $.extend(true, {value: {type: 'num', value: 50}}, data);
-
-                                                const value = $('<div>').css({marginTop: 10}).appendTo(parent)
-                                                    .arTypedInput({label: 'Brightness', types: ['num', 'msg', 'flow', 'global', 'jsonata', 'env']})
-                                                    .arTypedInput('type', data.value.type)
-                                                    .arTypedInput('value', data.value.value);
-
-                                                emitter.on('visible', () => value.arTypedInput('refresh'));
-
-                                                return () => ({value : { type: value.arTypedInput('type'), value: value.arTypedInput('value') }});
-                                            },
-                                            setPercentage: function(parent, data, emitter) {
-                                                data = $.extend(true, {value: {type: 'num', value: 50}}, data);
-
-                                                const value = $('<div>').css({marginTop: 10}).appendTo(parent)
-                                                    .arTypedInput({label: 'Percentage', types: ['num', 'msg', 'flow', 'global', 'jsonata', 'env']})
-                                                    .arTypedInput('type', data.value.type)
-                                                    .arTypedInput('value', data.value.value);
-
-                                                emitter.on('visible', () => value.arTypedInput('refresh'));
-
-                                                return () => ({value : { type: value.arTypedInput('type'), value: value.arTypedInput('value') }});
-                                            },
-                                            setLockState: function(parent, data, emitter) {
-                                                data = $.extend(true, {value: {type: 'str', value: 'Locked'}}, data);
-
-                                                const value = $('<div>').css({marginTop: 10}).appendTo(parent)
-                                                    .arTypedInputOrSelect({label:'Lock State', button: true})
-                                                    .arTypedInputOrSelect('selectOptions', ['locked', 'unlocked', 'jammed'])
-                                                    .arTypedInputOrSelect('type', data.value.type)
-                                                    .arTypedInputOrSelect('value', data.value.value)
-                                                    .arTypedInputOrSelect('choose');
-
-                                                emitter.on('visible', () => value.arTypedInputOrSelect('refresh'));
-
-                                                return () => ({value : { type: value.arTypedInputOrSelect('type'), value: value.arTypedInputOrSelect('value') }});
-                                            },
-                                            lockAction: function(parent, data, emitter) {
-                                                data = $.extend(true, {value: {type: 'str', value: 'Locked'}}, data);
-
-                                                const value = $('<div>').css({marginTop: 10}).appendTo(parent)
-                                                    .arTypedInputOrSelect({label:'Lock State', button: true})
-                                                    .arTypedInputOrSelect('selectOptions', ['locked', 'unlocked', 'jammed'])
-                                                    .arTypedInputOrSelect('type', data.value.type)
-                                                    .arTypedInputOrSelect('value', data.value.value)
-                                                    .arTypedInputOrSelect('choose');
-
-                                                emitter.on('visible', () => value.arTypedInputOrSelect('refresh'));
-
-                                                return () => ({value : { type: value.arTypedInputOrSelect('type'), value: value.arTypedInputOrSelect('value') }});
-                                            },
-                                            setTargetTemperature: function(parent, data, emitter) {
-                                                data = $.extend(true, {scale: {type: 'str', value: 'Celsius'}, value: {type: 'num', value: 20}}, data);
-
-                                                const scale = $('<div>').css({marginTop: 10}).appendTo(parent)
-                                                    .arTypedInputOrSelect({label:'Scale', button: true})
-                                                    .arTypedInputOrSelect('selectOptions', ['celsius', 'fahrenheit'])
-                                                    .arTypedInputOrSelect('type', data.scale.type)
-                                                    .arTypedInputOrSelect('value', data.scale.value)
-                                                    .arTypedInputOrSelect('choose');
-
-                                                const value = $('<div>').css({marginTop: 10}).appendTo(parent)
-                                                    .arTypedInput({label: 'Temperature', types: ['num', 'msg', 'flow', 'global', 'jsonata', 'env']})
-                                                    .arTypedInput('type', data.value.type)
-                                                    .arTypedInput('value', data.value.value);
-
-                                                emitter.on('visible', () => {
-                                                    scale.arTypedInputOrSelect('refresh');
-                                                    value.arTypedInput('refresh');
-                                                });
-
-                                                return () => ({
-                                                    scale: { type: scale.arTypedInputOrSelect('type'), value: scale.arTypedInputOrSelect('value') },
-                                                    value: { type: value.arTypedInput('type'), value: value.arTypedInput('value') }
-                                                });
-                                            },
-                                        }
-                                    });
-
-                                    row.css({ display: 'flex', flexDirection: 'column' }).append(
-                                        $('<div>').css({ display: 'flex', flex: '1' }).append(
-                                            entity.css({ flex: '1' }),
-                                            $('<div>').css({ minWidth: 10 }),
-                                            action.css({ flex: '1.5' }),
-                                        ),
-                                        parameters.css({display: 'flex', flex: '1', flexDirection: 'column'})
-                                    );
-
-                                    row.data({
-                                        entity: entity,
-                                        action: action,
-                                        parameters: parameters
-                                    });
-
-                                    emitter.on('visible', () => parameters.arInputGroups('visible'));
-
-                                    const updateParameters = () => {
-                                        const value = action.arInputOrSelect('value');
-                                        parameters.arInputGroups('group', value);
-                                    };
-                                    const updateAction = () => {
-                                        if (!loader.ready) return;
-
-                                        const [label, properties, actions] = loader.entitiesById[entity.arInputOrSelect('value')] || [];
-                                        action.arInputOrSelect('selectOptions', actions || []);
-                                        action.arInputOrSelect('selectActive', true);
-                                        updateParameters();
-                                        //if (!actions.includes(action.value())) action.value(actions[0]);
-                                    };
-                                    const updateEntity = () => {
-                                        if (!loader.ready) return;
-
-                                        const entities = loader.entities.filter(([id, label, properties, actions]) => actions.length !== 0);
-                                        entity.arInputOrSelect('selectOptions', entities);
-                                        entity.arInputOrSelect('selectActive', true);
-                                        updateAction();
-                                    };
-
-                                    action.on('change', updateParameters);
-                                    entity.on('change', updateAction);
-                                    loader.on('done', updateEntity);
-                                    updateEntity();
-                                },
-                                scrollOnAdd: true,
-                                removable: true,
-                                sortable: true,
-                                header: $("<div>").css({ display: 'flex', paddingTop: 4 }).append(
-                                    $('<div>').css({ display: 'inline-grid', flex: '1', marginLeft: 20 + 5 }).text('Appliance / Group')
-                                ).append(
-                                    $('<div>').css({ minWidth: 10 })
-                                ).append(
-                                    $('<div>').css({ display: 'inline-grid', flex: '1.5', marginRight: 28 + 5 }).text('Action')
-                                )
-                            });
-
-                            const marginBottom = 12;
-                            parent.css({marginBottom: marginBottom});
-                            emitter.on('height', height => list.editableList('height', Math.max(height-marginBottom, 200)));
-                            data.list.forEach(d => list.editableList('addItem', d));
-
-                            return () => ({
-                                list: list.editableList('items').toArray().map(e => ({
-                                    entity: e.data('entity').arInputOrSelect('value'),
-                                    action: e.data('action').arInputOrSelect('value'),
-                                    parameters: e.data('parameters').arInputGroups('value'), 
-                                }))
-                            });
-                        },
-                        discover: function () {},
-                        delete: function (parent, data, emitter) {
-                            data = $.extend(true, { what: 'device', entity: { type: 'str', value: '' } }, data);
-
-                            const what = $('<div>').appendTo(parent)
-                                .arSelect({ label: 'What', icon: 'fa fa-question-circle' })
-                                .arSelect('selectOptions', ['device', 'allDevices', 'group'])
-                                .arSelect('value', data.what);
-
-                            const entity = $('<div>').appendTo(parent)
-                                .arTypedInputOrSelect({ label: 'Name or Id', icon: 'fa fa-ticket' })
-                                .arTypedInputOrSelect('type', data.entity.type)
-                                .arTypedInputOrSelect('value', data.entity.value)
-                                .arTypedInputOrSelect('choose');
-
-                            emitter.on('visible', () => entity.arTypedInputOrSelect('refresh'));
-
-                            what.on('change', () => {
-                                if(what.val() === 'allDevices'){
-                                    entity.hide();
-                                } else {
-                                    entity.show();
-                                }
-                            });
-                            what.trigger('change');
-
-                            return () => ({
-                                what: what.arSelect('value'),
-                                entity: {
-                                    type: entity.arTypedInputOrSelect('type'),
-                                    value: entity.arTypedInputOrSelect('value')
-                                }
-                            });
-                        }
-                    }
-                });
-
-            loader.on('done', () => { console.log('DONE'); });
-
-            $.get(
-                '/alexa-remote-smarthome.json', 
-                { account: $('#node-input-account').val() },
-                null, 'json'
-            )
-            .done(data => {
-                loader.entitiesById = data.entitiesById;
-                loader.colorNames = data.colorNames;
-                loader.colorTemperatureNames = data.colorTemperatureNames;
-                loader.entities = Object.entries(loader.entitiesById).map(([id, [label, properties, actions]]) => [id, label, properties, actions]);
-                console.log({loader:data});
-                loader.ready = true;
-                loader.emit('done');
-            })
-            .fail(res => {
-                RED.notify(res.responseText || 'Unknown error, reopen this config...', 'error');
-                console.log({response: res});
-            });
-            
-            const outputs = $('#node-input-outputs');
-            const outputsRow = outputs.parent();
-            outputs.spinner({
-                min:1,
-                change: () => {
-                    const value = outputs.val();
-                    if (!value.match(/^\d+$/) || value < 1) { 
-                        outputs.spinner('value', 1);
-                    }
-                }
-            });
-            const updateOutputVisibility = () => {
-                switch(inputs.arInputGroups('group')) {
-                    case 'query':
-                    case 'action':
-                        outputsRow.show();
-                        break;
-                    default:
-                        outputs.spinner('value', 1);
-                        outputsRow.hide();
-                        break;
-                }
-            };
-            inputs.on('change', updateOutputVisibility);
-            updateOutputVisibility();
+				},
+				value: function (value) {
+					if (arguments.length === 0) {
+						return this.select.val();
+					}
+
+					this.select.val(value);
+				}
+			});
+			$.widget('alexaRemote.arTypedInput', $.alexaRemote.arBase, {
+				options: {
+					types: [],
+				},
+				_create: function () {
+					this.container = $('<div>')
+					this.input = $('<input>').appendTo(this.container)
+						.typedInput({ types: this.options.types.concat(['msg', 'flow', 'global', 'jsonata', 'env']) })
+						.typedInput('width', '98%'); // alright what the heck, typedInput adds +2% on its own
+
+					this._setupLayout(this.container);
+					this.element.addClass('alexaRemote-arTypedInput');
+				},
+				value: function (value) {
+					if (arguments.length === 0) {
+						return this.input.typedInput('value');
+					}
+
+					this.input.typedInput('value', value);
+				},
+				type: function (type) {
+					if (arguments.length === 0) {
+						return this.input.typedInput('type');
+					}
+
+					this.input.typedInput('type', type);
+				},
+				types: function (types) {
+					this.input.typedInput('types', types.concat(['msg', 'flow', 'global', 'jsonata', 'env']));
+				},
+				refresh: function () {
+					// fix display bug
+					const type = this.type();
+					this.type(type === 'msg' ? 'flow' : 'msg');
+					this.type(type);
+				}
+			});
+			$.widget('alexaRemote.arBaseOrSelect', $.alexaRemote.arBase, {
+				options: {
+					button: false,
+				},
+				_setup: function (element) {
+					this.notSelect = element;
+					this.select = $('<select>').css({ width: '100px', fontFamily: 'FontAwesome, "Helvetica Neue", Helvetica, Arial, sans-serif' });
+
+					this._on(this.select, {
+						'change': function(event) {
+							event.stopPropagation();
+							this._inputValue(this.select.val());
+							this._change();
+						}
+					});
+
+					if (this.options.button) {
+						const container = $('<div>');
+						this.button = $('<a>').addClass('editor-button');
+
+						container.css({ display: 'flex' }).append(
+							this.notSelect.css({ flex: '1' }),
+							this.select.css({ flex: '1' }),
+							$('<div>').css({ width: 8 }),
+							this.button.append($('<i>').attr('class', 'fa fa-list'))
+						);
+
+						this.button.click(() => {
+							const active = this.selectActive();
+							this.selectActive(!active);
+						});
+
+						this._setupLayout(container);
+					}
+					else {
+						this._setupLayout(this.notSelect.add(this.select));
+					}
+
+					this.selectActive(false);
+					this.selectOptions([]);
+				},
+				_inputValue: function (value) { throw 'abstract widget you dingus'; },
+				_selectValue: function(value) {
+					if(arguments.length === 0) return this.select.val();
+					const found = Array.from(this.select.get(0).options).find(o => o.value === value);
+					this.select.val(found ? value : '');
+				},
+				selectActive: function (active) {
+					const visible = this.select.is(':visible');
+
+					if (arguments.length === 0) {
+						return visible;
+					}
+
+					if (active) {
+						this.notSelect.hide();
+						this.select.show();
+					}
+					else {
+						this.select.hide();
+						this.notSelect.show();
+					}
+				},
+				selectOptions: function (options) {
+					if (arguments.length === 0) {
+						return this.select.children(':not(:disabled)').toArray().map(o => [$(o).val(), $(o).html()]);
+					}
+					// allows [['myval', 'My Label'], 'myValAndLabel_special'] => [.., ['myValAndLabel_special', 'My Val And Label Special']]
+					options = options.map(o => Array.isArray(o) ? o : [o, keyToLabel(o)]);
+					this.select.empty();
+					this.select.append('<option hidden disabled selected value>???</option>');
+					for (const [value, label] of options) $('<option>').val(value).html(label).appendTo(this.select);
+					this._selectValue(this._inputValue());
+				},
+				selectIndex: function(index) {
+					if(arguments.length === 0) return this.select.get(0).selectedIndex - 1;
+					const option = this.select.get(0).options[index + 1];
+					this.value(option && option.value || '');
+				},
+				selectSomething: function() {
+					if(this.selectIndex() < 0) this.selectIndex(0);
+				},
+				choose: function () {
+					const value = this.value();
+					if(!value) this.selectSomething();
+					const select = this.select.get(0);
+					const found = Array.from(select.options).find(o => o.value === value);
+					this.selectActive(!!found);
+				},
+				value: function (value) {
+					if (arguments.length === 0) return this._inputValue();
+					this._selectValue(value);
+					this._inputValue(value);
+					this._change();
+				},
+				_change: function() {
+					this.element.trigger('change', this.value());
+				}
+			})
+			$.widget('alexaRemote.arInputOrSelect', $.alexaRemote.arBaseOrSelect, {
+				_create: function () {
+					this.input = $('<input>').css({ width: '100%' }).attr('type', 'text')
+						.on('change', () => this.element.trigger('change', this.input.val()));
+					this._setup(this.input);
+					this.element.addClass('alexaRemote-arInputOrSelect');
+				},
+				_inputValue: function (value) {
+					if(arguments.length === 0) return this.input.val();
+					this.input.val(value);
+				}
+			});
+			$.widget('alexaRemote.arTypedInputOrSelect', $.alexaRemote.arBaseOrSelect, {
+				options: {
+					optionType: 'str',
+				},
+				_create: function () {
+					const container = $('<div>')
+					this.input = $('<input>').appendTo(container)
+						.typedInput({ types: [this.options.optionType, 'msg', 'flow', 'global', 'jsonata', 'env'], default: this.options.optionType })
+						.typedInput('width', '98%') // alright what the heck, typedInput adds +2% on its own
+						.on('change', this._change.bind(this));
+					this._setup(container);
+					this.element.addClass('alexaRemote-arTypedInputOrSelect');
+				},
+				_change: function () {
+					this.element.trigger('change', [this.input.typedInput('type'), this.input.typedInput('value')]);
+				},
+				_inputValue: function (value) {
+					if(arguments.length === 0) return this.input.typedInput('value');
+					this.input.typedInput('value', value);
+				},
+				selectActive: function (arg) {
+					if(arguments.length === 0) {
+						return this._super(...arguments);
+					}
+					
+					this._super(...arguments);
+					this.refresh();
+				},
+				choose: function () {
+					const type = this.input.typedInput('type');
+					type === this.options.optionType ? this._super() : this.selectActive(false);
+				},
+				type: function (type) {
+					if (arguments.length === 0) {
+						return this.input.typedInput('type');
+					}
+
+					this.input.typedInput('type', type);
+					if (this.type() !== this.options.optionType) this.selectActive(false);
+				},
+				types(types) {
+					this.input.typedInput('types', types.concat(['msg', 'flow', 'global', 'jsonata', 'env']));
+				},
+				refresh() {
+					// fix display bug
+					const type = this.input.typedInput('type');
+					this.input.typedInput('type', type === 'msg' ? 'flow' : 'msg');
+					this.input.typedInput('type', type);
+				}
+			});
+			$.widget('alexaRemote.arInputList', {
+				options: {
+					add: function (item, index) { return undefined; },
+					header: undefined
+				},
+				_create: function () {
+					this.list = $('<ol>').appendTo(this.element).editableList({
+						removable: true,
+						sortable: true,
+						scrollOnAdd: true,
+						header: this.options.header && $('<div>').css({ display: 'flex', paddingTop: 4, paddingLeft: 22 + 5, paddingRight: 28 + 5 }).append(this.options.header),
+						addItem: (row, index, data) => {
+							row.css({ display: 'flex' });
+							const callback = this.options.add.bind(row)(data, index);
+							row.data('callback', callback);
+						}
+					});
+
+					this.element.css({ marginBottom: 12, flex: '1', display: 'flex' });
+					this.element.find('.red-ui-editableList').css({ flex: '1', display: 'flex', flexDirection: 'column' });
+					this.element.find('.red-ui-editableList-border').css({ flex: '1', display: 'flex', flexDirection: 'column' });
+					this.element.find('.red-ui-editableList-container').css({ flex: '1' });
+					this.element.find('.red-ui-editableList-addButton').css({ alignSelf: 'flex-start' })
+				},
+				add: function (item) {
+					this.list.editableList('addItem', item)
+				},
+				items: function (items) {
+					if (arguments.length === 0) {
+						return this.list.editableList('items').toArray().map(row => {
+							const callback = row.data('callback');
+							return callback && callback();
+						});
+					}
+
+					this.list.empty();
+					for (const item of items) {
+						this.list.editableList('addItem', item);
+					}
+				}
+			});
+			$.widget('alexaRemote.arInputGroups', {
+				_create: function () {
+					this.element.addClass('alexaRemote-arInputGroups');
+				},
+				groups: function (groups) {
+					if (arguments.length === 0) return this.groupMap;
+					if (this.groupMap) this.groupValue = this.groupObject = undefined;
+					this.groupMap = groups;
+					this.update();
+				},
+				group: function (group) {
+					if (arguments.length === 0) return this.groupKey;
+					if (this.groupKey === group) return;
+					this.groupKey = group;
+					this.groupValue = undefined;
+					this.update();
+				},
+				value: function (value) {
+					if (arguments.length === 0) return this.groupCallbacks && this.groupCallbacks.getter() || null;
+					this.groupValue = value;
+					this.update();
+				},
+				update: function() {
+					this.element.empty();
+					if(!this.groupMap) return;
+					this.groupObject = this.groupMap.hasOwnProperty(this.groupKey) ? this.groupMap[this.groupKey] : undefined;
+					if(typeof this.groupObject === 'function') this.groupObject = { create: this.groupObject };
+					this.groupCallbacks = this.groupObject && this.groupObject.create && this.groupObject.create.bind(this.element)(this.groupValue);
+					if(typeof this.groupCallbacks === 'function') this.groupCallbacks = { getter: this.groupCallbacks };
+					if(this.groupObject) this.element.show(); else this.element.hide();
+					this.element.trigger('change', this.groupKey);
+				}
+			});
+			$.widget('alexaRemote.arInputGroupsSelect', $.alexaRemote.arInputGroups, {
+				options: {
+					label: '',
+					icon: '',
+					divider: false,
+				},
+				_create: function () {
+					this._super();
+
+					this.select = $('<div>')
+						.arSelect({ label: this.options.label, icon: this.options.icon })
+						.insertBefore(this.element)
+						.on('change', () => this.group(this.select.arSelect('value')));   
+
+					if (this.options.divider) {
+						this.select.css({ marginBottom: 0 });
+						$('<hr>').css({ margin: '12px 0px' }).insertAfter(this.select);
+					}
+
+					this.element.addClass('alexaRemote-arInputGroupsSelect');
+				},
+				groups: function (groups) {
+					const options = Object.entries(groups).map(([k, o]) => [k, o.label || keyToLabel(k)]);
+					this.select.arSelect('selectOptions', options);
+					this.select.arSelect('value', this.groupKey || Object.keys(groups)[0]);
+					return this._super(...arguments);
+				},
+				group: function (group) {
+					if(arguments.length !== 0) this.select.arSelect('value', group);
+					return this._super(...arguments);
+				}
+			});
+
+			const loader = new EventEmitter();
+			loader.colorNameToHex = new Map([["blanched_almond", "#ffeacc"], ["pale_goldenrod", "#ede9aa"], ["deep_pink", "#ff1491"], ["cyan", "#00ffff"], ["light_goldenrod", "#f9f9d1"], ["pale_green", "#99f999"], ["medium_blue", "#0000cc"], ["dark_turquoise", "#00ced1"], ["hot_pink", "#ff68b6"], ["dark_olive_green", "#546b2d"], ["dodger_blue", "#1e8eff"], ["red", "#ff0000"], ["goldenrod", "#d8a421"], ["blue", "#0000ff"], ["fuchsia", "#ff00ff"], ["medium_turquoise", "#47d1cc"], ["light_steel_blue", "#afc4dd"], ["navajo_white", "#ffddad"], ["antique_white", "#f9ead6"], ["cornsilk", "#fff7db"], ["dark_slate_blue", "#483d8c"], ["light_pink", "#ffb5c1"], ["gainsboro", "#dbdbdb"], ["slate_blue", "#6a59cc"], ["light_slate_gray", "#778799"], ["wheat", "#f4ddb2"], ["plum", "#dda0dd"], ["dark_magenta", "#8c008c"], ["peach_puff", "#ffd8ba"], ["sea_green", "#2d8c56"], ["blue_violet", "#8a2be2"], ["burlywood", "#ddb687"], ["dark_cyan", "#008c8c"], ["dark_green", "#006300"], ["rebecca_purple", "#663399"], ["web_purple", "#7f007f"], ["pale_turquoise", "#afeded"], ["olive_drab", "#6a8e23"], ["dark_red", "#8c0000"], ["alice_blue", "#eff7ff"], ["medium_aquamarine", "#66ccaa"], ["orchid", "#d870d6"], ["old_lace", "#fcf4e5"], ["seashell", "#fff4ed"], ["brown", "#a52828"], ["dark_gray", "#a8a8a8"], ["dark_orange", "#ff8c00"], ["sandy_brown", "#f4a360"], ["dim_gray", "#686868"], ["turquoise", "#3fe0d0"], ["purple", "#a021ef"], ["tan", "#d1b58c"], ["pink", "#ffbfcc"], ["dark_goldenrod", "#b7860a"], ["misty_rose", "#ffe2e0"], ["aqua", "#00ffff"], ["yellow", "#ffff00"], ["light_gray", "#d3d3d3"], ["pale_violet_red", "#db7094"], ["medium_spring_green", "#00f99a"], ["light_sea_green", "#21b2ab"], ["forest_green", "#218c21"], ["moccasin", "#ffe1b5"], ["web_gray", "#7f7f7f"], ["deep_sky_blue", "#00bfff"], ["white_smoke", "#f4f4f4"], ["gold", "#ffd500"], ["lime", "#c7ff1f"], ["olive", "#7f7f00"], ["web_green", "#007f00"], ["light_coral", "#ef7f7f"], ["royal_blue", "#3f67e0"], ["floral_white", "#fff9ef"], ["navy_blue", "#00007f"], ["bisque", "#ffe2c4"], ["coral", "#ff7e4f"], ["yellow_green", "#99cc33"], ["salmon", "#ffa07a"], ["papaya_whip", "#ffefd6"], ["light_yellow", "#ffffe0"], ["medium_sea_green", "#3db270"], ["steel_blue", "#4482b5"], ["light_green", "#8eed8e"], ["firebrick", "#b22121"], ["midnight_blue", "#191970"], ["linen", "#f9efe5"], ["violet", "#ed82ed"], ["cadet_blue", "#5e9ea0"], ["light_salmon", "#ffa07a"], ["spring_green", "#00ff80"], ["mint_cream", "#f4fff9"], ["dark_khaki", "#bcb76b"], ["maroon", "#af3061"], ["web_maroon", "#7f0000"], ["dark_sea_green", "#8ebc8e"], ["crimson", "#db143c"], ["tomato", "#ff6347"], ["lawn_green", "#7efc00"], ["white", "#ffffff"], ["lavender", "#9f80ff"], ["green_yellow", "#afff2d"], ["chocolate", "#d1691e"], ["lavender_blush", "#ffeff4"], ["dark_orchid", "#9933cc"], ["sky_blue", "#87ceea"], ["magenta", "#ff00ff"], ["medium_violet_red", "#c61485"], ["gray", "#bfbfbf"], ["orange_red", "#ff4400"], ["silver", "#bfbfbf"], ["green", "#00ff00"], ["light_cyan", "#e0ffff"], ["chartreuse", "#80ff00"], ["dark_salmon", "#e8967a"], ["sienna", "#a0512d"], ["saddle_brown", "#8c4411"], ["thistle", "#d8bfd8"], ["lemon_chiffon", "#fff9cc"], ["light_blue", "#add8e5"], ["indigo", "#4a0082"], ["indian_red", "#cc5b5b"], ["medium_orchid", "#ba54d3"], ["dark_violet", "#9400d3"], ["ghost_white", "#f7f7ff"], ["lime_green", "#33cc33"], ["medium_purple", "#9470db"], ["teal", "#007f7f"], ["beige", "#f4f4db"], ["peru", "#cc833f"], ["dark_blue", "#00008c"], ["light_sky_blue", "#87cdf9"], ["ivory", "#ffffef"], ["honeydew", "#efffef"], ["dark_slate_gray", "#2d4f4f"], ["orange", "#ffa600"], ["cornflower", "#6393ed"], ["slate_gray", "#707f8e"], ["medium_slate_blue", "#7a68ed"], ["azure", "#efffff"], ["powder_blue", "#afe0e5"], ["snow", "#fff9f9"], ["aquamarine", "#7fffd2"], ["khaki", "#efe58c"], ["black", "#000000"], ["rosy_brown", "#bc8e8e"],]);
+			loader.colorTemperatureNameToHex = new Map([["sunset", "#ff9227"], ["warm", "#ff9227"], ["evening", "#ff9227"], ["warm_white", "#ff9227"], ["candlelight", "#ff9227"], ["relax", "#ff9227"], ["soft_white", "#ffa757"], ["incandescent", "#ffa757"], ["soft", "#ffa757"], ["reading_white", "#ffa757"], ["reading", "#ffa757"], ["white", "#ffcea6"], ["daytime", "#ffedde"], ["daylight_white", "#ffedde"], ["daytime_white", "#ffedde"], ["daylight", "#ffedde"], ["cool_white", "#f3f2ff"], ["cool", "#f3f2ff"], ["bright_white", "#f3f2ff"]]);
+			loader.init = function(success, account='', data) {
+				this.success 				= success;
+				this.account 				= account;
+				this.colorNames 			= !success ? [] : data.colorNames;
+				this.colorTemperatureNames 	= !success ? [] : data.colorTemperatureNames;
+				this.entityById 			= !success ? {} : data.entityById;
+				this.entities 				= !success ? [] : Object.entries(this.entityById).map(([id, [label, properties, actions, type]]) => [id, label, properties, actions, type]);
+				this.emit('change', this.success);
+			}
+			loader.on('change', (success) => console.log('loaderChange', {state: success ? 'SUCCESS' : 'FAILURE', loader:loader}));
+			loader.init(false);
+
+			const data = template(this.config, { option: 'get', value: undefined });
+			const form = $('#dialog-form').css({ display: 'flex', flexDirection: 'column' });
+			const inputs = $('#node-input-inputs').css({ flex: '1', display: 'flex', flexDirection: 'column' }).arInputGroups()
+				.arInputGroups('group', data.option)
+				.arInputGroups('value', data.value)
+				.arInputGroups('groups', {
+					get: function (data) {
+						data = template(data, 'simplified');
+
+						const what = $('<div>').appendTo(this)
+							.arSelect({ label: 'What', icon: 'fa fa-question-circle', button: true })
+							.arSelect('selectOptions', ['devices', 'groups', 'entities', 'definitions', ['simplified', 'Simplified (cached)']])
+							.arSelect('value', data);
+
+						return () => what.arSelect('value');
+					},
+					query: function (data) {
+						data = template(data, [{}], 1);
+
+						const list = $('<div>').appendTo(this).arInputList({
+							header: $('<div>').text('Appliance / Group').css({ flex: '1' }).add($('<div>').text('Property').css({ flex: '1' })),
+							add: function (data) {
+								data = template(data, { entity: '', property: 'all', format: '' });
+
+								const entity = $('<div>').arInputOrSelect().arInputOrSelect('value', data.entity);
+								const property = $('<div>').arInputOrSelect().arInputOrSelect('value', data.property);
+								const format = $('<div>').arInputGroups()
+									.arInputGroups('group', data.property)
+									.arInputGroups('value', data.format)
+									.arInputGroups('groups', {
+										color: function(data) {
+											data = template(data, '') || 'hex';
+
+											const input = $('<div>').arSelect()
+												.arSelect('selectOptions', expand(['native', 'hex', 'rgb', 'hsv']))
+												.arSelect('value', data)
+												.appendTo(this);
+
+											return () => input.arSelect('value');
+										}
+									});
+
+								this.append(
+									entity.css({flex: '1'}),
+									$('<div>').css({minWidth: 10}),
+									$('<div>').css({flex: '1', display: 'flex'}).append(
+										property.css({flex: '1'}),
+										format.css({flex: '1', marginLeft: 10})
+									)
+								)
+
+								const updateFormat = () => {
+									format.arInputGroups('group', property.arInputOrSelect('value'));
+								}
+								const updateProperty = (user) => {
+									const [label, properties, actions] = loader.entityById[entity.arInputOrSelect('value')] || [];
+									property.arInputOrSelect('selectOptions', [['all', 'All Properties']].concat(properties || []));
+									property.arInputOrSelect('selectActive', loader.success);
+									if(user || !property.arInputOrSelect('value')) property.arInputOrSelect('selectSomething');
+								}
+								const updateEntity = () => {
+									const entities = loader.entities.filter(([id, label, properties, actions]) => properties.length !== 0);
+									entity.arInputOrSelect('selectOptions', entities);
+									entity.arInputOrSelect('selectActive', loader.success);
+									if (!entity.arInputOrSelect('value')) entity.arInputOrSelect('selectSomething');
+								};
+								const requestUpdate = () => {
+									if (!inDocument(entity)) return;
+									loader.once('change', requestUpdate);
+									updateEntity();
+									updateProperty();
+									updateFormat();
+								}
+
+								property.on('change', updateFormat)
+								entity.on('change', () => updateProperty(true));
+								requestUpdate();
+
+								return () => clean({
+									entity: entity.arInputOrSelect('value'),
+									property: property.arInputOrSelect('value'),
+									format: format.arInputGroups('value')
+								});
+							},
+						});
+						list.arInputList('items', data);
+
+						return () => list.arInputList('items');
+					},
+					action: function (data) {
+						data = template(data, [{}], 1);
+
+						const list = $('<div>').appendTo(this).arInputList({
+							header: $('<div>').css({ flex: '1' }).text('Appliance / Group').add($('<div>').css({ flex: '1.5' }).text('Action')),
+							add: function (data) {
+								data = template(data, { entity: '', action: '', value: {}, scale: {} }, 1);
+
+								const row = $('<div>').css({flex: '1', display: 'flex'}).appendTo(this.css({flexDirection: 'column'}));
+								const separator = $('<div>').css({minWidth: 10}).appendTo(row);
+								const entity = $('<div>').arInputOrSelect().arInputOrSelect('value', data.entity).css({flex: '1'}).insertBefore(separator);
+								const action = $('<div>').arInputOrSelect().arInputOrSelect('value', data.action).css({flex: '1.5'}).insertAfter(separator);
+
+								function prepareLockAction(data) {
+									data = template(data, { value: { type: 'str', value: 'locked' }});
+
+									const value = $('<div>').css({ marginTop: 10 }).appendTo(this)
+										.arTypedInputOrSelect({ label: 'Lock State', button: true })
+										.arTypedInputOrSelect('selectOptions', ['locked', 'unlocked', 'jammed'])
+										.arTypedInputOrSelect('type', data.value.type)
+										.arTypedInputOrSelect('value', data.value.value)
+										.arTypedInputOrSelect('choose');
+
+									return () => ({ value: {
+										type: value.arTypedInputOrSelect('type'),
+										value: value.arTypedInputOrSelect('value')
+									}});
+								}
+								const parameters = $('<div>').css({ display: 'flex', flex: '1', flexDirection: 'column' }).insertAfter(row).arInputGroups()
+									.arInputGroups('group', data.action)
+									.arInputGroups('value', data.value.type ? data : data.value)
+									.arInputGroups('groups', {
+										setColor: function (data) {
+											data = template(data, { value: {type: 'str', value: '' }});
+
+											const value = $('<div>').css({ marginTop: 10 }).appendTo(this)
+												.arTypedInputOrSelect({ label: 'Color', button: true })
+												.arTypedInputOrSelect('type', data.value.type)
+												.arTypedInputOrSelect('value', data.value.value);
+
+											const label = value.find('label');
+											const separator = $('<div>').css({ width: 8 }).hide();
+											const preview = $('<div>').css({ width: 34, height: 34, border: '1px solid #ccc', borderRadius: 4, boxSizing: 'border-box' }).hide();
+											const wrap = $('<div>').css({ flex: '1', display: 'flex' }).insertAfter(label).append(label, separator, preview);
+
+											const updatePreview = () => {
+												const type = value.arTypedInputOrSelect('type');
+												if(type !== 'str') return;
+
+												const name = value.arTypedInputOrSelect('value');
+												const color = loader.colorNameToHex.get(name);
+
+												if(!color) {
+													preview.add(separator).hide();
+													return;
+												}
+												
+												preview.add(separator).show();
+												preview.css({background: color});
+											}
+											const updateValue = () => {
+												if (!inDocument(value)) return;
+												loader.once('change', updateValue);
+												value.arTypedInputOrSelect('selectOptions', loader.colorNames).arTypedInputOrSelect('choose');
+											}
+
+											value.on('change', updatePreview);
+											updateValue();
+											updatePreview();
+
+											return () => ({ value: {
+												type: value.arTypedInputOrSelect('type'),
+												value: value.arTypedInputOrSelect('value')
+											}});
+										},
+										setColorTemperature: function (data) {
+											data = template(data, { value: {type: 'str', value: '' }});
+
+											const value = $('<div>').css({ marginTop: 10 }).appendTo(this)
+												.arTypedInputOrSelect({ label: 'Color Temp.', button: true })
+												.arTypedInputOrSelect('type', data.value.type)
+												.arTypedInputOrSelect('value', data.value.value);
+
+											const label = value.find('label');
+											const separator = $('<div>').css({ width: 8 }).hide();
+											const preview = $('<div>').css({ width: 34, height: 34, border: '1px solid #ccc', borderRadius: 4, boxSizing: 'border-box' }).hide();
+											const wrap = $('<div>').css({ flex: '1', display: 'flex' }).insertAfter(label).append(label, separator, preview);
+
+											const updatePreview = () => {
+												const type = value.arTypedInputOrSelect('type');
+												if(type !== 'str') return;
+
+												const name = value.arTypedInputOrSelect('value');
+												const color = loader.colorTemperatureNameToHex.get(name);
+
+												if(!color) {
+													preview.add(separator).hide();
+													return;
+												}
+												
+												preview.add(separator).show();
+												preview.css({background: color});
+											}
+											const updateValue = () => {
+												if (!inDocument(value)) return;
+												loader.once('change', updateValue);
+												value.arTypedInputOrSelect('selectOptions', loader.colorTemperatureNames).arTypedInputOrSelect('choose');
+											}
+
+											value.on('change', updatePreview);
+											updateValue();
+											updatePreview();
+
+											return () => ({ value: {
+												type: value.arTypedInputOrSelect('type'),
+												value: value.arTypedInputOrSelect('value')
+											}});
+										},
+										setBrightness: function (data) {
+											data = template(data, { value: { type: 'num', value: '50' }});
+
+											const value = $('<div>').css({ marginTop: 10 }).appendTo(this)
+												.arTypedInput({ label: 'Brightness', types: ['num', 'msg', 'flow', 'global', 'jsonata', 'env'] })
+												.arTypedInput('type', data.value.type)
+												.arTypedInput('value', data.value.value);
+
+											return () => ({ value: {
+												type: value.arTypedInput('type'),
+												value: value.arTypedInput('value')
+											}});
+										},
+										setPercentage: function (data) {
+											data = template(data, { value: { type: 'num', value: '50' }});
+
+											const value = $('<div>').css({ marginTop: 10 }).appendTo(this)
+												.arTypedInput({ label: 'Percentage', types: ['num', 'msg', 'flow', 'global', 'jsonata', 'env'] })
+												.arTypedInput('type', data.value.type)
+												.arTypedInput('value', data.value.value);
+
+											return () => ({ value: {
+												type: value.arTypedInput('type'),
+												value: value.arTypedInput('value')
+											}});
+										},
+										setLockState: prepareLockAction,
+										lockAction: prepareLockAction,
+										setTargetTemperature: function (data) {
+											data = template(data, { value: { type: 'num', value: '20' }, scale: { type: 'str', value: 'celsius' }});
+
+											const scale = $('<div>').css({ marginTop: 10 }).appendTo(this)
+												.arTypedInputOrSelect({ label: 'Scale', button: true })
+												.arTypedInputOrSelect('selectOptions', ['celsius', 'fahrenheit'])
+												.arTypedInputOrSelect('type', data.scale.type)
+												.arTypedInputOrSelect('value', data.scale.value)
+												.arTypedInputOrSelect('choose');
+
+											const value = $('<div>').css({ marginTop: 10 }).appendTo(this)
+												.arTypedInput({ label: 'Temperature', types: ['num', 'msg', 'flow', 'global', 'jsonata', 'env'] })
+												.arTypedInput('type', data.value.type)
+												.arTypedInput('value', data.value.value);
+
+											return () => ({
+												scale: { type: scale.arTypedInputOrSelect('type'), value: scale.arTypedInputOrSelect('value') },
+												value: { type: value.arTypedInput('type'), value: value.arTypedInput('value') }
+											});
+										},
+									});
+
+								const updateParameters = () => {
+									const value = action.arInputOrSelect('value');
+									parameters.arInputGroups('group', value);
+								};
+								const updateAction = (user) => {
+									const [label, properties, actions] = loader.entityById[entity.arInputOrSelect('value')] || [];
+									action.arInputOrSelect('selectOptions', actions || []);
+									action.arInputOrSelect('selectActive', loader.success);
+									if(user || !action.arInputOrSelect('value')) action.arInputOrSelect('selectSomething');
+								};
+								const updateEntity = () => {
+									const entities = loader.entities.filter(([id, label, properties, actions]) => actions.length !== 0);
+									entity.arInputOrSelect('selectOptions', entities);
+									entity.arInputOrSelect('selectActive', loader.success);
+									if (!entity.arInputOrSelect('value')) entity.arInputOrSelect('selectSomething');
+								};
+								const requestUpdate = () => {
+									if (!inDocument(entity)) return; 
+									loader.once('change', requestUpdate);
+									updateEntity();
+									updateAction();
+								}
+
+								action.on('change', updateParameters);
+								entity.on('change', () => updateAction(true));
+								requestUpdate();
+
+								return () => {
+									const result = {};
+									result.entity = entity.arInputOrSelect('value');
+									result.action = action.arInputOrSelect('value');
+									Object.assign(result, parameters.arInputGroups('value'));
+									return result;
+								};
+							}
+						});
+						list.arInputList('items', data);
+
+						return () => list.arInputList('items');
+					},
+					discover: function (data) { },
+					forget: function (data) {
+						data = template(data, { what: 'device', entity: undefined });
+
+						const what = $('<div>').appendTo(this)
+							.arSelect({ label: 'What', icon: 'fa fa-question-circle' })
+							.arSelect('selectOptions', ['device', 'group', 'allDevices'])
+							.arSelect('value', data.what);
+
+						const getInputGroupByType = function (entityType) {
+							return function (data) {
+								data = template(data, { type: 'str', value: '' });
+
+								const entity = $('<div>').appendTo(this)
+									.arTypedInputOrSelect({ label: 'Name or Id', icon: 'fa fa-ticket', button: true })
+									.arTypedInputOrSelect('type', data.type)
+									.arTypedInputOrSelect('value', data.value)
+									.arTypedInputOrSelect('choose');
+
+								const updateEntity = () => {
+									entity.arTypedInputOrSelect('selectOptions', loader.entities.filter(([id, label, properties, actions, type]) => type === entityType));
+									entity.arTypedInputOrSelect('selectActive', loader.success);
+									if (!entity.arTypedInputOrSelect('value')) entity.arTypedInputOrSelect('selectSomething');
+								};
+								const requestUpdate = () => {
+									if (!inDocument(entity)) return;
+									loader.once('change', requestUpdate);
+									updateEntity();
+								}
+								requestUpdate();
+
+								return () => ({
+									type: entity.arTypedInputOrSelect('type'),
+									value: entity.arTypedInputOrSelect('value')
+								});
+							}
+						}
+
+						const group = $('<div>').appendTo(this).arInputGroups()
+							.arInputGroups('group', data.what)
+							.arInputGroups('value', data.entity)
+							.arInputGroups('groups', { 
+								device: getInputGroupByType('APPLIANCE'), 
+								group: getInputGroupByType('GROUP')
+							});
+
+						what.on('change', () => group.arInputGroups('group', what.arSelect('value')));
+						what.trigger('change');
+
+						return () => clean({
+							what: what.arSelect('value'),
+							entity: group.arInputGroups('value')
+						});
+					},
+				});
+			const select = $('<div>').arSelect({ label: 'Select', icon: 'fa fa-sort'}).arSelect('selectOptions', ['get', 'query', 'action', 'discover', 'forget']).arSelect('value', data.option).insertBefore(inputs);
+			const divider = $('<hr>').css({ margin: '12px 0px' }).insertBefore(inputs);
+			const info = $('<div>').addClass('form-tips').css({marginBottom: 12})
+				.html('<b>Note:</b> Select an initialised account first to be able to select from a list of devices!').insertBefore(inputs);
+
+			function updateInfo() {
+				const value = select.arSelect('value');
+				//console.log('updateInfo', {value: value, success:loader.success});
+
+				if(loader.success) {
+					info.hide();
+				}
+				else if(value === 'query' || value === 'action' || value === 'forget') {
+					info.html = '<b>Note:</b> Select an initialised account first to be able to select from a list of devices!';
+					info.show();
+				}
+			}
+			updateInfo();
+			loader.on('change', updateInfo);
+			select.on('change', updateInfo);
+			select.on('change', () => inputs.arInputGroups('group', select.arSelect('value')));
+
+			function updateLoader() {
+				const account = $('#node-input-account').val();
+				if(loader.account === account) return /*console.log('updateLoader', {result: 'same account', account: account, loader: loader})*/;
+				loader.init(false, account);
+				if(!account || account === '_ADD_') return /*console.log('updateLoader', {result: 'invalid account', account: account, loader: loader})*/;
+
+				$.get('/alexa-remote-smarthome.json', { account: account }, null, 'json')
+					.done(data => { loader.init(true, account, data); /*console.log('updateLoader', {result: 'success', account: account, loader: loader});*/ })
+					.fail(res => RED.notify(res.responseText || 'Unknown error, reopen this node...', 'error'));
+			}
+			updateLoader();
+			$('#node-input-account').on('change', updateLoader);
+
+			const outputs = $('#node-input-outputs');
+			const outputsRow = outputs.parent();
+			outputs.spinner({
+				min: 1,
+				change: () => {
+					const value = outputs.val();
+					if (!value.match(/^\d+$/) || value < 1) {
+						outputs.spinner('value', 1);
+					}
+				}
+			});
+			const updateOutputVisibility = () => {
+				switch (inputs.arInputGroups('group')) {
+					case 'query':
+					case 'action':
+						outputsRow.show();
+						break;
+					default:
+						outputs.spinner('value', 1);
+						outputsRow.hide();
+						break;
+				}
+			};
+			select.on('change', updateOutputVisibility);
+			updateOutputVisibility();
 		},
-		oneditsave: function() {
-            const inputs = $('#node-input-config-container');
-            this.config = {
-                option: inputs.arInputGroups('group'),
-                value: inputs.arInputGroups('value')
-            }
-            console.log('saved', this.config);
-        },
-        oneditresize: function() {
-            const occupiedHeight = $('#dialog-form>div:not(#node-input-config-container)').toArray()
-                .map(e => $(e).outerHeight(true))
-                .reduce((r,h) => r + h);
+		oneditsave: function () {
+			function clean(obj) {
+				return Object.entries(obj).filter(([k,v]) => v || (typeof v === 'number')).reduce((o,[k,v]) => (o[k] = v, o), {});
+			}
 
-            const maximumHeight = $('#dialog-form').height();
-            const availableHeight = maximumHeight - occupiedHeight - (16 + 2 + 16 - 12); // hr
-
-            const configs = $('#node-input-config-container');
-            configs.arInputGroups('height', availableHeight);
-            //console.log('dialog', {max: maximumHeight, occ: occupiedHeight, avail: availableHeight});
-        }
-    });
+			const inputs = $('#node-input-inputs');
+			this.config = clean({
+				option: inputs.arInputGroups('group'),
+				value: inputs.arInputGroups('value')
+			});
+			console.log('saved', this.config);
+		},
+	});
 </script>

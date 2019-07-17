@@ -1,333 +1,277 @@
-const tools = require('../lib/tools.js');
+const tools = require('../lib/common.js');
 const util = require('util');
+const convert = require('../lib/color-convert.js');
 
 module.exports = function (RED) {
 
 	function AlexaRemoteSmarthome(input) {
 		RED.nodes.createNode(this, input);
-	
-		tools.assignNode(RED, this, ['account'], input);
 		tools.assign(this, ['config', 'outputs'], input);
-		if(!tools.nodeSetupForStatusReporting(this)) return;
+		tools.assignNode(RED, this, ['account'], input);
+		if(!tools.nodeSetup(this, input, true)) return;
 		//console.log({input:input});
 
 		this.on('input', function (msg) {
-			if(!this.account.initialised) {
-				return tools.nodeErrVal(this, msg, new Error('Account not initialised'));
-			}
-
-			const {option, value} = this.config;
-			//console.log({id: id, value:value});
-
+			// TODO: change {} to msg, caution! errors!
+			const send = tools.nodeGetSendCb(this, {});
+			const error = tools.nodeGetErrorCb(this);
+			if(this.account.state.code !== 'READY') return error('Account not initialised!');
 			this.status({ shape: 'dot', fill: 'grey', text: 'sending' });
-			const account = this.account;
-			const alexa = account.alexa;
-			const callback = (err, val) => tools.nodeErrVal(this, msg, err, val);
-			const callbackCached = (val) => val ? callback(null, val) : callback(new Error('Cached not available.'));
+			const alexa = this.account.alexa;
+			const {option, value} = this.config;
 
 			switch(option) {
 				case 'get': {
-					switch(value.what) {
-						case 'devices': 	return alexa.getSmarthomeDevices(callback);
-						case 'groups': 		return alexa.getSmarthomeGroups(callback);
-						case 'entities': 	return alexa.getSmarthomeEntities(callback);
-						case 'definitions': return alexa.getSmarthomeBehaviourActionDefinitions(callback);
-						case 'simplified': 	return callbackCached(account.smarthomeSimplified);
-						default: 			return callback(new Error('Invalid "What"!'));
+					switch(value) {
+						case 'devices': 	return alexa.getSmarthomeDevicesPromise().then(send).catch(error);
+						case 'groups': 		return alexa.getSmarthomeGroupsPromise().then(send).catch(error);
+						case 'entities': 	return alexa.getSmarthomeEntitiesPromise().then(send).catch(error);
+						case 'definitions': return alexa.getSmarthomeBehaviourActionDefinitionsPromise().then(send).catch(error);
+						case 'simplified': 	return alexa.smarthomeSimplifiedByEntityIdExt ? send(alexa.smarthomeSimplifiedByEntityIdExt) : error('Not available?!');
+						default: 			return error('invalid input', this.config);
 					}
 				}
 				case 'query': {
-					if(!tools.matches(value, { list: [{	entity: '',	property: '' }] })) {
-						return callback(new Error('Invalid Input! Notify the developer!'), this.config);
+					if(!tools.matches(value, [{	entity: '',	property: '' }])) {
+						return error('invalid input', this.config);
 					}
 
-					const queries = tools.clone(value.list);
-					for(const query of queries) {
-						const id = query.entity;
-						delete query.entity;
+					// i don't know either
+					const getIdForQuery = (entity) => entity.type === 'APPLIANCE' ? entity.applianceId : entity.entityId;
 
-						const entity = account.findSmarthomeEntity(id);
-						if(!entity) return callback(new Error(`Device or group "${id}" not found!`));
+					const queries = value.length === 0 ? msg.payload : value;
+					const entities = queries.map(query => {
+						const entity = alexa.findSmarthomeEntityExt(query.entity);
+						if(!entity) error(`smarthome entity not found: "${query.entity}"`, query.entity);
+						return entity;
+					});
+					if(entities.includes(undefined)) return;
 
-						query.entityType = entity.type;
-						query.entityName = entity.name;
+					const requests = entities.map(entity => ({entityType: entity.type, entityId: getIdForQuery(entity)}));
 
-						if(entity.type === 'GROUP') {
-							query.entityId = entity.entityId;
-
-							query.children = [];
-							for(const entityId of entity.entityIds) {
-								const entity = account.smarthomeSimplified && account.smarthomeSimplified[entityId];
-								if(!entity) continue;
-								
-								const child = {};
-								child.entityId = entity.applianceId;
-								child.property = query.property;
-								child.entityType = entity.type;
-								child.entityName = entity.name;						
-
-								query.children.push(child);
-							}						
-						}
-						else {
-							query.entityId = entity.applianceId; // yes this is correct
-						}
-					}
-					
-					const requests = queries.map(query => ({
-						entityType: query.entityType,
-						entityId: query.entityId
-					}));
-	
-					return tools.querySmarthomeDevices(alexa, requests, (err, res) => {
-						if(err) {
-							return callback(err, res);
+					return alexa.querySmarthomeDevicesRawExt(requests).then(response => {
+						if(!tools.matches(response, { 
+							deviceStates: [{ entity: { entityId: '', entityType: ''}, capabilityStates: ['']}],
+							errors: [{ entity: { entityId: '', entityType: '' }}]
+						})) {
+							return error('unexpected response layout', reponse);
 						}
 
-						if(!tools.matches(res, {deviceStates: [], errors: []})) {
-							const err = new Error('Unexpected response layout! Notify the developer!');
-							return callback(err, res);
+						const stateById = new Map();
+						const errorById = new Map();
+
+						for(const state of response.deviceStates) {
+							const simplified = {};
+							simplified.id = state.entity.entityId;
+							simplified.type = state.entity.type;
+							if(state.error) simplified.error = state.error;
+							simplified.properties = state.capabilityStates
+								.map(json => tools.tryParseJson(json))
+								.filter(cap => tools.isObject(cap))
+								.reduce((o,cap) => (o[cap.name] = cap.value, o), {});
+
+							stateById.set(simplified.id, simplified);
 						}
 
-						// map response to
-						// { [id]: { [prop1]: value1 } }
-						const states = {};
-						for(const state of res.deviceStates) {
-							const properties = {};
+						for(const error of response.errors) {
+							errorById.set(error.entity.entityId, error);
+						}
 
-							properties.id = state.entity && state.entity.entityId;
-							properties.type = state.entity && state.entity.entityType;
-							if(state.error) properties.error = state.error;
+						tools.log({states: stateById, errors: errorById});
 
-							const capabilities = (state.capabilityStates || []).map(tools.tryParseJson).filter(tools.isObject);
-							console.log(util.inspect({state:state}, false, 10, true));
-
-							for(const capability of capabilities) {
-								if(!tools.matches(capability, { name: '', value: undefined })) {
-									const err = new Error('Unexpected capability layout! Notify the developer!');
-									err.warning = true;
-									callback(err, res);
-									continue;
-								}
-
-								properties[capability.name] = capability.value;
-							}
-
-							states[properties.id] = properties;
-						};
-
-						const errors = {};
-						for(const state of res.errors) {
-							const properties = {};
-
-							properties.id = state.entity && state.entity.entityId;
-							properties.type = state.entity && state.entity.entityType;
-							properties.code = state.code;
-							properties.message = state.message;
-							properties.data = state.data;
-
-							errors[properties.id] = properties;
-						};
-
-						console.log(util.inspect({
-							states: states,
-							errors: errors,
-						}, false, 10, true));
-
-						const mapApplianceQuery = (query, reportErrors = true) => {
-							const state = states[query.entityId];
-							if(!state) { 
-								if(!reportErrors) return null;
-								
-								let error = errors[query.entityId];
-								if(!error) error = {message: `No response for device ${query.entityId}!`}
-								this.error(error.message, error);
+						const mapQueryToMsg = (entity, query, reportErrors = true) => {
+							if(!entity) {
 								return null;
 							}
 
-							if(query.property) {
-								const mapped = {};
-								mapped.id = state.id;
-								mapped.type = state.type;
-								if(state.error) mapped.error = state.error;
-								//mapped.name = query.entityName;
-								mapped.topic = query.entityName;
-								mapped.payload = state[query.property];
-								return mapped;
+							if(entity.type === 'GROUP') {
+								const msg = {};
+								msg.id = entity.entityId;
+								msg.type = 'GROUP';
+								msg.topic = entity.name;
+								msg.payload = entity.children
+									.filter(e => e.type !== 'GROUP')
+									.map(e => mapQueryToMsg(e, {}, false))
+									.filter(m => m);
+
+								return msg;
+							}
+
+							const id = getIdForQuery(entity);
+							const state = stateById.get(id);
+							if(!state) {
+								if(reportErrors) {
+									const errorObj = errorById.get(id) || { message: `no response for smarthome entity "${entity.name}" (${id})!`};
+									error(errorObj.message, errorObj);								
+								};
+								return null;
+							}
+
+							if(query.property && query.property !== 'all') {
+								const msg = tools.clone(state);
+								msg.payload = msg.properties[query.property];
+								switch(query.property) { 
+									case 'color': { 
+										const native = msg.payload;
+										if(!tools.isObject(native)) break;
+										const hsv = [native.hue, native.saturation, native.brightness];
+
+										switch(query.format) {
+											case 'hex': msg.payload = convert.hsv2hex(hsv); break;
+											case 'rgb': msg.payload = convert.hsv2rgb(hsv); break;
+											case 'hsv': msg.payload = hsv; break;
+										}
+										break;
+									}
+								}
+								msg.topic = entity.name;
+								delete msg.properties;
+								return msg;
 							}
 							else {
-								const mapped = Object.assign({}, state);
-								//mapped.name = query.entityName;
-								mapped.topic = query.entityName;
-								return mapped;
+								const msg = tools.clone(state);
+								msg.payload = msg.properties;
+								msg.topic = entity.name;
+								delete msg.properties;
+								return msg;
 							}
-						};
-						let msgs = queries.map(query => {
-							if(query.entityType === 'APPLIANCE') {
-								return mapApplianceQuery(query);
-							}
-							else if(query.entityType === 'GROUP') {
-								return {
-									id: query.entityId,
-									type: 'GROUP',
-									//name: query.entityName,
-									topic: query.entityName,
-									payload: query.children.map(q => mapApplianceQuery(q, false)).filter(r => r)
-								};
-							}
-						});
-
-						// if there are too many results put them in the last output payload
-						if(msgs.length > this.outputs) {
-							const result = msgs.slice(0, this.outputs);
-							const last = msgs.slice(this.outputs-1);
-							result[this.outputs-1] = {payload: last};
-							msgs = result;
 						}
- 
-						this.status({ shape: 'dot', fill: 'green', text: 'success' });
-						this.send(msgs)
-					});
+
+						const msgs = queries.map((query,i) => mapQueryToMsg(entities[i], query));
+						tools.nodeSendMultiple(this, msgs, this.outputs);
+					}).catch(error);	
 				}
 				case 'action': {
-					if(!tools.matches(value, { list: [{	entity: '',	action: '' }] })) {
-						return callback(new Error('Invalid Input! Notify the developer!'), this.config);
+					if(!tools.matches(value, [{}])) {
+						return error('invalid input', this.config);
 					}
 
-					const requests = tools.clone(value.list);
-					for(const request of requests) {
-						const id = request.entity;
-						delete request.entity;
+					const inputs = value.length === 0 ? msg.payload : value.map(input => {
+						const result = {};
+						result.entity = input.entity;
+						result.action = input.action;
 
-						const entity = account.findSmarthomeEntity(id);
-						if(!entity) return callback(new Error(`Device or group "${id}" not found!`));
-
-						request.entityId = entity.entityId;
-						request.entityType = entity.type;
-						request.entityName = entity.name;
-
-						if(!request.parameters) request.parameters = {};
-
-						for(const [key, parameter] of Object.entries(request.parameters)) {
-							if(tools.isObject(parameter) && parameter.type && parameter.value) {
-								request.parameters[key] = RED.util.evaluateNodeProperty(parameter.value, parameter.type, this, msg);
-							}
+						for(const key of ['value', 'scale']) {
+							const param = input[key];
+							if(!tools.isObject(param)) continue;
+							result[key] = RED.util.evaluateNodeProperty(param.value, param.type, this, msg);
 						}
-					}
-					console.log({requests: requests});
-
-					const nativeRequests = requests.map(request => {
-						const native = {};
-						native.entityId = request.entityId;
-						native.entityType = request.entityType;
-						native.parameters = { action: request.action };
 						
-						switch(request.action) {
+						return result;
+					});
+
+					if(!tools.matches(inputs, [{entity: '', action: ''}])) {
+						return error('invalid input', inputs);
+					}
+
+					const entities = inputs.map(input => {
+						const entity = alexa.findSmarthomeEntityExt(input.entity);
+						if(!entity) error(`smarthome entity not found: "${input.entity}"`, input.entity);
+						return entity;
+					});
+					if(entities.includes(undefined)) return;
+
+					const requests = inputs.map((input, i) => {
+						const entity = entities[i];
+						if(!entity) return;
+
+						const native = {};
+						native.entityId = entity.entityId;
+						native.entityType = entity.entityType;
+						native.parameters = { action: input.action };
+						
+						switch(input.action) {
 							case 'setColor': {
-								native.parameters['colorName'] = account.findColorName(request.parameters.value);
+								native.parameters['colorName'] = alexa.findSmarthomeColorNameExt(input.value);
 								break;
 							}
 							case 'setColorTemperature': {
-								native.parameters['colorTemperatureName'] = account.findColorTemperatureName(request.parameters.value);
+								native.parameters['colorTemperatureName'] = alexa.findSmarthomeColorTemperatureNameExt(input.value);
 								break;
 							}
 							case 'setBrightness': {
-								native.parameters['brightness'] = Number(request.parameters.value);
+								native.parameters['brightness'] = Number(input.value);
 								break;
 							}
 							case 'setPercentage': {
-								native.parameters['percentage'] = Number(request.parameters.value);
+								native.parameters['percentage'] = Number(input.value);
 								break;
 							}
 							case 'setLockState': 
 							case 'lockAction': {
-								native.parameters['targetLockState.value'] = String(request.parameters.value).trim().toUpperCase();
+								native.parameters['targetLockState.value'] = String(input.value).trim().toUpperCase();
 								break;
 							}
 							case 'setTargetTemperature': {
-								native.parameters['targetTemperature.value'] = Number(request.parameters.value);
-								native.parameters['targetTemperature.scale'] = String(request.parameters.scale).trim().toUpperCase();
+								native.parameters['targetTemperature.value'] = Number(input.value);
+								native.parameters['targetTemperature.scale'] = String(input.scale).trim().toUpperCase();
 								break;
 							}
 						}
 
 						return native;
-					});
-					tools.log({nativeRequests: nativeRequests});
+					}).filter(o => o);
 
-					return tools.executeSmarthomeDeviceAction(alexa, nativeRequests, (err, res) => {
-						if(err) {
-							return callback(err, res);
+					return alexa.executeSmarthomeDeviceActionRawExt(requests).then(response => {
+						if(!tools.matches(response, { 
+							controlResponses: [{ entityId: '' }],
+							errors: [{ entity: { entityId: '', entityType: '' }}]
+						})) {
+							error('unexpected response layout', reponse);
 						}
 
-						if(!tools.matches(res, {controlResponses: [], errors: []})) {
-							const err = new Error('Unexpected response layout! Notify the developer!');
-							return callback(err, res);
+						const controlResponseById = new Map();
+						const errorById = new Map();
+
+						for(const controlResponse of response.controlResponses) {
+							controlResponseById.set(controlResponse.entityId, controlResponse);
 						}
 
-						tools.log({response:res});
-
-						const responses = {};
-						for(const response of res.controlResponses) {
-							response.id = response.entityId;
-							delete response.entityId;
-							responses[response.id] = response;
+						for(const error of response.errors) {
+							errorById.set(error.entity.entityId, error);
 						}
 
-						const errors = {};
-						for(const error of res.errors) {
-							error.id = error.entity && error.entity.entityId;
-							error.type = error.entity && error.entity.entityType;
-							delete error.entity;
-							errors[error.id] = error;
-						}
+						const msgs = inputs.map((input, i) => {
+							const entity = entities[i];
+							if(!entity) return null;
 
-						tools.log({responses:responses, errors: errors});
-
-						let msgs = requests.map(request => {
-							const response = responses[request.entityId];
-							if(!response) {
-								let error = errors[request.entityId];
-								if(!error) error = {message: `No response for entity "${request.entityName}" (${request.entityId})!`}
-								this.error(error.message, error);
-								return null;
+							const id = entity.entityId;
+							const controlResponse = controlResponseById.get(id);
+							if(!controlResponse) {
+								const errorObj = errorById.get(id) || {message: `no response for smarthome entity: "${entity.name}" (${id})!`}
+								error(errorObj.message, errorObj);
 							}
 
-							return response;
+							return controlResponse;
 						});
-
-						let successCount = msgs.filter(m => m).length;
-						tools.log({msgs:msgs, count: successCount});
-
-						// if there are too many msgs put them in the last output payload
-						if(msgs.length > this.outputs) {
-							const result = msgs.slice(0, this.outputs);
-							const last = msgs.slice(this.outputs-1).filter(x => x);
-							result[this.outputs-1] = {payload: last};
-							msgs = result;
-						}
-
-						this.status({
-							shape: 'dot',
-							fill: successCount === requests.length ? 'green' : successCount !== 0 ? 'yellow' : 'red',
-							text: `${successCount}/${requests.length} successful`
-						});
-						
-						this.send(msgs);
-					});
+						tools.nodeSendMultiple(this, msgs, this.outputs);
+					}).catch(error);
 				}
 				case 'discover': {
-					return alexa.discoverSmarthomeDevice(callback);
+					return alexa.discoverSmarthomeDevicePromise().then(send).catch(error);
 				}
-				case 'delete': {
-					const what = value.what.name;
-					const id = RED.util.evaluateNodeProperty(value.what.value.name.value, value.what.value.name.type, this, msg);
+				case 'forget': {
+					if(!tools.matches(value, { what: '' })) {
+						return error('invalid input', this.config);
+					}
 					
-					switch(what) {
-						case 'device': 		return alexa.deleteSmarthomeDevice(id, callback);
-						case 'allDevices': 	return alexa.deleteAllSmarthomeDevices(callback);
-						case 'group': 		return alexa.deleteSmarthomeGroup(id, callback);
-						default: 			return callback(new Error('Invalid "What"!'));
+					switch(value.what) {
+						case 'device': {
+							if(!tools.matches(value, { entity: {type: '', value: ''} })) return error('invalid input', this.config);
+							const id = RED.util.evaluateNodeProperty(value.entity.value, value.entity.type, this, msg);;
+							return alexa.deleteSmarthomeDeviceExt(id).then(send).catch(error);
+						}		
+						case 'group': {
+							if(!tools.matches(value, { entity: {type: '', value: ''} })) return error('invalid input', this.config);
+							const id = RED.util.evaluateNodeProperty(value.entity.value, value.entity.type, this, msg);;
+							return alexa.deleteSmarthomeGroupExt(id).then(send).catch(error);
+						}		
+						case 'allDevices': 	{
+							return alexa.deleteAllSmarthomeDevicesExt().then(send).catch(error);
+						}
+						default: {
+							return error('invalid input', this.config);	
+						}
 					}
 				}
 			}

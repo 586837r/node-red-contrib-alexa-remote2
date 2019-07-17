@@ -1,40 +1,34 @@
-const tools = require('../tools/tools.js');
+const tools = require('../lib/common.js');
+const util = require('util');
 
 module.exports = function (RED) {
 	function AlexaRemoteInitNode(input) {
 		RED.nodes.createNode(this, input);
-
 		tools.assignNode(RED, this, ['account'], input);
-		tools.nodeSetupForStatusReporting(this);
+		if(!tools.nodeSetup(this, input, true)) return;
 
-		this.onInput = function (msg) {
-			if(!msg) msg = {};
+		this.on('input', function (msg) {
+			const send = tools.nodeGetSendCb(this, msg);
+			const error = tools.nodeGetErrorCb(this);
 
 			if(msg.payload === 'debug') {
-				console.log(this);
-				return;
+				return send(tools.stringifyOmitCircular(this.account));
 			}
 
-			if(msg.payload === 'stop') {
-				this.account.stopAlexa();
-				return;
+			if(msg.payload === 'stop' || msg.payload === 'reset') {
+				this.account.resetAlexa();
+				return send();
 			}
 
 			if(msg.payload === 'refresh') {
-				const callback = (err, val) => tools.nodeErrVal(this, msg, err, val);
-				this.account.refreshAlexaCookie(callback);
-				return;
+				this.account.refreshAlexa();
+				return send();
 			}
 
-			this.account.initAlexa(msg.payload, (err) => {
-				const options = this.account.alexa._options;
-				const regData = options && options.formerRegistrationData;
-				tools.nodeErrVal(this, msg, err, regData);
-			});
-		}
-
-		this.on('input', this.onInput);
+			return this.account.initAlexa(msg.payload).then(tools.nodeGetSendCb(this, msg)).catch(tools.nodeGetErrorCb(this));
+		});
 	}
+
 	RED.nodes.registerType("alexa-remote-init", AlexaRemoteInitNode);
 
 	/*
