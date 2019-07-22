@@ -33,6 +33,7 @@
 		paletteLabel: 'Alexa Smarthome',
 		label: function () {
 			function keyToLabel(str) {
+				str = String(str);
 				const match = str.match(/(?:[A-Z]?[a-z]+)|[A-Z]|[0-9]+/g);
 				if (match) str = match.map(s => s.slice(0, 1).toUpperCase() + s.slice(1)).join(' ');
 				return str;
@@ -142,7 +143,7 @@
 					return typeof x == 'object' && x !== null && !Array.isArray(x)
 				}
 
-				if(templ === undefined) {
+				if (templ === undefined) {
 					return source;
 				}
 
@@ -155,10 +156,6 @@
 					if (Array.isArray(templ)) {
 						if (templ.length === 0) {
 							return source;
-						}
-
-						if (source.length === 0 && !arrayMayBeEmpty) {
-							return templ;
 						}
 
 						const result = [];
@@ -485,7 +482,7 @@
 				add: function (item) {
 					this.list.editableList('addItem', item)
 				},
-				items: function (items) {
+				value: function (items) {
 					if (arguments.length === 0) {
 						return this.list.editableList('items').toArray().map(row => {
 							const callback = row.data('callback');
@@ -665,9 +662,9 @@
 								});
 							},
 						});
-						list.arInputList('items', data);
+						list.arInputList('value', data);
 
-						return () => list.arInputList('items');
+						return () => list.arInputList('value');
 					},
 					action: function (data) {
 						data = template(data, [{}], 1);
@@ -873,9 +870,9 @@
 								};
 							}
 						});
-						list.arInputList('items', data);
+						list.arInputList('value', data);
 
-						return () => list.arInputList('items');
+						return () => list.arInputList('value');
 					},
 					discover: function (data) { },
 					forget: function (data) {
