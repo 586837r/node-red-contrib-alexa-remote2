@@ -76,7 +76,8 @@
 
 			if(this.name) return this.name;
 			const type = this.routineNode && this.routineNode.type;
-			if(type) return `Routine ${keyToLabel(type)}`
+			if(type === 'routine') return `Routine Execute`;
+			if(type) return `Routine ${keyToLabel(type)}`;
 			return `Routine`;
 		},
 		labelStyle: function () {
@@ -634,7 +635,7 @@
 						['wait',				'&#xf017;  Wait'], // clock-o
 						['stop',				'&#xf04d;  Stop'], // stop
 						['prompt',				'&#xf075;  Prompt'], // comment
-						['volume',				'&#xf028;  Volume'], // volume-down
+						['volume',				'&#xf028;  Volume'], // volume-up
 						['music',				'&#xf001;  Music'], // music   Alexa.Music.PlaySearchPhrase
 						['smarthome',			'&#xf015;  Smarthome'], // home
 						['routine',				'&#xf0e7;  Execute Routine'], // bolt

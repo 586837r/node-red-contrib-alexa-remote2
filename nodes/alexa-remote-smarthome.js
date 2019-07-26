@@ -28,12 +28,12 @@ module.exports = function (RED) {
 						case 'entities': 	return alexa.getSmarthomeEntitiesPromise().then(send).catch(error);
 						case 'definitions': return alexa.getSmarthomeBehaviourActionDefinitionsPromise().then(send).catch(error);
 						case 'simplified': 	return alexa.smarthomeSimplifiedByEntityIdExt ? send(alexa.smarthomeSimplifiedByEntityIdExt) : error('Not available?!');
-						default: 			return error('invalid input', this.config);
+						default: 			return error(`invalid input: "${JSON.stringify(this.config)}"`);
 					}
 				}
 				case 'query': {
 					if(!tools.matches(value, [{	entity: '',	property: '' }])) {
-						return error('invalid input', this.config);
+						return error(`invalid input: "${JSON.stringify(this.config)}"`);
 					}
 
 					// i don't know either
@@ -49,7 +49,7 @@ module.exports = function (RED) {
 
 					const requests = entities.map(entity => ({entityType: entity.type, entityId: getIdForQuery(entity)}));
 
-					return alexa.querySmarthomeDevicesRawExt(requests).then(response => {
+					return alexa.querySmarthomeDevicesExt(requests).then(response => {
 						if(!tools.matches(response, { 
 							deviceStates: [{ entity: { entityId: '', entityType: ''}, capabilityStates: ['']}],
 							errors: [{ entity: { entityId: '', entityType: '' }}]
@@ -143,7 +143,7 @@ module.exports = function (RED) {
 				}
 				case 'action': {
 					if(!tools.matches(value, [{}])) {
-						return error('invalid input', this.config);
+						return error(`invalid input: "${JSON.stringify(this.config)}"`);
 					}
 
 					const inputs = value.length === 0 ? msg.payload : value.map(input => {
@@ -161,7 +161,7 @@ module.exports = function (RED) {
 					});
 
 					if(!tools.matches(inputs, [{entity: '', action: ''}])) {
-						return error('invalid input', inputs);
+						return error(`invalid input: "${JSON.stringify(inputs)}"`);
 					}
 
 					const entities = inputs.map(input => {
@@ -212,7 +212,7 @@ module.exports = function (RED) {
 						return native;
 					}).filter(o => o);
 
-					return alexa.executeSmarthomeDeviceActionRawExt(requests).then(response => {
+					return alexa.executeSmarthomeDeviceActionExt(requests).then(response => {
 						if(!tools.matches(response, { 
 							controlResponses: [{ entityId: '' }],
 							errors: [{ entity: { entityId: '', entityType: '' }}]
@@ -252,17 +252,17 @@ module.exports = function (RED) {
 				}
 				case 'forget': {
 					if(!tools.matches(value, { what: '' })) {
-						return error('invalid input', this.config);
+						return error(`invalid input: "${JSON.stringify(this.config)}"`);
 					}
 					
 					switch(value.what) {
 						case 'device': {
-							if(!tools.matches(value, { entity: {type: '', value: ''} })) return error('invalid input', this.config);
+							if(!tools.matches(value, { entity: {type: '', value: ''} })) return error(`invalid input: "${JSON.stringify(this.config)}"`);
 							const id = RED.util.evaluateNodeProperty(value.entity.value, value.entity.type, this, msg);;
 							return alexa.deleteSmarthomeDeviceExt(id).then(send).catch(error);
 						}		
 						case 'group': {
-							if(!tools.matches(value, { entity: {type: '', value: ''} })) return error('invalid input', this.config);
+							if(!tools.matches(value, { entity: {type: '', value: ''} })) return error(`invalid input: "${JSON.stringify(this.config)}"`);
 							const id = RED.util.evaluateNodeProperty(value.entity.value, value.entity.type, this, msg);;
 							return alexa.deleteSmarthomeGroupExt(id).then(send).catch(error);
 						}		
@@ -270,7 +270,7 @@ module.exports = function (RED) {
 							return alexa.deleteAllSmarthomeDevicesExt().then(send).catch(error);
 						}
 						default: {
-							return error('invalid input', this.config);	
+							return error(`invalid input: "${JSON.stringify(this.config)}"`);
 						}
 					}
 				}
