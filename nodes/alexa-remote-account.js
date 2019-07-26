@@ -78,6 +78,23 @@ function getDeviceLabel(device) {
 	return `&#x${getIcon(device)};  ${device.accountName}`;
 }
 
+function getDeviceSortValue(device) {
+	let value = device.accountName ? device.accountName.charCodeAt(0) : 0;
+
+	switch(device.deviceFamily) {
+		case 'ECHO': 							value -= 1000;
+		case 'WHA':								value -= 1000;
+		case 'FIRE_TV': 						value -= 1000;
+		case 'TABLET': 							value -= 1000;
+		case 'VOX': 							value -= 1000;
+		case 'THIRD_PARTY_AVS_MEDIA_DISPLAY': 	value -= 1000;
+		case 'AMAZONMOBILEMUSIC_ANDROID':		value -= 1000;
+		default:								value -= 1000;
+	}
+
+	return value;
+}
+
 function getRoutineLabel(routine, smarthomeSimplifiedByEntityIdExt) {
 	routine = tools.isObject(routine) && routine || {};
 	const id = String(routine.automationId);
@@ -123,6 +140,36 @@ function getRoutineLabel(routine, smarthomeSimplifiedByEntityIdExt) {
 	}
 
 	return `&#xf059;  ${id}${suffix}` // question-circle
+}
+
+function getBluetoothDeviceLabel(device) {
+	return device.friendlyName;
+}
+
+function getNotificationLabel(not) {
+	if(!tools.matches(not, { type: '', status: '', id: ''})) return `&#xf059;  ???`;
+
+	const name = not.type === 'Timer' ? not.timerLabel : not.reminderLabel;
+	const suffix = not.status === 'ON' ? '' : ` (${String(not.status).toLowerCase()})`;
+	const icon = not.type === 'Timer' ? 'f017' : not.type === 'Alarm' ? 'f0f3' : not.type === 'Reminder' ? 'f073' : 'f059';
+	const shortId = not.id.slice(not.id.lastIndexOf('-') + 1);
+	const shortTime = (not.originalTime || '').slice(0, 5);
+
+	return `&#x${icon};  ${name || (not.type === 'Alarm' ? shortTime : shortId)}${suffix}`;
+}
+
+const getNotificationSortValue = (noti) => {
+	const name = noti.type === 'Timer' ? noti.timerLabel : noti.reminderLabel;		
+
+	const nameValue = name ? name.charCodeAt(0) : 1000;
+
+	const typeValue = 
+		  noti.type === 'Timer' ? 0
+		: noti.type === 'Alarm' ? 10000
+		: noti.type === 'Reminder' ? 20000
+		: 30000;
+
+	return nameValue + typeValue;
 }
 
 module.exports = function (RED) {
@@ -189,26 +236,50 @@ module.exports = function (RED) {
 			this.smarthomeForUiJson = JSON.stringify(smarthomeForUi);
 		}
 		this.buildDevicesForUi = function() {
-			const deviceBySerial = this.alexa.serialNumbers;
-			const result = Object.entries(deviceBySerial).map(([id, dev]) => [id, getDeviceLabel(dev)]);
-			this.devicesForUiJson = JSON.stringify(result);
+			const devicesForUi = Array.from(this.alexa.deviceByIdExt.values())
+				.sort((a,b) => getDeviceSortValue(a) - getDeviceSortValue(b))
+				.map(dev => [dev.serialNumber, getDeviceLabel(dev), dev.capabilities]);
+
+			this.devicesForUiJson = JSON.stringify(devicesForUi);
+		}
+		this.buildNotificationsForUi = function() {
+			const notificationsForUi = Array.from(this.alexa.notificationByIdExt.values())
+				.sort((a,b) => getNotificationSortValue(a) - getNotificationSortValue(b))
+				.map(noti => [noti.notificationIndex, getNotificationLabel(noti), noti.type, noti.deviceSerialNumber]);
+
+			this.notificationsForUiJson = JSON.stringify(notificationsForUi);
 		}
 		this.buildRoutinesForUi = async function() {
-			const routineById = this.alexa.routineByIdExt;
+			const [routines, musicProviders] = await Promise.all([
+				this.alexa.getAutomationRoutinesPromise(),
+				this.alexa.getMusicProvidersPromise(),
+			]);
 
-			const routines = Array.from(routineById.entries())
-				.sort(([_,a],[__,b]) => (a.status === 'DISABLED' ? 1 : -1) - (b.status === 'DISABLED' ? 1 : -1))
-				.map(([id, routine]) => [id, getRoutineLabel(routine, this.alexa.smarthomeSimplifiedByEntityIdExt)]);
+			const routinesForUi = routines
+				.sort((a,b) => (a.status === 'DISABLED' ? 1 : -1) - (b.status === 'DISABLED' ? 1 : -1))
+				.map(routine => [routine.automationId, getRoutineLabel(routine, this.alexa.smarthomeSimplifiedByEntityIdExt)]);
 
-			const musicProviders = this.alexa.musicProvidersExt
-				.filter(obj => obj.supportedOperations.includes('Alexa.Music.PlaySearchPhrase'))
-				.map(obj => [obj.id, obj.displayName]);
+			const musicProvidersForUi = musicProviders
+				.filter(provider => provider.supportedOperations.includes('Alexa.Music.PlaySearchPhrase'))
+				.map(provider => [provider.id, provider.displayName]);
 
 			this.routinesForUiJson = JSON.stringify({
-				routines: routines,
-				musicProviders: musicProviders
+				routines: routinesForUi,
+				musicProviders: musicProvidersForUi
 			});
 		}
+		this.buildBluetoothForUi = async function(warnCb) {
+			const bluetoothStates = (await this.alexa.getBluetoothPromise()).bluetoothStates;
+
+			const bluetoothForUi = bluetoothStates
+				.filter(state => Array.isArray(state.pairedDeviceList))
+				.reduce((o, state) => (o[state.deviceSerialNumber] = state.pairedDeviceList
+					.map(device => [device.address, getBluetoothDeviceLabel(device)]
+				), o), {})
+
+			this.bluetoothForUiJson = JSON.stringify(bluetoothForUi);
+		}
+
 		this.initAlexa = async function(input) {
 			// we can hopefully do without this now by checking if this.alexa changes
 			// if(this.initing) throw new Error('Already initialising!');
@@ -287,7 +358,7 @@ module.exports = function (RED) {
 			}
 
 			if(this.authMethod === 'proxy' && this.cookieFile) {
-				const data = this.alexa.cookieData;
+				const data = alexa.cookieData;
 				const json = JSON.stringify(data);
 				try { fs.writeFileSync(this.cookieFile, json, 'utf8') }
 				catch (error) { warnCb(error) }
@@ -295,7 +366,16 @@ module.exports = function (RED) {
 
 			this.buildDevicesForUi();
 			this.buildSmarthomeForUi();
-			await this.buildRoutinesForUi();
+			this.buildNotificationsForUi();
+
+			this.alexa.on('change-device', () => this.buildDevicesForUi());
+			this.alexa.on('change-smarthome', () => this.buildSmarthomeForUi());
+			this.alexa.on('change-notification', () => this.buildNotificationsForUi());
+
+			await Promise.all([
+				this.buildRoutinesForUi().catch(error => (error.message = `building routines for ui failed: "${error.message}"`, warnCb(error))),
+				this.buildBluetoothForUi().catch(error => (error.message = `building bluetooth for ui failed: "${error.message}"`, warnCb(error))),,
+			]);
 
 			// see above why
 			if(alexa !== this.alexa) {
@@ -332,4 +412,31 @@ module.exports = function (RED) {
 	RED.httpAdmin.get('/alexa-remote-routines.json', (req, res) => accountHttpResponse(RED, 'routinesForUiJson', 'Routines', req, res));
 	RED.httpAdmin.get('/alexa-remote-devices.json', (req, res) => accountHttpResponse(RED, 'devicesForUiJson', 'Devices', req, res));
 	RED.httpAdmin.get('/alexa-remote-smarthome.json', (req, res) => accountHttpResponse(RED, 'smarthomeForUiJson', 'Smarthome Devices', req, res));
+	RED.httpAdmin.get('/alexa-remote-bluetooth.json', (req, res) => accountHttpResponse(RED, 'bluetoothForUiJson', 'Bluetooth Devices', req, res));
+	RED.httpAdmin.get('/alexa-remote-notifications.json', (req, res) => accountHttpResponse(RED, 'notificationsForUiJson', 'Notifications', req, res));
+	RED.httpAdmin.get('/alexa-remote-sounds.json', (req, res) => {
+		const account = RED.nodes.getNode(req.query.account);
+		const device = req.query.device;
+		const label = 'Sounds';
+		console.log(req.url);
+
+		if (!account) {
+			res.writeHeader(400, { 'Content-Type': 'text/plain' });
+			return res.end(`Could not load ${label}: Account not deployed!`);
+		}
+
+		if (account.state.code !== 'READY') {
+			res.writeHeader(400, { 'Content-Type': 'text/plain' });
+			return res.end(`Could not load ${label}: Account not initialised!`);
+		}
+
+		account.alexa.getSoundsExt(device).then(sounds => {
+			const pairs = sounds.map(sound => [JSON.stringify(sound), sound.displayName]);
+			res.writeHeader(200, { 'Content-Type': 'application/json' });
+			res.end(JSON.stringify(pairs));
+		}).catch(error => {
+			res.writeHeader(400, { 'Content-Type': 'text/plain' });
+			return res.end(`Could not load sounds: "${error}"`);
+		});
+	});
 }

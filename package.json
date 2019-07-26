@@ -19,7 +19,9 @@
 			"alexa-remote-init": "nodes/alexa-remote-init.js",
 			"alexa-remote-event": "nodes/alexa-remote-event.js",
 			"alexa-remote-smarthome": "nodes/alexa-remote-smarthome.js",
-			"alexa-remote-routine": "nodes/alexa-remote-routine.js"
+			"alexa-remote-routine": "nodes/alexa-remote-routine.js",
+			"alexa-remote-echo": "nodes/alexa-remote-echo.js",
+			"alexa-remote-other": "nodes/alexa-remote-other.js"
 		}
 	},
 	"repository": {
