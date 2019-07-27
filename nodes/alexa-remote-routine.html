@@ -724,6 +724,7 @@
 
 					const options = [
 						['speak',				'&#xf04b;  Speak'], // play
+						['speakAtVolume', 		'&#xf0fe;  Speak At Volume'],
 					//  ['speakRegularSingle',	'&#xf04b;  Speak Alt'], // play
 						['wait',				'&#xf017;  Wait'], // clock-o
 						['stop',				'&#xf04d;  Stop'], // stop
@@ -734,6 +735,7 @@
 						['routine',				'&#xf0e7;  Execute Routine'], // bolt
 						['pushNotification',	'&#xf10b;  Push Notification'], // mobile
 						['node',				'&#xf126;  Node'], // code-fork
+						['custom',				'&#xf061;  Custom'], // arrow-right
 					];
 
 					const common = { input: {}, right: { group: {}, getter: {} }, bottom: { group: {}, getter: {} } };
@@ -856,15 +858,17 @@
 						channel.type = type;
 						return () => ({ type: type.arSelect('value') });
 					}
+					groups.right.speakAtVolume = function(data) {
+						data = template(data, { type: 'regular' });
+						const type = arSelect(data.type, ['regular', ['ssml', 'SSML'], 'announcement']).appendTo(this);
+						channel.type = type;
+						return () => ({ type: type.arSelect('value') });
+					}
 					groups.right.wait = function(data) {
 						data = template(data, { time: { type: 'num', value: '1' }});
 						const type = arTypedInput(data.time, ['num']).appendTo(this);
+						$('<label>').text('seconds').css({display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0px 15px'}).appendTo(this);
 						return () => ({ time: type.arTypedInput('data') });
-					}
-					groups.right.speakRegularSingle = function (data) {
-						data = template(data, { text: { type: 'str', value: 'Hello World!' }});
-						const input = arTypedInput(data.text, ['str']).appendTo(this);
-						return () => ({text: input.arTypedInput('data')});
 					}
 					groups.right.volume = function(data) {
 						data = template(data, { value: { type: 'str', value: '50' } });
@@ -914,7 +918,7 @@
 
 						const updateRoutine = () => {
 							routine.arTypedInputOrSelect('selectOptions', loader.routines);
-							routine.arTypedInputOrSelect('selectActive', loader.success);
+							routine.arTypedInputOrSelect('selectActiveMaybe', loader.success);
 							if(!routine.arTypedInputOrSelect('value')) routine.arTypedInputOrSelect('selectSomething');
 						}
 						loader.listen('change', routine, updateRoutine);
@@ -932,7 +936,12 @@
 						const input = arSelect(data.type, ['serial', 'parallel']).appendTo(this);
 						return () => ({ type: input.arSelect('value') });
 					}
-					
+					groups.right.custom = function(data) {
+						data = template(data, { type: 'msg', value: 'payload' });
+						const input = arTypedInput(data, ['json']).appendTo(this);
+						return () => input.arTypedInput('data');
+					}
+
 					groups.bottom.speak = function(data) {
 						data = template(data, { text: { type: '', value: '' }, devices: [undefined] });
 						const ssml = {
@@ -958,16 +967,45 @@
 						arRow(devices, 'Devices').appendTo(this).children('label').css({ paddingBottom: 24 }); // to center it to the list (without add button);
 						return () => ({ text: text.arTypedInput('data'), devices: devices.arInputList('value') });
 					};
-					groups.bottom.speakRegularSingle = common.bottom.group.device;
-					groups.bottom.prompt = common.bottom.group.device;
+					groups.bottom.speakAtVolume = function(data) {
+						data = template(data, { text: { type: 'str', value: '' }, volume: {type: 'num', value: '50'}, devices: [undefined] });
+						const ssml = {
+							value: "ssml",
+							label: "SSML",
+							expand: function () {
+								RED.editor.editMarkdown({
+									value: this.value().replace(/\t/g, "\n"),
+									complete: (value) => {
+										this.value(value.replace(/\n/g, "\t"));
+									}
+								})
+							}
+						}
+						const text = arTypedInput(data.text, ['str']);
+						const devices = common.input.deviceList(data.devices);
+						const volume = arTypedInput(data.volume, ['num']);
+						channel.type.on('change', () => {
+							const value = channel.type.arSelect('value');
+							const type = value === 'ssml' ? ssml : 'str'
+							text.arTypedInput('types', [type]);
+						});
+						arRow(text, 'Text').appendTo(this);
+						arRow(volume, 'Volume').appendTo(this);
+						arRow(devices, 'Devices').appendTo(this).children('label').css({ paddingBottom: 24 }); // to center it to the list (without add button);
+						return () => ({ 
+							text: text.arTypedInput('data'), 
+							volume: volume.arTypedInput('data'),
+							devices: devices.arInputList('value'),
+						});
+					}
 					groups.bottom.stop = common.bottom.group.deviceListOrAll;
-					groups.bottom.prompt = common.bottom.group.device;
+					groups.bottom.prompt = common.bottom.group.deviceList;
 					groups.bottom.volume = common.bottom.group.deviceList;
 					groups.bottom.music = function(data) {
 						data = template(data, {provider: { type: 'str', value: ''}, search: {type: 'str', value: ''}, duration: { type: 'num', value: ''}});
 						const provider = arTypedInputOrSelect(data.provider);
 						const search = arTypedInput(data.search);
-						const duration = arTypedInput(data.duration, ['num'], 'Optional');
+						const duration = arTypedInput(data.duration, ['num'], { placeholder: 'Optional' });
 						this.append(
 							arRow(provider, 'Provider'), 
 							arRow(search, 'Search'),
@@ -976,7 +1014,7 @@
 
 						const updateProvider = () => {
 							provider.arTypedInputOrSelect('selectOptions', loader.musicProviders);
-							provider.arTypedInputOrSelect('selectActive', loader.success);
+							provider.arTypedInputOrSelect('selectActiveMaybe', loader.success);
 							if (!provider.arTypedInputOrSelect('value')) provider.arTypedInputOrSelect('selectSomething');
 						}
 						loader.listen('change', provider, updateProvider);
@@ -1039,8 +1077,8 @@
 						if(Object.keys(groups.right).includes(type)) this.separator.show(); else this.separator.hide();
 					});
 					this.separator = $('<div>').css({width: 10}).appendTo(rowDiv);
-					this.inputsRight = $('<div>').css({flex: '3', display: 'flex'}).appendTo(rowDiv).arInputGroups({clean: false}).arInputGroups('groups', groups.right);
-					this.inputsBottom = $('<div>').css({marginTop: 12}).appendTo(this.element).arInputGroups({clean: false}).arInputGroups('groups', groups.bottom);
+					this.inputsRight = $('<div>').css({flex: '3', display: 'flex'}).appendTo(rowDiv).arInputGroups().arInputGroups('groups', groups.right);
+					this.inputsBottom = $('<div>').css({marginTop: 12}).appendTo(this.element).arInputGroups().arInputGroups('groups', groups.bottom);
 
 					this.type(this.select.arSelect('value'));
 				},
@@ -1096,6 +1134,7 @@
 			loader.on('change', (success) => console.log('loaderChange', {state: success ? 'SUCCESS' : 'FAILURE', loader:loader}));
 
 			$('#dialog-form').css({ display: 'flex', flexDirection: 'column' });
+			if(!this.routineNode) this.routineNode = { type: 'speak', payload: { text: 'Hello World!' }};
 			const inputs = $('#node-input-routineNode_div')
 				.arRoutineNode({ loader: loader })
 				.arRoutineNode('data', this.routineNode);
