@@ -61,7 +61,7 @@
 		defaults: {
 			name: { value: '' },
 			account: { value: '', type: 'alexa-remote-account', required: true },
-			config: { value: {} },
+			config: { value: { option: 'get' } },
 		},
 		inputs: 1,
 		outputs: 1,
@@ -919,7 +919,7 @@
 						});
 					},
 					changeNotification: function (data) {
-						data = template(data, { notification: { type: 'str', value: '' }, label: { type: 'str', value: '' }, time: {type: 'str', value:'Jan 1 2020'}, status: { type: 'str', value: '' }, sound: { type: 'json', value: ''} })
+						data = template(data, { notification: { type: 'str', value: '' }, label: { type: 'str', value: '' }, time: {type: 'str', value:''}, status: { type: 'str', value: '' }, sound: { type: 'json', value: ''} })
 
 						const optionalJson = {
 							value: "json",
@@ -946,8 +946,8 @@
 						const values = { type: undefined, device: undefined };
 						const label = arTypedInput(data.label, ['str'], {placeholder: 'Unchanged'});
 						const dateOrTime = arTypedInput(data.time, ['str'], {placeholder: 'Unchanged'});
-						const status = arTypedInputOrSelect(data.status, ['on', 'off', 'paused'], {placeholder: 'Unchanged', some: false});
-						const sound = arTypedInputOrSelect(data.sound, [], {optionType: optionalJson, placeholder: 'Unchanged', some: false});
+						const status = arTypedInputOrSelect(data.status, ['on', 'off', 'paused'], {placeholder: 'Unchanged', choose: false});
+						const sound = arTypedInputOrSelect(data.sound, [], {optionType: optionalJson, placeholder: 'Unchanged', choose: false});
 
 						const updateNotification = () => {
 							notification.arTypedInputOrSelect('selectOptions', loader.notifications);
@@ -1009,7 +1009,7 @@
 						});
 					},
 					sendTextMessage: function (data) {
-						data = template(data, { conversation: { type: 'str', value: '' }, text: { type: 'str', value: 'Hello from NodeRed!' } });
+						data = template(data, { conversation: { type: 'str', value: '' }, text: { type: 'str', value: 'Hello from Node-RED!' } });
 
 						const conversation = arTypedInputOrSelect(data.conversation);
 						const text = arTypedInput(data.text);

@@ -65,7 +65,7 @@
 		defaults: {
 			name: { value: '' },
 			account: { value: '', type: 'alexa-remote-account', required: true },
-			config: { value: { option: 'get', what: 'simplified' } },
+			config: { value: { option: 'action' } },
 			outputs: { value: 1 }
 		},
 		inputs: 1,
@@ -693,7 +693,7 @@
 			loader.update(false);
 			loader.on('change', (success) => console.log('loaderChange', {state: success ? 'SUCCESS' : 'FAILURE', loader:loader}));
 
-			const data = template(this.config, { option: 'get', value: undefined });
+			const data = template(this.config, { option: 'action', value: undefined });
 			const form = $('#dialog-form').css({ display: 'flex', flexDirection: 'column' });
 			const inputs = $('#node-input-inputs').css({ flex: '1', display: 'flex', flexDirection: 'column' }).arInputGroups()
 				.arInputGroups('group', data.option)
@@ -910,7 +910,7 @@
 
 								const updateEntity = () => {
 									entity.arTypedInputOrSelect('selectOptions', loader.entities.filter(([id, label, properties, actions, type]) => type === entityType));
-									entity.arTypedInputOrSelect('selectActive', loader.success);
+									entity.arTypedInputOrSelect('selectActiveMaybe', loader.success);
 									if (!entity.arTypedInputOrSelect('value')) entity.arTypedInputOrSelect('selectSomething');
 								};
 								const requestUpdate = () => {

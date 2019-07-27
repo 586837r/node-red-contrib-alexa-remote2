@@ -61,7 +61,7 @@
 		defaults: {
 			name: { value: '' },
 			account: { value: '', type: 'alexa-remote-account', required: true },
-			routineNode: { value: {} },
+			routineNode: { value: { type: 'speak', payload: { text: 'Hello World!' } } },
 		},
 		inputs: 1,
 		outputs: 1,
@@ -1134,7 +1134,6 @@
 			loader.on('change', (success) => console.log('loaderChange', {state: success ? 'SUCCESS' : 'FAILURE', loader:loader}));
 
 			$('#dialog-form').css({ display: 'flex', flexDirection: 'column' });
-			if(!this.routineNode) this.routineNode = { type: 'speak', payload: { text: 'Hello World!' }};
 			const inputs = $('#node-input-routineNode_div')
 				.arRoutineNode({ loader: loader })
 				.arRoutineNode('data', this.routineNode);

@@ -47,7 +47,8 @@ module.exports = function (RED) {
 					});
 					if(entities.includes(undefined)) return;
 
-					const requests = entities.map(entity => ({entityType: entity.type, entityId: getIdForQuery(entity)}));
+
+					const requests = Array.from(new Set(entities)).map(entity => ({entityType: entity.type, entityId: getIdForQuery(entity)}));
 
 					return alexa.querySmarthomeDevicesExt(requests).then(response => {
 						if(!tools.matches(response, { 
