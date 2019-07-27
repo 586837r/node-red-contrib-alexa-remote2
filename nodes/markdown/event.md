@@ -1,11 +1,11 @@
-Listens to WebSocket events.
+Listens to WsMqtt events.
 Events must be enabled for this account.
 
 ---
 
 ### **Outputs**
  - **payload**
-   - response from amazon
+   - the event payload
 
 ---
 

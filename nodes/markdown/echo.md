@@ -1,10 +1,10 @@
-Gets information from alexa account.
+Interface to Echo features.
 
 ---
 
-### **Outputs**
- - **payload**
-   - response from amazon
+### **Info**
+
+- Echo devices can be referenced by id or name (not case sensitive)
 
 ---
 

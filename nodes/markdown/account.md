@@ -6,9 +6,9 @@ Alexa Account configuration node.
  - **Auth Method**
    - **Proxy** 
      - automatically captures your cookies using a proxy
-     - enables cookie refreshing by sending a `msg.payload` of `refresh`
-     - can setup persistant automatic initialisation with **File Path** and a refresh every few days
-     - **File Path** to a text file like (like `alexa-cookie.json` or `~/alexa/cookie.json`)
+     - **This Ip** has to be the ip of the Node-RED server
+     - enter a **File Path** to a text file (can be relative or absolute) to save the authentication result to make following authentications automatic (for alternative ways to save the authentication result see the *Alexa Init* node) 
+     - **Refresh** is the cookie refresh interval in days
    - **Cookie**
      - login with manually entering your cookie
      - [How do i get my cookie?](get_cookie.md)
@@ -25,9 +25,9 @@ Alexa Account configuration node.
 ---  
 
 ### **Setup**
-1. Drag a **Alexa Sequence** node into your flow.
+1. Drag an **Alexa Routine** node into your flow.
 2. Create a new Account by pressing the edit button at the right side of the *Account* field.
-3. Choose a **Service Host** and **Page** and optionally **Language** depending on your location. For example:
+3. Choose a **Service Host** and **Page** and **Language** depending on your location. For example:
 
    |     | Service Host        | Page         | Language |
    |-----|---------------------|--------------|----------|
@@ -41,10 +41,10 @@ automatic.
 6. *Add* the new Account.
 7. Deploy
 8. Follow the url you see in the node status
-9.  Log in, wait until you see the node status **ready**
-10. Select a device. Clicking on the button on the far right of the device field will let you select from a list of your devices.
+9. Log in, wait until you see the node status **ready**
+10. Select a device in the *Alexa Routine* node.
 
-Now trigger the Alexa Sequence Node with any message and your Alexa will say "Hello World!". (Hopefully!)
+Now trigger the *Alexa Routine* Node with any message and your Alexa will say "Hello World!". (Hopefully!)
 
 ---
 

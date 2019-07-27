@@ -1,10 +1,11 @@
-Executes actions related to account or devices.
+Interface to Any other features.
 
 ---
 
-### **Outputs**
- - **payload**
-   - response from amazon
+### **Info**
+
+- Echo devices can be referenced by id or name (not case sensitive)
+- Notifications can be referenced by id or name (not case sensitive)
 
 ---
 
