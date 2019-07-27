@@ -17,7 +17,6 @@
 	#dialog-form .red-ui-editableList-item-sortable.red-ui-editableList-item-removable:last-child {
 		border-bottom: none;
 	}
-
 	#dialog-form .red-ui-editableList-border.red-ui-editableList-container {
 		overflow-y: auto !important;
 	}
@@ -27,12 +26,10 @@
 		display: flex;
 		margin-bottom: 12px;
 	}
-
-	.alexaRemote-arRow>*:first-child {
+	.alexaRemote-arRow > *:first-child {
 		min-width: 150px;
 		flex: 1;
 	}
-
 	.alexaRemote-arRow_label {
 		flex: 1;
 		display: flex;
@@ -40,11 +37,10 @@
 		justify-content: flex-end;
 		white-space: nowrap;
 		overflow: hidden;
-		text-overflow: ellipsis;
+		text-overflow: ellipsis;	
 	}
 
-	.alexaRemote-arSelect,
-	.alexaRemote-arBaseOrSelect>select {
+	.alexaRemote-arSelect, .alexaRemote-arBaseOrSelect > select {
 		font-family: FontAwesome, "Helvetica Neue", Helvetica, Arial, sans-serif;
 	}
 
@@ -52,8 +48,9 @@
 		display: flex;
 	}
 
-	.alexaRemote-arBaseOrSelect>select {
+	.alexaRemote-arBaseOrSelect > select, .alexaRemote-arSelect {
 		flex: 1;
+		width: 50px;
 	}
 </style>
 
@@ -346,7 +343,7 @@
 				_setup: function (element) {
 					this.element.addClass('alexaRemote-arBaseOrSelect');
 					this.notSelect = element;
-					this.select = $('<select>').css({ width: '100px' });
+					this.select = $('<select>').css({ width: 50 });
 
 					this._on(this.select, {
 						'change': function (event) {
@@ -419,14 +416,15 @@
 				selectIndex: function (index) {
 					if (arguments.length === 0) return this.select.get(0).selectedIndex - 1;
 					const option = this.select.get(0).options[index + 1];
+					this.selectActive(true);
 					this.value(option && option.value || '');
 				},
 				selectSomething: function () {
 					if (this.selectIndex() < 0) this.selectIndex(0);
 				},
-				choose: function (some) {
+				choose: function (some = true) {
 					const value = this.value();
-					if (some && !value) this.selectSomething();
+					if (some && !value) return this.selectSomething();
 					const select = this.select.get(0);
 					const found = value && Array.from(select.options).find(o => o.value === value);
 					this.selectActive(!!found);
@@ -448,7 +446,7 @@
 				_create: function () {
 					this.element.addClass('alexaRemote-arInputOrSelect');
 					this.input = $('<input>').css({ width: '100%' }).attr('type', 'text');
-					if(this.options.placeholder) this.input.attr('placeholder', this.options.placeholder);
+					if (this.options.placeholder) this.input.attr('placeholder', this.options.placeholder);
 					this._setup(this.input);
 				},
 				_inputValue: function (value) {
@@ -464,7 +462,7 @@
 				_create: function () {
 					this.element.addClass('alexaRemote-arTypedInputOrSelect');
 					this.input = $('<div>').arTypedInput({ placeholder: this.options.placeholder, types: [this.options.optionType] });
-					if(typeof this.options.optionType === 'object') this.options.optionType = this.options.optionType.value;
+					if (typeof this.options.optionType === 'object') this.options.optionType = this.options.optionType.value;
 					this._setup(this.input);
 				},
 				_change: function () {
@@ -480,11 +478,11 @@
 					}
 
 					this._super(...arguments);
-					if(active) this.type(this.options.optionType);
+					if (active) this.type(this.options.optionType);
 					this.refresh();
 				},
-				selectActiveMaybe: function(active) {
-					if(active && this.type() !== this.options.optionType) return;
+				selectActiveMaybe: function (active) {
+					if (active && this.type() !== this.options.optionType) return;
 					return this.selectActive(...arguments);
 				},
 				choose: function () {
@@ -562,6 +560,7 @@
 				options: { clean: true },
 				_create: function () {
 					this.element.addClass('alexaRemote-arInputGroups');
+					this.element.hide();
 				},
 				groups: function (groups) {
 					if (arguments.length === 0) return this.groupMap;
@@ -596,11 +595,76 @@
 			function arFormRow(element, label = '', icon = '') {
 				return $('<div>').addClass('form-row arFormRow').append(
 					$('<label>').text(' ' + label).prepend(
-						$('<i>').attr('class', icon).css({width: 14, textAlign: 'center'})
+						$('<i>').attr('class', icon).css({ width: 14, textAlign: 'center' })
 					),
 					$(document.createTextNode(' ')),
-					$('<div>').css({width: '70%', display: 'inline-block'}).append(
-						element.css({width: '100%'})
+					$('<div>').css({ width: '70%', display: 'inline-block' }).append(
+						element.css({ width: '100%' })
+					)
+				);
+			}
+			function arRow(element, label, flex = '3') {
+				return $('<div>').addClass('alexaRemote-arRow').append(
+					$('<label>').addClass('alexaRemote-arRow_label').html(label),
+					$('<div>').css({ width: 10 }),
+					element.css({ flex: flex }),
+				);
+			}
+			function arInput(data = '') {
+				return $('<input>').arInput()
+					.arInput('value', data)
+					.css({ flex: '1' });
+			}
+			function arSelect(data = '', options = []) {
+				return $('<select>').arSelect()
+					.arSelect('selectOptions', options)
+					.arSelect('value', data);
+			}
+			function arTypedInput(data = { type: 'str', value: '' }, types = ['str'], { placeholder = '' } = {}) {
+				return $('<div>')
+					.arTypedInput({ types: types, placeholder: placeholder })
+					.arTypedInput('data', data)
+					.css({ flex: '1' });
+			}
+			function arInputList(data = [], add = () => { }, { header } = {}) {
+				return $('<div>')
+					.arInputList({ add: add, header: header })
+					.arInputList('value', data);
+			}
+			function arInputOrSelect(data = '', options = [], { button = false, placeholder = '', choose = true, some = true } = {}) {
+				const div = $('<div>')
+					.arInputOrSelect({ button: button, placeholder: placeholder })
+					.arInputOrSelect('selectOptions', options)
+					.arInputOrSelect('value', data);
+
+				if (choose) div.arInputOrSelect('choose', some);
+				return div;
+			}
+			function arTypedInputOrSelect(data = { type: 'str', value: '' }, options = [], { button = true, placeholder = '', optionType = 'str', choose = true, some = true } = {}) {
+				const div = $('<div>').css({ flex: '1' })
+					.arTypedInputOrSelect({ button: button, placeholder: placeholder, optionType: optionType })
+					.arTypedInputOrSelect('selectOptions', options)
+					.arTypedInputOrSelect('data', data);
+
+				if (choose) div.arTypedInputOrSelect('choose', some);
+				return div;
+			}
+			function arInputGroups(group, value, groups = {}, clean = true) {
+				return $('<div>').css({display: 'flex'})
+					.arInputGroups({ clean: clean })
+					.arInputGroups('group', group)
+					.arInputGroups('value', value)
+					.arInputGroups('groups', groups);
+			}
+
+			function arFormRow(element, label = '', icon = '') {
+				return $('<div>').addClass('form-row arFormRow').append(
+					$('<label>').text(' ' + label).prepend(
+						$('<i>').attr('class', icon).css({ width: 14, textAlign: 'center' })
+					),
+					$(document.createTextNode(' ')),
+					$('<div>').css({ width: '70%', display: 'inline-block' }).append(
+						element.css({ width: '100%' })
 					)
 				);
 			}
@@ -620,35 +684,35 @@
 				return $('<select>').arSelect()
 					.arSelect('selectOptions', options)
 					.arSelect('value', data)
-					.css({ flex: '1' });
+					.css({ flex: '1', width: 100 });
 			}
-			function arTypedInput(data = { type: 'str', value: '' }, types = ['str'], {placeholder=''} = {}) {
+			function arTypedInput(data = { type: 'str', value: '' }, types = ['str'], { placeholder = '' } = {}) {
 				return $('<div>')
 					.arTypedInput({ types: types, placeholder: placeholder })
 					.arTypedInput('data', data)
 					.css({ flex: '1' });
 			}
-			function arInputList(data = [], add = () => { }) {
+			function arInputList(data = [], add = () => { }, { header } = {}) {
 				return $('<div>')
-					.arInputList({ add: add })
+					.arInputList({ add: add, header: header })
 					.arInputList('value', data);
 			}
-			function arInputOrSelect(data = '', options = [], {button = false, placeholder='', choose=true, some=false} = {}) {
+			function arInputOrSelect(data = '', options = [], { button = false, placeholder = '', choose = true, some = true } = {}) {
 				const div = $('<div>').css({ flex: '1' })
-					.arInputOrSelect({ button: button, placeholder: placeholder})
+					.arInputOrSelect({ button: button, placeholder: placeholder })
 					.arInputOrSelect('selectOptions', options)
 					.arInputOrSelect('value', data);
 
-				if(choose) div.arInputOrSelect('choose', some);
+				if (choose) div.arInputOrSelect('choose', some);
 				return div;
 			}
-			function arTypedInputOrSelect(data = { type: 'str', value: '' }, options = [], {button= true, placeholder= '', optionType= 'str', choose= true, some=false} = {}) {
+			function arTypedInputOrSelect(data = { type: 'str', value: '' }, options = [], { button = true, placeholder = '', optionType = 'str', choose = true, some = true } = {}) {
 				const div = $('<div>').css({ flex: '1' })
 					.arTypedInputOrSelect({ button: button, placeholder: placeholder, optionType: optionType })
 					.arTypedInputOrSelect('selectOptions', options)
 					.arTypedInputOrSelect('data', data);
 
-				if(choose) div.arTypedInputOrSelect('choose', some);
+				if (choose) div.arTypedInputOrSelect('choose', some);
 				return div;
 			}
 			function arInputGroups(group, value, groups = {}, clean = true) {
@@ -882,8 +946,8 @@
 						const values = { type: undefined, device: undefined };
 						const label = arTypedInput(data.label, ['str'], {placeholder: 'Unchanged'});
 						const dateOrTime = arTypedInput(data.time, ['str'], {placeholder: 'Unchanged'});
-						const status = arTypedInputOrSelect(data.status, ['on', 'off', 'paused'], {placeholder: 'Unchanged'});
-						const sound = arTypedInputOrSelect(data.sound, [], {optionType: optionalJson, placeholder: 'Unchanged'});
+						const status = arTypedInputOrSelect(data.status, ['on', 'off', 'paused'], {placeholder: 'Unchanged', some: false});
+						const sound = arTypedInputOrSelect(data.sound, [], {optionType: optionalJson, placeholder: 'Unchanged', some: false});
 
 						const updateNotification = () => {
 							notification.arTypedInputOrSelect('selectOptions', loader.notifications);

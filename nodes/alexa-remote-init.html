@@ -7,6 +7,16 @@
 		<label for="node-input-account"><i class="fa fa-amazon"></i> Account</label>
 		<input id="node-input-account">
 	</div>
+	<div class="form-row">
+		<label for="node-input-option"><i class="fa fa-question-circle"></i> Option</label>
+		<select id="node-input-option">
+			<option value="initialise">Initialise</option>
+			<option value="refresh">Refresh Cookie</option>
+			<option value="update">Update Cached State</option>
+			<option value="reset">Reset</option>
+			<option value="timer">Timer</option>
+		</select>
+	</div>
 </script>
 
 <script type="text/x-red" data-help-name="alexa-remote-init">
@@ -53,6 +63,7 @@
 		defaults: {
 			name: { value: '' },
 			account: { value: '', type: 'alexa-remote-account', required: true },
+			option: { value: 'initialise', required: true },
 		},
 		inputs: 1,
 		outputs: 1,
