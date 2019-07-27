@@ -51,11 +51,13 @@ module.exports = function (RED) {
 					const requests = Array.from(new Set(entities)).map(entity => ({entityType: entity.type, entityId: getIdForQuery(entity)}));
 
 					return alexa.querySmarthomeDevicesExt(requests).then(response => {
+						if(tools.matches(response, {message: ''})) return error(`error response: ${response.message}`);
+
 						if(!tools.matches(response, { 
 							deviceStates: [{ entity: { entityId: '', entityType: ''}, capabilityStates: ['']}],
 							errors: [{ entity: { entityId: '', entityType: '' }}]
 						})) {
-							error(`unexpected response layout: "${JSON.stringify(response)}"`);
+							return error(`unexpected response layout: "${JSON.stringify(response)}"`);
 						}
 
 						const stateById = new Map();
@@ -218,11 +220,13 @@ module.exports = function (RED) {
 					}).filter(o => o);
 
 					return alexa.executeSmarthomeDeviceActionExt(requests).then(response => {
+						if(tools.matches(response, {message: ''})) return error(`error response: ${response.message}`);
+
 						if(!tools.matches(response, { 
 							controlResponses: [{ entityId: '' }],
 							errors: [{ entity: { entityId: '', entityType: '' }}]
 						})) {
-							error(`unexpected response layout: "${JSON.stringify(response)}"`);
+							return error(`unexpected response layout: "${JSON.stringify(response)}"`);
 						}
 
 						const controlResponseById = new Map();
