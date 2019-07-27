@@ -54,7 +54,7 @@ module.exports = function (RED) {
 							deviceStates: [{ entity: { entityId: '', entityType: ''}, capabilityStates: ['']}],
 							errors: [{ entity: { entityId: '', entityType: '' }}]
 						})) {
-							return error('unexpected response layout', reponse);
+							error(`unexpected response layout: "${JSON.stringify(response)}"`);
 						}
 
 						const stateById = new Map();
@@ -182,11 +182,15 @@ module.exports = function (RED) {
 						
 						switch(input.action) {
 							case 'setColor': {
-								native.parameters['colorName'] = alexa.findSmarthomeColorNameExt(input.value);
+								const name = alexa.findSmarthomeColorNameExt(input.value);
+								if(!name) return error(`could not find closest color name of "${input.value}"`);
+								native.parameters['colorName'] = name;
 								break;
 							}
 							case 'setColorTemperature': {
-								native.parameters['colorTemperatureName'] = alexa.findSmarthomeColorTemperatureNameExt(input.value);
+								const name = alexa.findSmarthomeColorTemperatureNameExt(input.value);
+								if(!name) return error(`could not find closest color name of "${input.value}"`);
+								native.parameters['colorTemperatureName'] = name;
 								break;
 							}
 							case 'setBrightness': {
@@ -217,7 +221,7 @@ module.exports = function (RED) {
 							controlResponses: [{ entityId: '' }],
 							errors: [{ entity: { entityId: '', entityType: '' }}]
 						})) {
-							error('unexpected response layout', reponse);
+							error(`unexpected response layout: "${JSON.stringify(response)}"`);
 						}
 
 						const controlResponseById = new Map();

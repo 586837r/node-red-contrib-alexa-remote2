@@ -217,13 +217,7 @@ module.exports = function (RED) {
 					const an = a.name.toLowerCase();
 					const bn = b.name.toLowerCase();
 	
-					if (an < bn) {
-						return -1;
-					} else if (an > bn) {
-						return 1;
-					}
-	
-					return 0;	
+					return an < bn ? -1 : an > bn ? 1 : 0;
 				})
 				.reduce((obj, entity) => (obj[entity.entityId] = 
 					[getSmarthomeEntityLabel(entity), entity.properties, entity.actions, entity.type]
@@ -250,10 +244,13 @@ module.exports = function (RED) {
 			this.notificationsForUiJson = JSON.stringify(notificationsForUi);
 		}
 		this.buildRoutinesForUi = async function() {
-			const [routines, musicProviders] = await Promise.all([
-				this.alexa.getAutomationRoutinesPromise(),
-				this.alexa.getMusicProvidersPromise(),
-			]);
+			// const [routines, musicProviders] = await Promise.all([
+			// 	this.alexa.getAutomationRoutinesPromise(),
+			// 	this.alexa.getMusicProvidersPromise(),
+			// ]);
+
+			const routines = Array.from(this.alexa.routineByIdExt.values());
+			const musicProviders = this.alexa.musicProvidersExt;
 
 			const routinesForUi = routines
 				.sort((a,b) => (a.status === 'DISABLED' ? 1 : -1) - (b.status === 'DISABLED' ? 1 : -1))
@@ -388,7 +385,10 @@ module.exports = function (RED) {
 		this.refreshAlexa = async function() {
 			if(this.state.code !== 'READY') throw new Error('Not ready, must be initialised!');
 			this.setState('REFRESH');
-			return this.alexa.refreshExt().then();
+			return this.alexa.refreshExt();
+		}
+		this.updateAlexa = async function() {
+			return this.alexa.updateExt();
 		}
 
 		this.on('close', function () {
