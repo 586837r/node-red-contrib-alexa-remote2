@@ -36,6 +36,11 @@
         <label for="node-config-input-cookieFile"><i class="fa fa-file"></i> File Path</label>
         <input type="text" id="node-config-input-cookieFile" placeholder="Optional">
 	</div>
+	<div class="form-row">
+		<label for="node-config-input-refreshInterval"><i class="fa fa-refresh"></i> Refresh</label>
+		<input type="text" id="node-config-input-refreshInterval" placeholder="Optional" style="width: 55%;">
+		<label for="node-config-input-refreshInterval" style="width: 15%; text-align: center;">days</label>
+	</div>
 	<hr>
 	<div class="form-row">
 		<label for="node-config-input-autoInit"><i class="fa fa-wrench"></i> Auto Init</label>
@@ -216,6 +221,7 @@
 			proxyOwnIp:			{ required: true,  value: 'localhost' },
 			proxyPort:			{ required: true,  value: 3456, validate: x => 0 <= Number(x) && Number(x) <= 65535 },
 			cookieFile:			{ required: false, value: ''},
+			refreshInterval:	{ required: false, value: '3'},
             alexaServiceHost:   { required: true,  value: 'pitangui.amazon.com' },
 			amazonPage:         { required: true,  value: 'amazon.com' },
             acceptLanguage:     { required: false,  value: 'en-US' },
@@ -231,13 +237,15 @@
             return this.name ? 'node_label_italic' : '';
 		}, 
 		oneditprepare: function () {
+			console.log('loaded', this);
+
 			const getInput = x => $(`#node-config-input-${x}`);
 			const getRow = x => getInput(x).parent();
 			
 			let rowmap = {
-				proxy: [ getRow('proxyOwnIp'), getRow('proxyPort'), getRow('cookieFile') ],
+				proxy: [ getRow('proxyOwnIp'), getRow('proxyPort'), getRow('cookieFile'), getRow('refreshInterval') ],
 				cookie: [ getRow('cookie') ],
-				password: [ getRow('email'), getRow('password') ]
+				password: [ getRow('email'), getRow('password') ],
 			}
 
 			getInput('authMethod').change(event => {
@@ -245,6 +253,9 @@
 					k === event.target.value ? v.forEach(r => r.show()) : v.forEach(r => r.hide());
 				});
 			});
+		},
+		oneditsave: function() {
+			console.log('saved', this);
 		}
 	});
 </script>

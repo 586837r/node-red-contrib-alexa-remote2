@@ -9,12 +9,13 @@
 	</div>
 	<div class="form-row">
 		<label for="node-input-option"><i class="fa fa-question-circle"></i> Option</label>
-		<select id="node-input-option">
+		<select id="node-input-option" style="width: 70%;">
 			<option value="initialise">Initialise</option>
+			<option value="fresh">Fresh Authentication</option>
 			<option value="refresh">Refresh Cookie</option>
 			<option value="update">Update Cached State</option>
 			<option value="reset">Reset</option>
-			<option value="timer">Timer</option>
+			<option value="interval">Interval Info</option>
 		</select>
 	</div>
 </script>
@@ -70,7 +71,16 @@
 		icon: 'alexa-remote-icon.png',
 		paletteLabel: 'Alexa Init',
 		label: function () {
-			return this.name || "Alexa Init";
+			if(this.name) return this.name;
+			switch(this.option) {
+				case 'initialise': return 'Initialise';
+				case 'fresh': return 'Fresh Authentication';
+				case 'refresh': return 'Refresh Cookie';
+				case 'update': return 'Update Cached State';
+				case 'reset': return 'Reset';
+				case 'interval': return 'Interval Info';
+				default: return 'Alexa Init';
+			}
 		},
 		labelStyle: function () {
 			return this.name ? "node_label_italic" : "";

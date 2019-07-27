@@ -964,7 +964,7 @@
 					groups.bottom.prompt = common.bottom.group.device;
 					groups.bottom.volume = common.bottom.group.deviceList;
 					groups.bottom.music = function(data) {
-						data = template(data, {provider: { type: 'str', value: ''}, search: {type: 'str', value: 'Life On Mars'}, duration: { type: 'num', value: ''}});
+						data = template(data, {provider: { type: 'str', value: ''}, search: {type: 'str', value: ''}, duration: { type: 'num', value: ''}});
 						const provider = arTypedInputOrSelect(data.provider);
 						const search = arTypedInput(data.search);
 						const duration = arTypedInput(data.duration, ['num'], 'Optional');

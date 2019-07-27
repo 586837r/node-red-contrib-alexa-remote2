@@ -178,10 +178,12 @@ module.exports = function (RED) {
 
 		tools.log({self:this, status:this.status});
 
-		tools.assign(this, ['authMethod', 'proxyOwnIp', 'proxyPort', 'cookieFile', 'alexaServiceHost', 'amazonPage', 'acceptLanguage', 'userAgent'], input);
+		tools.assign(this, ['authMethod', 'proxyOwnIp', 'proxyPort', 'cookieFile', 'refreshInterval', 'alexaServiceHost', 'amazonPage', 'acceptLanguage', 'userAgent'], input);
 		this.useWsMqtt = input.useWsMqtt === 'on';
 		this.autoInit  = input.autoInit  === 'on';
 		this.locale = this.acceptLanguage;
+		this.refreshInterval = Number(this.refreshInterval) * 1000 * 60 * 60 * 24;
+		if(this.refreshInterval < 15000) this.refreshInterval = NaN;
 
 		this.alexa = new AlexaRemote();
 		this.emitter = new EventEmitter().setMaxListeners(64);
@@ -190,6 +192,8 @@ module.exports = function (RED) {
 
 		this.smarthomeForUiJson = null;
 		this.devicesForUiJson = null;
+		this.refreshTimeoutStartTime = null;
+		this.refreshTimeout = null;
 
 		this.setState = function(code, message) {
 			this.state = {
@@ -198,7 +202,26 @@ module.exports = function (RED) {
 			}
 			this.emitter.emit('state', code, message);
 		}
+		this.renewTimeout = function() {
+			if(this.refreshTimeout !== null) {
+				clearTimeout(this.refreshTimeout);
+				this.refreshTimeout = null;
+			}
+
+			if(!this.refreshInterval) return;
+			if(this.state.code !== 'READY') return;
+
+			this.refreshTimeoutStartTime = Date.now();
+			this.refreshTimeout = setTimeout(() => {
+				this.log('auto refreshing cookie...');
+				this.refreshAlexa().catch();
+			}, this.refreshInterval);
+		}
 		this.resetAlexa = function () {
+			if(this.refreshTimeout !== null) {
+				clearTimeout(this.refreshTimeout);
+				this.refreshTimeout = null;
+			}
 			if (!this.alexa) return;
 			this.alexa.resetExt();
 			this.initialised = false;
@@ -277,7 +300,7 @@ module.exports = function (RED) {
 			this.bluetoothForUiJson = JSON.stringify(bluetoothForUi);
 		}
 
-		this.initAlexa = async function(input) {
+		this.initAlexa = async function(input, ignoreFile = false) {
 			// we can hopefully do without this now by checking if this.alexa changes
 			// if(this.initing) throw new Error('Already initialising!');
 			// this.initing = true;
@@ -298,7 +321,7 @@ module.exports = function (RED) {
 					config.proxyOnly = true; // should not matter					
 
 					const cookieData = tools.isObject(input) && input.loginCookie && tools.clone(input)
-						 || this.cookieFile && await readFileAsync(this.cookieFile, 'utf8').then(json => JSON.parse(json)).catch(warnCb)
+						 || this.cookieFile && !ignoreFile && await readFileAsync(this.cookieFile, 'utf8').then(json => JSON.parse(json)).catch(warnCb)
 						 || undefined;
 
 					config.cookie = cookieData;
@@ -380,15 +403,34 @@ module.exports = function (RED) {
 			}
 
 			this.setState('READY');
+			this.renewTimeout();
 			return cookieData;
 		}
 		this.refreshAlexa = async function() {
-			if(this.state.code !== 'READY') throw new Error('Not ready, must be initialised!');
+			if(this.state.code !== 'READY') throw new Error('account must be initialised before refreshing');
 			this.setState('REFRESH');
-			return this.alexa.refreshExt();
+
+			return this.alexa.refreshExt().then(value => {
+				this.setState('READY');
+				this.renewTimeout();
+				return value;
+			}).catch(error => {
+				this.setState('ERROR', error && error.message);
+				this.renewTimeout();
+				throw error;
+			});
 		}
 		this.updateAlexa = async function() {
-			return this.alexa.updateExt();
+			if(this.state.code !== 'READY') throw new Error('account must be initialised before updating');
+			this.setState('UPDATE');
+
+			return this.alexa.updateExt().then(value => {
+				this.setState('READY');
+				return value;
+			}).catch(error => {
+				this.setState('ERROR', error && error.message);
+				throw error;
+			});
 		}
 
 		this.on('close', function () {
