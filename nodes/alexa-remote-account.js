@@ -379,6 +379,14 @@ module.exports = function (RED) {
 				throw error;
 			});
 
+			await alexa.checkAuthenticationExt().then(authenticated => {
+				if(!authenticated) throw new Error('Authentication unsuccessful.');
+			}).catch(error => {
+				if(alexa !== this.alexa) return;
+				this.setState('ERROR', error && error.message);
+				throw error;
+			});
+
 			// see above why
 			if(alexa !== this.alexa) {
 				throw new Error('Initialisation was aborted!');
