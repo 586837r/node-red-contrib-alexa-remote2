@@ -249,7 +249,7 @@ module.exports = function (RED) {
 			smarthomeForUi.colorNames = Array.from(this.alexa.colorNameToLabelExt.entries());
 			smarthomeForUi.colorTemperatureNames = Array.from(this.alexa.colorTemperatureNameToLabelExt.entries());
 
-			tools.log({smarthomeForUi: smarthomeForUi}, 10, 250);
+			//tools.log({smarthomeForUi: smarthomeForUi}, 10, 250);
 			this.smarthomeForUiJson = JSON.stringify(smarthomeForUi);
 		}
 		this.buildDevicesForUi = function() {
