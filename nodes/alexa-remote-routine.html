@@ -552,7 +552,7 @@
 				},
 				choose: function () {
 					const type = this.input.arTypedInput('type');
-					type === this.options.optionType ? this._super() : this.selectActive(false);
+					type === this.options.optionType ? this._super(...arguments) : this.selectActive(false);
 				},
 				type: function (type) {
 					if (arguments.length === 0) {
@@ -928,8 +928,12 @@
 						const input = arTypedInputOrSelect(data);
 						const updateInput = () => {
 							input.arTypedInputOrSelect('selectOptions', all ? [['ALEXA_ALL_DSN', '&#xf0ac;  All Devices']].concat(loader.devices) : loader.devices);
-							input.arTypedInputOrSelect('selectActive', loader.success);
-							if(!input.arTypedInputOrSelect('value') && loader.success) input.arTypedInputOrSelect('selectSomething');
+							if(loader.success) {
+								input.arTypedInputOrSelect('choose', true);
+							}
+							else {
+								input.arTypedInputOrSelect('selectActive', false);
+							}
 						}
 						loader.listen('change', input, updateInput);
 						updateInput();
@@ -953,7 +957,7 @@
 						return function(data) {
 							data = template(data, { device: undefined });
 							const input = common.input.device(data.device, all).appendTo(this);											
-							return () => ({ device: input.arTypedInputOrSelect('value') });
+							return () => ({ device: input.arTypedInputOrSelect('data') });
 						}
 					}
 					common.bottom.row.deviceList = function(data, all) {

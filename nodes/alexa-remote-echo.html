@@ -104,7 +104,17 @@
 					}
 					return `Get Echo ${keyToLabel(this.config.value && this.config.value.what)}`;
 				case 'command':
-					return `Echo ${keyToLabel(this.config.value && this.config.value.what)}`;
+					const what = this.config.value && this.config.value.what;
+					const data = this.config.value && this.config.value.value;
+					const value = data && data.value;
+					const type = data && data.type;
+
+					switch(what) {
+						case 'shuffle': 
+						case 'repeat': if(type === 'bool')	return `Echo ${keyToLabel(what)} ${value === 'true' ? 'On' : 'Off'}`;						
+						case 'volume': if(type === 'num') return `Echo ${keyToLabel(what)} ${value}`
+					}
+					return `Echo ${keyToLabel(what)}`;
 				case 'bluetooth':
 				case 'rename':
 				case 'delete':
@@ -804,7 +814,7 @@
 								arFormRow(input, 'Enabled', 'fa fa-question-circle').appendTo(this);
 								return () => input.arTypedInput('data');
 							}
-						}); 
+						}).css({ flexDirection: 'column' }); 
 						what.on('change', () => inputGroups.arInputGroups('group', what.arSelect('value')));
 
 						arFormRow(what, 'What', 'fa fa-question-circle').appendTo(this);
