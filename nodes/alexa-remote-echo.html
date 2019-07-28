@@ -99,6 +99,9 @@
 			if(this.name) return this.name;
 			switch(this.config && this.config.option) {
 				case 'get':
+					if(this.config.value.device && this.config.value.device.type === 'str' && this.config.value.device.value === 'ALEXA_ALL_DSN') {
+						return `Get Echo Devices`;
+					}
 					return `Get Echo ${keyToLabel(this.config.value && this.config.value.what)}`;
 				case 'command':
 					return `Echo ${keyToLabel(this.config.value && this.config.value.what)}`;

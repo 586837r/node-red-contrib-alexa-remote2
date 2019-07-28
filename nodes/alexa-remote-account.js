@@ -368,6 +368,7 @@ module.exports = function (RED) {
 
 			if(initType === 'proxy') {
 				await tools.portAvailable(config.proxyPort).catch(error => {
+					if(error.code === 'EADDRINUSE') error.message = `port ${config.proxyPort} already in use`;
 					this.setState('ERROR', error.message);
 					throw error;
 				});
