@@ -185,7 +185,7 @@ module.exports = function (RED) {
 		this.refreshInterval = Number(this.refreshInterval) * 1000 * 60 * 60 * 24;
 		if(this.refreshInterval < 15000) this.refreshInterval = NaN;
 
-		this.alexa = new AlexaRemote();
+		this.alexa = new AlexaRemote().setMaxListeners(32);
 		this.emitter = new EventEmitter().setMaxListeners(64);
 		this.initing = false;
 		this.state = { code: 'UNINITIALISED', message: '' }
@@ -364,6 +364,13 @@ module.exports = function (RED) {
 			const warnCallback = (error) => {
 				if(alexa !== this.alexa) return;
 				this.warn(error.message);
+			}
+
+			if(initType === 'proxy') {
+				await tools.portAvailable(config.proxyPort).catch(error => {
+					this.setState('ERROR', error.message);
+					throw error;
+				});
 			}
 
 			const cookieData = await alexa.initExt(config, proxyWaitCallback, warnCallback).catch(error => {
