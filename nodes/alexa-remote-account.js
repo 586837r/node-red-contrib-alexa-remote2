@@ -134,7 +134,7 @@ function getRoutineLabel(routine, smarthomeSimplifiedByEntityIdExt) {
 	}
 
 	if(type === 'AbsoluteTimeSchedule') {
-		const time = trigger.schedule.triggerTime || '??????';
+		const time = trigger.schedule && trigger.schedule.triggerTime || '??????';
 		const formatted = `${time.slice(0,2)}:${time.slice(2,4)}:${time.slice(4,6)}`;
 		return `&#xf017;  Schedule ${formatted}${suffix}` // clock-o
 	}
