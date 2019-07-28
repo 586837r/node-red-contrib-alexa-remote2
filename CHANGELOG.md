@@ -1,3 +1,6 @@
+- **3.0.0**
+  - added refresh interval for proxy Account config
+  - replaced/overhauled all other nodes, only Account config of version 2 is compatible
 - **2.3.5**
   - fix cookie refresh causing 'no JSON' error
 - **2.3.4**
