@@ -7,24 +7,37 @@
 		<label for="node-input-account"><i class="fa fa-amazon"></i> Account</label>
 		<input id="node-input-account">
 	</div>
+	<div class="form-row">
+		<label for="node-input-option"><i class="fa fa-question-circle"></i> Option</label>
+		<select id="node-input-option" style="width: 70%;">
+			<option value="initialise">Initialise</option>
+			<option value="fresh">Fresh Authentication</option>
+			<option value="refresh">Refresh Cookie</option>
+			<option value="update">Update Cached State</option>
+			<option value="reset">Reset</option>
+			<option value="interval">Interval Info</option>
+		</select>
+	</div>
 </script>
 
 <script type="text/x-red" data-help-name="alexa-remote-init">
-	<p>Enables control over Account Node intialisation.
+	<style>
+		table, th, td {
+			border-collapse: collapse;
+			border: 1px solid rgb(204, 204, 204);
+			padding: 4px 8px;
+		}
+	</style>
+
+	<p>This node is for manual control of Account Node intialisation.
 		The associated Account Node should have <em>Auto Init</em> turned off to use this node.</p>
 	<hr>
 	<h3 id="Inputs"><strong>Inputs</strong></h3>
 	<ul>
 		<li><strong>payload</strong>
 			<ul>
-				<li><code>&quot;stop&quot;</code> to stop the initialisation</li>
-				<li><code>&quot;refresh&quot;</code> to refresh the cookie (only in proxy authentication mode)</li>
-				<li>any other payload will initialise the account
-					<ul>
-						<li>if authentification mode is <em>proxy</em>, then you can send the output of the last
-							initialisation for automatic initialisation</li>
-					</ul>
-				</li>
+				<li>with the <em>Initialise</em> option the payload can be the previous authentication result, enabling
+					automatic initialisation without the <em>File Path</em> setting (only in Proxy Auth Mode)</li>
 			</ul>
 		</li>
 	</ul>
@@ -33,11 +46,18 @@
 	<ul>
 		<li><strong>payload</strong>
 			<ul>
-				<li>if authentication mode is <em>proxy</em> and on success this will be an object that you can
-					send to this node later for automatic initialisation</li>
+				<li>with the <em>Initialise</em> option this is the authentication result that can be fed back into an Init
+					node for automatic initialisation (only in Proxy Auth Mode)</li>
 			</ul>
 		</li>
 	</ul>
+	<hr>
+	<h3 id="Info"><strong>Info</strong></h3>
+	<p>Instead of saving the the Authentication result to a file specified in the Account Config Node you can also manually
+		initialise the Account and save the Authentication result however you want. Here is an example how you can do that:
+	</p>
+	<pre><code><div>[{&quot;id&quot;:&quot;bf44407a.c20d4&quot;,&quot;type&quot;:&quot;alexa-remote-init&quot;,&quot;z&quot;:&quot;c0bfc064.e8d26&quot;,&quot;name&quot;:&quot;&quot;,&quot;account&quot;:&quot;&quot;,&quot;option&quot;:&quot;initialise&quot;,&quot;x&quot;:260,&quot;y&quot;:2800,&quot;wires&quot;:[[&quot;123e6678.5acbaa&quot;]]},{&quot;id&quot;:&quot;c7f04444.fed188&quot;,&quot;type&quot;:&quot;inject&quot;,&quot;z&quot;:&quot;c0bfc064.e8d26&quot;,&quot;name&quot;:&quot;&quot;,&quot;topic&quot;:&quot;&quot;,&quot;payload&quot;:&quot;alexa&quot;,&quot;payloadType&quot;:&quot;flow&quot;,&quot;repeat&quot;:&quot;&quot;,&quot;crontab&quot;:&quot;00 12 * * 3,4,0&quot;,&quot;once&quot;:false,&quot;onceDelay&quot;:0.1,&quot;x&quot;:110,&quot;y&quot;:2800,&quot;wires&quot;:[[&quot;bf44407a.c20d4&quot;]]},{&quot;id&quot;:&quot;123e6678.5acbaa&quot;,&quot;type&quot;:&quot;change&quot;,&quot;z&quot;:&quot;c0bfc064.e8d26&quot;,&quot;name&quot;:&quot;&quot;,&quot;rules&quot;:[{&quot;t&quot;:&quot;set&quot;,&quot;p&quot;:&quot;alexa&quot;,&quot;pt&quot;:&quot;flow&quot;,&quot;to&quot;:&quot;payload&quot;,&quot;tot&quot;:&quot;msg&quot;}],&quot;action&quot;:&quot;&quot;,&quot;property&quot;:&quot;&quot;,&quot;from&quot;:&quot;&quot;,&quot;to&quot;:&quot;&quot;,&quot;reg&quot;:false,&quot;x&quot;:420,&quot;y&quot;:2800,&quot;wires&quot;:[[]]}]
+	</div></code></pre>
 	<hr>
 	<h3 id="References"><strong>References</strong></h3>
 	<ul>
@@ -54,13 +74,23 @@
 		defaults: {
 			name: { value: '' },
 			account: { value: '', type: 'alexa-remote-account', required: true },
+			option: { value: 'initialise', required: true },
 		},
 		inputs: 1,
 		outputs: 1,
 		icon: 'alexa-remote-icon.png',
 		paletteLabel: 'Alexa Init',
 		label: function () {
-			return this.name || "Alexa Init";
+			if(this.name) return this.name;
+			switch(this.option) {
+				case 'initialise': return 'Initialise';
+				case 'fresh': return 'Fresh Authentication';
+				case 'refresh': return 'Refresh Cookie';
+				case 'update': return 'Update Cached State';
+				case 'reset': return 'Reset';
+				case 'interval': return 'Interval Info';
+				default: return 'Alexa Init';
+			}
 		},
 		labelStyle: function () {
 			return this.name ? "node_label_italic" : "";

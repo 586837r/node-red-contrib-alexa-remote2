@@ -31,19 +31,27 @@
 </script>
 
 <script type="text/x-red" data-help-name="alexa-remote-event">
-	<p>Listens to WebSocket events.
+	<style>
+		table, th, td {
+			border-collapse: collapse;
+			border: 1px solid rgb(204, 204, 204);
+			padding: 4px 8px;
+		}
+	</style>
+
+	<p>Listens to WsMqtt events.
 		Events must be enabled for this account.</p>
 	<hr>
-	<h3 id="outputs"><strong>Outputs</strong></h3>
+	<h3 id="Outputs"><strong>Outputs</strong></h3>
 	<ul>
 		<li><strong>payload</strong>
 			<ul>
-				<li>response from amazon</li>
+				<li>the event payload</li>
 			</ul>
 		</li>
 	</ul>
 	<hr>
-	<h3 id="references"><strong>References</strong></h3>
+	<h3 id="References"><strong>References</strong></h3>
 	<ul>
 		<li><a href="https://npmjs.com/package/node-red-contrib-alexa-remote2">npm</a> - the nodes npm repository</li>
 		<li><a href="https://github.com/586837r/node-red-contrib-alexa-remote2">GitHub</a> - the nodes GitHub repository
@@ -66,10 +74,10 @@
 		paletteLabel: 'Alexa Event',
 		label: function () {
             function keyToLabel(str) {
-                const match = str.match(/[A-Z]?[^A-Z_-\s]+/g);
-                if(match) str = match.map(s => s[0].toUpperCase() + s.slice(1)).join(' ');
+                const match = str.match(/(?:[A-Z]?[a-z]+)|[A-Z]|[0-9]+/g);
+                if (match) str = match.map(s => s.slice(0, 1).toUpperCase() + s.slice(1)).join(' ');
                 return str;
-			}
+            }
 			
 			return this.name || `On ${keyToLabel(this.event.slice(3))}`;
 		},

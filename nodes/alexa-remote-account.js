@@ -1,71 +1,330 @@
-const EventEmitter = require('events');
-const tools = require('../tools/tools.js');
-const AlexaRemote = tools.AlexaRemote;
+const util = require('util');
 const fs = require('fs');
-const DEBUG = false;
+const readFileAsync = util.promisify(fs.readFile);
+const writeFileAsync = util.promisify(fs.writeFile);
+const EventEmitter = require('events');
+
+const AlexaRemote = require('../lib/alexa-remote-ext.js');
+const tools = require('../lib/common.js');
+const known = require('../lib/known-color-values.js');
+const convert = require('../lib/color-convert.js');
+const deltaE = require('../lib/delta-e.js')
+
+const DEBUG_THIS = tools.DEBUG_THIS;
+const DEBUG_ALEXA_REMOTE2 = tools.DEBUG_ALEXA_REMOTE2;
+
+function accountHttpResponse(RED, property, label, req, res) {
+	const account = RED.nodes.getNode(req.query.account);
+	console.log(req.url);
+
+	if(!account) {
+		res.writeHeader(400, {'Content-Type': 'text/plain'});
+		return res.end(`Could not load ${label}: Account not deployed!`);
+	}
+
+	if(account.state.code !== 'READY') {
+		res.writeHeader(400, {'Content-Type': 'text/plain'});
+		return res.end(`Could not load ${label}: Account not initialised!`);
+	}
+
+	if(!account.hasOwnProperty(property)) {
+		res.writeHeader(500, {'Content-Type': 'text/plain'});
+		return res.end(`Could not load ${label}: Account not correctly initialised!`);
+	}
+
+	res.writeHeader(200, {'Content-Type': 'application/json'});
+	res.end(typeof account[property] === 'string' ? account[property] : JSON.stringify(account[property]));
+}
+
+function getSmarthomeEntityLabel(entity) {
+	function getIcon(applianceType) {
+		switch(applianceType) {
+			case 'LIGHT':               return 'f0eb'; // lightbulb-o 
+			case 'SWITCH':              return 'f205'; // toggle-on
+			case 'THERMOSTAT':          return 'f2c9'; // thermometer-half
+			case 'SMARTLOCK':           return 'f084'; // key
+			case 'SCENE_TRIGGER':       return 'f144'; // play-circle
+			case 'ACTIVITY_TRIGGER':    return 'f0f3'; // bell
+			case 'HUB':                 return 'f233'; // server
+			case 'ECHO': /*not native*/ return 'f270'; // amazon
+			case 'OTHER':               return 'f2db'; // microchip
+			default:                    return 'f128'; // question
+		}
+	}
+
+	if(entity.type === 'APPLIANCE') {
+		return entity.applianceTypes.map(getIcon).map(c => `&#x${c};`).join('') + `  ${entity.name}`;
+	}
+	else {
+		const icon = 'f247'; // object-group
+		return `&#x${icon};  ${entity.name}`; 
+	}
+}
+
+function getDeviceLabel(device) {
+	function getIcon(device) {
+		switch(device.deviceFamily) {
+			case 'TABLET': 							return 'f10a'; // tablet
+			case 'VOX': 							return 'f007'; // user
+			case 'THIRD_PARTY_AVS_MEDIA_DISPLAY': 	return 'f135'; // app
+			case 'ECHO': 							return 'f270'; // amazon
+			case 'FIRE_TV': 						return 'f06d'; // fire
+			case 'WHA':								return 'f247'; // object-group
+			case 'AMAZONMOBILEMUSIC_ANDROID':		return 'f17b'; // android
+			default:								return 'f059'; // question-circle
+		}
+	}
+
+	return `&#x${getIcon(device)};  ${device.accountName}`;
+}
+
+function getDeviceSortValue(device) {
+	let value = device.accountName ? device.accountName.charCodeAt(0) : 0;
+
+	switch(device.deviceFamily) {
+		case 'ECHO': 							value -= 1000;
+		case 'WHA':								value -= 1000;
+		case 'FIRE_TV': 						value -= 1000;
+		case 'TABLET': 							value -= 1000;
+		case 'VOX': 							value -= 1000;
+		case 'THIRD_PARTY_AVS_MEDIA_DISPLAY': 	value -= 1000;
+		case 'AMAZONMOBILEMUSIC_ANDROID':		value -= 1000;
+		default:								value -= 1000;
+	}
+
+	return value;
+}
+
+function getRoutineLabel(routine, smarthomeSimplifiedByEntityIdExt) {
+	routine = tools.isObject(routine) && routine || {};
+	const id = String(routine.automationId);
+	const trigger = Array.isArray(routine.triggers) && routine.triggers[0] || {}; 
+	const type = trigger.type || '';
+	const disabled = routine.status === 'DISABLED';
+	const suffix = disabled ? ' (disabled)' : '';
+
+	// const shortId = 
+	// 	  id.startsWith('amzn1.alexa.automation') 				? id.slice(id.lastIndexOf('-') + 1) 
+	// 	: id.startsWith('amzn1.alexa.behaviors.preconfigured') 	? tools.keyToLabel(id.slice(id.lastIndexOf(':') + 1, tools.nthIndexOf(id, '_', 1)))
+	// 	: '???';
+
+	if(type.startsWith('Alexa.Trigger.Alarms')) {
+		let action = type.slice(type.lastIndexOf('.') + 1);
+		if(action === 'NotificationStopped') action = 'dismissed';
+		return `&#xf0f3;  Alarm ${tools.keyToLabel(action)}${suffix}`; //bell
+	}
+
+	if(type.startsWith('Alexa.Trigger.Gadget.EchoButton')) {
+		let action = type.slice(type.lastIndexOf('.') + 1);
+		let shortId = trigger.payload.gadgetDsn.slice(-3);
+		if(action === 'ButtonPress') action = 'pressed';
+		return `&#xf111;  Button ${shortId} ${tools.keyToLabel(action)}${suffix}` // circle
+	}
+
+	if(type === 'CustomUtterance') {
+		const utterance = trigger.payload.utterance;
+		return `&#xf130;  "${utterance}"`; // microphone
+	}
+
+	if(type === 'motionSensorDetectionStateTrigger') {
+		const entityId = trigger.payload.target;
+		const entity = smarthomeSimplifiedByEntityIdExt.get(entityId);
+		const name = entity && entity.name || '???';
+		return `&#xf047;  Motion in ${name}${suffix}`; // arrows
+	}
+
+	if(type === 'AbsoluteTimeSchedule') {
+		const time = trigger.schedule.triggerTime || '??????';
+		const formatted = `${time.slice(0,2)}:${time.slice(2,4)}:${time.slice(4,6)}`;
+		return `&#xf017;  Schedule ${formatted}${suffix}` // clock-o
+	}
+
+	return `&#xf059;  ${id}${suffix}` // question-circle
+}
+
+function getBluetoothDeviceLabel(device) {
+	return device.friendlyName;
+}
+
+function getNotificationLabel(not) {
+	if(!tools.matches(not, { type: '', status: '', id: ''})) return `&#xf059;  ???`;
+
+	const name = not.type === 'Timer' ? not.timerLabel : not.reminderLabel;
+	const suffix = not.status === 'ON' ? '' : ` (${String(not.status).toLowerCase()})`;
+	const icon = not.type === 'Timer' ? 'f017' : not.type === 'Alarm' ? 'f0f3' : not.type === 'Reminder' ? 'f073' : 'f059';
+	const shortId = not.id.slice(not.id.lastIndexOf('-') + 1);
+	const shortTime = (not.originalTime || '').slice(0, 5);
+
+	return `&#x${icon};  ${name || (not.type === 'Alarm' ? shortTime : shortId)}${suffix}`;
+}
+
+const getNotificationSortValue = (noti) => {
+	const name = noti.type === 'Timer' ? noti.timerLabel : noti.reminderLabel;		
+
+	const nameValue = name ? name.charCodeAt(0) : 1000;
+
+	const typeValue = 
+		  noti.type === 'Timer' ? 0
+		: noti.type === 'Alarm' ? 10000
+		: noti.type === 'Reminder' ? 20000
+		: 30000;
+
+	return nameValue + typeValue;
+}
 
 module.exports = function (RED) {
 	function AlexaRemoteAccountNode(input) {
 		RED.nodes.createNode(this, input);
 
-		tools.assign(this, ['authMethod', 'proxyOwnIp', 'proxyPort', 'cookieFile', 'alexaServiceHost', 'amazonPage', 'acceptLanguage', 'userAgent'], input);
+		tools.log({self:this, status:this.status});
+
+		tools.assign(this, ['authMethod', 'proxyOwnIp', 'proxyPort', 'cookieFile', 'refreshInterval', 'alexaServiceHost', 'amazonPage', 'acceptLanguage', 'userAgent'], input);
 		this.useWsMqtt = input.useWsMqtt === 'on';
 		this.autoInit  = input.autoInit  === 'on';
+		this.locale = this.acceptLanguage;
+		this.refreshInterval = Number(this.refreshInterval) * 1000 * 60 * 60 * 24;
+		if(this.refreshInterval < 15000) this.refreshInterval = NaN;
 
 		this.alexa = new AlexaRemote().setMaxListeners(32);
 		this.emitter = new EventEmitter().setMaxListeners(64);
 		this.initing = false;
-		this.status = { code: 'uninitialized', message: 'uninitialized' }
-		this.initialised = false;
-		this.initialisationType = null;
+		this.state = { code: 'UNINITIALISED', message: '' }
 
-		this._status = function(code, message) {
-			this.status = {
+		this.smarthomeForUiJson = null;
+		this.devicesForUiJson = null;
+		this.refreshTimeoutStartTime = null;
+		this.refreshTimeout = null;
+
+		this.setState = function(code, message) {
+			this.state = {
 				code: code,
 				message: message || code
 			}
-			this.emitter.emit('status', code, message);
+			this.emitter.emit('state', code, message);
 		}
-		this._stopAlexa = function () {
+		this.renewTimeout = function() {
+			if(this.refreshTimeout !== null) {
+				clearTimeout(this.refreshTimeout);
+				this.refreshTimeout = null;
+			}
+
+			if(!this.refreshInterval) return;
+			if(this.state.code !== 'READY') return;
+
+			this.refreshTimeoutStartTime = Date.now();
+			this.refreshTimeout = setTimeout(() => {
+				this.log('auto refreshing cookie...');
+				this.refreshAlexa().catch();
+			}, this.refreshInterval);
+		}
+		this.resetAlexa = function () {
+			if(this.refreshTimeout !== null) {
+				clearTimeout(this.refreshTimeout);
+				this.refreshTimeout = null;
+			}
 			if (!this.alexa) return;
-
-			if (this.alexa.alexaWsMqtt) {
-				// suppress crash
-				this.alexa.alexaWsMqtt.on('error', (err) => console.log(err));
-				this.alexa.alexaWsMqtt.removeAllListeners();
-			}
-			if (this.alexa.alexaCookie) {
-				this.alexa.alexaCookie.stopProxyServer();
-			}
-
-			// TODO: is this still necessary?
-			delete this.alexa.alexaCookie;
-
-			this.alexa.removeAllListeners();
-			this.alexa.stop();
-			
-			this._status('stopped')
-			this.alexa = new AlexaRemote().setMaxListeners(32);
-
-			this.initing = false;
+			this.alexa.resetExt();
+			this.initialised = false;
+			this.alexa = new AlexaRemote();
+			this.setState('UNINITIALISED');
 		}
-		this._initAlexaFromObject = function (input, callback) {
-			// start from blank slate
-			this._stopAlexa();
 
-			const config = {}
-			tools.assign(config, ['proxyOwnIp', 'proxyPort', 'alexaServiceHost', 'amazonPage', 'acceptLanguage', 'userAgent', 'useWsMqtt'], this);
+		this.buildSmarthomeForUi = function() {
+			const smarthomeForUi = {};
+			smarthomeForUi.entityById = Array.from(this.alexa.smarthomeSimplifiedByEntityIdExt.values())
+				.sort((a,b) => {
+					if(a.type !== b.type) {
+						return a.type === 'APPLIANCE' ? -1 : 1;
+					}
+					
+					const an = a.name.toLowerCase();
+					const bn = b.name.toLowerCase();
+	
+					return an < bn ? -1 : an > bn ? 1 : 0;
+				})
+				.reduce((obj, entity) => (obj[entity.entityId] = 
+					[getSmarthomeEntityLabel(entity), entity.properties, entity.actions, entity.type]
+				, obj), {});
 
-			config.logger = DEBUG ? console.log : undefined;
-			config.refreshCookieInterval = 0; // wrong name
-			config.cookieRefreshTimeout = 0;
+			smarthomeForUi.colorNames = Array.from(this.alexa.colorNameToLabelExt.entries());
+			smarthomeForUi.colorTemperatureNames = Array.from(this.alexa.colorTemperatureNameToLabelExt.entries());
+
+			//tools.log({smarthomeForUi: smarthomeForUi}, 10, 250);
+			this.smarthomeForUiJson = JSON.stringify(smarthomeForUi);
+		}
+		this.buildDevicesForUi = function() {
+			const devicesForUi = Array.from(this.alexa.deviceByIdExt.values())
+				.sort((a,b) => getDeviceSortValue(a) - getDeviceSortValue(b))
+				.map(dev => [dev.serialNumber, getDeviceLabel(dev), dev.capabilities]);
+
+			this.devicesForUiJson = JSON.stringify(devicesForUi);
+		}
+		this.buildNotificationsForUi = function() {
+			const notificationsForUi = Array.from(this.alexa.notificationByIdExt.values())
+				.sort((a,b) => getNotificationSortValue(a) - getNotificationSortValue(b))
+				.map(noti => [noti.notificationIndex, getNotificationLabel(noti), noti.type, noti.deviceSerialNumber]);
+
+			this.notificationsForUiJson = JSON.stringify(notificationsForUi);
+		}
+		this.buildRoutinesForUi = async function() {
+			// const [routines, musicProviders] = await Promise.all([
+			// 	this.alexa.getAutomationRoutinesPromise(),
+			// 	this.alexa.getMusicProvidersPromise(),
+			// ]);
+
+			const routines = Array.from(this.alexa.routineByIdExt.values());
+			const musicProviders = this.alexa.musicProvidersExt;
+
+			const routinesForUi = routines
+				.sort((a,b) => (a.status === 'DISABLED' ? 1 : -1) - (b.status === 'DISABLED' ? 1 : -1))
+				.map(routine => [routine.automationId, getRoutineLabel(routine, this.alexa.smarthomeSimplifiedByEntityIdExt)]);
+
+			const musicProvidersForUi = musicProviders
+				.filter(provider => provider.supportedOperations.includes('Alexa.Music.PlaySearchPhrase'))
+				.map(provider => [provider.id, provider.displayName]);
+
+			this.routinesForUiJson = JSON.stringify({
+				routines: routinesForUi,
+				musicProviders: musicProvidersForUi
+			});
+		}
+		this.buildBluetoothForUi = async function(warnCb) {
+			const bluetoothStates = (await this.alexa.getBluetoothPromise()).bluetoothStates;
+
+			const bluetoothForUi = bluetoothStates
+				.filter(state => Array.isArray(state.pairedDeviceList))
+				.reduce((o, state) => (o[state.deviceSerialNumber] = state.pairedDeviceList
+					.map(device => [device.address, getBluetoothDeviceLabel(device)]
+				), o), {})
+
+			this.bluetoothForUiJson = JSON.stringify(bluetoothForUi);
+		}
+
+		this.initAlexa = async function(input, ignoreFile = false) {
+			// we can hopefully do without this now by checking if this.alexa changes
+			// if(this.initing) throw new Error('Already initialising!');
+			// this.initing = true;
+
+			const warnCb = tools.nodeGetWarnCb(this);
+			const errCb = tools.nodeGetErrorCb(this);
+
+			let config = {};
+			tools.assign(config, ['proxyOwnIp', 'proxyPort', 'alexaServiceHost', 'amazonPage', 'acceptLanguage', 'userAgent', 'useWsMqtt'], this);	
+			config.logger = DEBUG_ALEXA_REMOTE2 ? console.log : undefined;
+			config.refreshCookieInterval = 0;
 			config.proxyLogLevel = 'warn';
 			config.cookieJustCreated = true; // otherwise it just tries forever...
 			config.bluetooth = false;
 
 			switch (this.authMethod) {
 				case 'proxy':
-					config.proxyOnly = true; // optional
+					config.proxyOnly = true; // should not matter					
+
+					const cookieData = tools.isObject(input) && input.loginCookie && tools.clone(input)
+						 || this.cookieFile && !ignoreFile && await readFileAsync(this.cookieFile, 'utf8').then(json => JSON.parse(json)).catch(warnCb)
+						 || undefined;
+
+					config.cookie = cookieData;
 					break;
 				case 'cookie':
 					tools.assign(config, ['cookie'], this.credentials);
@@ -75,186 +334,128 @@ module.exports = function (RED) {
 					break;
 			}
 
-			// if input was actually formerRegistrationData
-			if(input.loginCookie) {
-				input = { formerRegistrationData: input };
+			if (!config.amazonPageProxyLanguage) config.amazonPageProxyLanguage = config.acceptLanguage && config.acceptLanguage.replace('-', '_') || undefined;
+
+			// guess authentication method that AlexaRemote will use
+			// useful if we want to drive init by input
+			// currently initType should not differ this.authMethod
+			const initType = config.cookie ? (config.cookie.loginCookie ? 'proxy' : 'cookie') : (config.email && config.password ? 'password' : 'proxy');
+
+			this.resetAlexa();
+			
+			switch(initType) {
+				case 'proxy': this.setState('INIT_PROXY'); break;
+				case 'cookie': this.setState('INIT_COOKIE'); break;
+				case 'password': this.setState('INIT_PASSWORD'); break;
 			}
 
-			if (input) tools.assign(config, input);
-			if (!config.amazonPageProxyLanguage) config.amazonPageProxyLanguage = config.acceptLanguage ? config.acceptLanguage.replace('-', '_') : undefined;
+			// the this.alexa we init could change once the this.alexa.initExt is complete because
+			// this.resetAlexa() or this.initAlexa() might have been called again during this time
+			// so we need to check if this.alexa has changed and if so handle it differently
+			const alexa = this.alexa;
 
-			if(!config.cookie && config.formerRegistrationData) {
-				config.cookie = config.formerRegistrationData.localCookie;
+			const proxyWaitCallback = (url) => {
+				if(alexa !== this.alexa) return;
+				const text = `open ${url} in your browser`;
+				this.warn(text);
+				this.setState('WAIT_PROXY', text);
 			}
 
-			if(config.cookie) {
-				if(config.formerRegistrationData){
-					this.initialisationType = 'proxy';
-				}
-				else {
-					this.initialisationType = 'cookie';
-					
-				}
-			} 
-			else if (config.email && config.password) {
-				this.initialisationType = 'password';
-			}
-			else {
-				this.initialisationType = 'proxy';
+			const warnCallback = (error) => {
+				if(alexa !== this.alexa) return;
+				this.warn(error.message);
 			}
 
-			switch(this.initialisationType) {
-				case 'proxy': this._status('init-proxy'); break;
-				case 'cookie': this._status('init-cookie'); break;
-				case 'password': this._status('init-password'); break;
+			if(initType === 'proxy') {
+				await tools.portAvailable(config.proxyPort).catch(error => {
+					if(error.code === 'EADDRINUSE') error.message = `port ${config.proxyPort} already in use`;
+					this.setState('ERROR', error.message);
+					throw error;
+				});
 			}
 
-			const alexaInitCallback = (err, val) => {
-				if (err) {
-					// proxy status message is not the final callback call
-					const begin = `You can try to get the cookie manually by opening http://`;
-					const end = `/ with your browser.`;
-					const beginIdx = err.message.indexOf(begin);
-					const endIdx = err.message.indexOf(end);
-					
-					if(beginIdx !== -1 && endIdx !== -1) {
-						const url = err.message.substring(begin.length, endIdx);
-						const text = `open ${url} in your browser`;
-				
-						this.warn(text);
-						this._status('wait-proxy', text);
-						// we dont call callback
-					}
-					else {
-						this.initialised = false;
-						this._status('error', err.message);
-						callback && callback(err, val);
-					}
-				}
-				else {
-					this.alexa.checkAuthentication((authenticated, err) => {
-						if(err || !authenticated) {
-							if(!err) err = new Error('Authentication failed.')
-							else err.message = `Authentication failed (${err.message})`;
-							this.initialised = false;
-							this._status('error', err.message);
-							return callback && callback(err, {authenticated:authenticated});
-						}
+			const cookieData = await alexa.initExt(config, proxyWaitCallback, warnCallback).catch(error => {
+				if(alexa !== this.alexa) return;
+				this.setState('ERROR', error && error.message);
+				throw error;
+			});
 
-						if(this.cookieFile && this.authMethod === 'proxy') {
-							const options = this.alexa._options;
-							const regData = options && options.formerRegistrationData;
-							const string = JSON.stringify(regData);
-	
-							fs.writeFile(this.cookieFile, string, 'utf8', (err, val) => {
-								if(err) {
-									err.warning = true;
-									callback && callback(err, val);
-								}
-							})
-						}
-	
-						this.initialised = true;
-						this._status('ready');
-						callback && callback(err, val);
-					});
-				}
+			await alexa.checkAuthenticationExt().then(authenticated => {
+				if(!authenticated) throw new Error('Authentication unsuccessful.');
+			}).catch(error => {
+				if(alexa !== this.alexa) return;
+				this.setState('ERROR', error && error.message);
+				throw error;
+			});
+
+			// see above why
+			if(alexa !== this.alexa) {
+				throw new Error('Initialisation was aborted!');
 			}
 
-			if(this.initialisationType === 'proxy') {
-				tools.portInUseAsync(this.proxyPort)
-					.then(() => this.alexa.init(config, alexaInitCallback))
-					.catch((err) => {
-						err.message = `Port ${this.proxyPort} already in use (${err.message})`;
-						callback && callback(err);
-					});
+			if(this.authMethod === 'proxy' && this.cookieFile) {
+				const data = alexa.cookieData;
+				const json = JSON.stringify(data);
+				try { fs.writeFileSync(this.cookieFile, json, 'utf8') }
+				catch (error) { warnCb(error) }
 			}
-			else {
-				this.alexa.init(config, alexaInitCallback);
-			}			
+
+			this.buildDevicesForUi();
+			this.buildSmarthomeForUi();
+			this.buildNotificationsForUi();
+
+			this.alexa.on('change-device', () => this.buildDevicesForUi());
+			this.alexa.on('change-smarthome', () => this.buildSmarthomeForUi());
+			this.alexa.on('change-notification', () => this.buildNotificationsForUi());
+
+			await Promise.all([
+				this.buildRoutinesForUi().catch(error => (error.message = `building routines for ui failed: "${error.message}"`, warnCb(error))),
+				this.buildBluetoothForUi().catch(error => (error.message = `building bluetooth for ui failed: "${error.message}"`, warnCb(error))),,
+			]);
+
+			// see above why
+			if(alexa !== this.alexa) {
+				throw new Error('Initialisation was aborted!');
+			}
+
+			this.setState('READY');
+			this.renewTimeout();
+			return cookieData;
 		}
-		this._initAlexaFromObjectOrFile = function (input, callback) {
+		this.refreshAlexa = async function() {
+			if(this.state.code !== 'READY') throw new Error('account must be initialised before refreshing');
+			this.setState('REFRESH');
 
-			if(input.formerRegistrationData || input.loginCookie || this.authMethod !== 'proxy' || !this.cookieFile) {
-				return this._initAlexaFromObject(input, callback);
-			}
-
-			fs.readFile(this.cookieFile, 'utf8', (err, val) => {
-				let obj;
-				const config = tools.assign({}, input);
-
-				if(!err) {
-					if(obj = tools.tryParseJson(val)) {
-						tools.assign(config, obj);
-					}
-					else {
-						err = new Error('file is not json');
-						err.warning = true;
-						callback && callback(err, val);
-					}
-				}
-				else {
-					err.warning = true;
-					callback && callback(err, val);
-				}
-
-				this._initAlexaFromObject(config, callback);
-			})
-		}
-		this._initAlexaFromObjectOrFileLocked = function(input={}, callback) {
-			if (this.initing) {
-				const error = new Error('Already initialising');
-				error.warning = true;
-				return callback && callback(error);
-			}
-
-			this.initing = true;
-			this._initAlexaFromObjectOrFile(input, (err, val) => {
-				this.initing = false;
-				callback && callback(err, val);
+			return this.alexa.refreshExt().then(value => {
+				this.setState('READY');
+				this.renewTimeout();
+				return value;
+			}).catch(error => {
+				this.setState('ERROR', error && error.message);
+				this.renewTimeout();
+				throw error;
 			});
 		}
-		this._refreshAlexaCookie = function(callback) {
-			if (this.initing) {
-				const error = new Error('Already initialising');
-				error.warning = true;
-				return callback && callback(error);
-			}
-	
-			if(this.status.code !== 'ready') {
-				const error = new Error('Not initialised');
-				error.warning = true;
-				return callback && callback(error);
-			}
+		this.updateAlexa = async function() {
+			if(this.state.code !== 'READY') throw new Error('account must be initialised before updating');
+			this.setState('UPDATE');
 
-			this._status('refresh');
-			this.alexa._options.cookie = this.alexa.cookieData;
-			delete this.alexa._options.csrf;
-			this.alexa.init(this.alexa._options, (err, val) => {
-				if(err) {
-					this._status('error', 'Refreshing Cookie failed!');
-					return callback && callback(err, val);
-				}
-
-				this._status('ready')
-				return callback && callback(err, val);
+			return this.alexa.updateExt().then(value => {
+				this.setState('READY');
+				return value;
+			}).catch(error => {
+				this.setState('ERROR', error && error.message);
+				throw error;
 			});
 		}
-
-		this.stopAlexa = this._stopAlexa;
-		this.initAlexa = this._initAlexaFromObjectOrFileLocked;
-		this.refreshAlexaCookie = this._refreshAlexaCookie;
 
 		this.on('close', function () {
-			this.stopAlexa();
+			this.resetAlexa();
 		});
 		
 		if(this.autoInit) {
-			this.initAlexa(undefined, (err, val) => {
-				if(err) {
-					this.error(err);
-				}
-			});
+			const errorCb = tools.nodeGetErrorCb(this);
+			this.initAlexa(undefined).catch(errorCb);
 		}
 	}
 
@@ -266,35 +467,34 @@ module.exports = function (RED) {
 		}
 	});
 
-	RED.httpAdmin.get('/alexa-remote-devices', function(req, res, next)
-	{
+	RED.httpAdmin.get('/alexa-remote-routines.json', (req, res) => accountHttpResponse(RED, 'routinesForUiJson', 'Routines', req, res));
+	RED.httpAdmin.get('/alexa-remote-devices.json', (req, res) => accountHttpResponse(RED, 'devicesForUiJson', 'Devices', req, res));
+	RED.httpAdmin.get('/alexa-remote-smarthome.json', (req, res) => accountHttpResponse(RED, 'smarthomeForUiJson', 'Smarthome Devices', req, res));
+	RED.httpAdmin.get('/alexa-remote-bluetooth.json', (req, res) => accountHttpResponse(RED, 'bluetoothForUiJson', 'Bluetooth Devices', req, res));
+	RED.httpAdmin.get('/alexa-remote-notifications.json', (req, res) => accountHttpResponse(RED, 'notificationsForUiJson', 'Notifications', req, res));
+	RED.httpAdmin.get('/alexa-remote-sounds.json', (req, res) => {
 		const account = RED.nodes.getNode(req.query.account);
-		const result = {
-			error: null,
-			devices: null
-		}
-		
-		if(!account) {
-			res.statusCode = 500;
-			result.error = 'Account missing!';
-			return res.end(JSON.stringify(result));
+		const device = req.query.device;
+		const label = 'Sounds';
+		console.log(req.url);
+
+		if (!account) {
+			res.writeHeader(400, { 'Content-Type': 'text/plain' });
+			return res.end(`Could not load ${label}: Account not deployed!`);
 		}
 
-		if(!account.initialised) {
-			res.statusCode = 500;
-			result.error = 'Account not initialised!';
-			return res.end(JSON.stringify(result));
+		if (account.state.code !== 'READY') {
+			res.writeHeader(400, { 'Content-Type': 'text/plain' });
+			return res.end(`Could not load ${label}: Account not initialised!`);
 		}
 
-		try {
-			const deviceBySerial = account.alexa.serialNumbers;
-			result.devices = Object.entries(deviceBySerial).map(([k,v]) => [k, v.accountName]);
-			res.end(JSON.stringify(result));
-		}
-		catch (e) {
-			res.statusCode = 500;
-			result.error = 'Devices were not initialised?';
-			res.end(JSON.stringify(result));
-		}
+		account.alexa.getSoundsExt(device).then(sounds => {
+			const pairs = sounds.map(sound => [JSON.stringify(sound), sound.displayName]);
+			res.writeHeader(200, { 'Content-Type': 'application/json' });
+			res.end(JSON.stringify(pairs));
+		}).catch(error => {
+			res.writeHeader(400, { 'Content-Type': 'text/plain' });
+			return res.end(`Could not load sounds: "${error}"`);
+		});
 	});
 }

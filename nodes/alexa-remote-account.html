@@ -36,6 +36,11 @@
         <label for="node-config-input-cookieFile"><i class="fa fa-file"></i> File Path</label>
         <input type="text" id="node-config-input-cookieFile" placeholder="Optional">
 	</div>
+	<div class="form-row">
+		<label for="node-config-input-refreshInterval"><i class="fa fa-refresh"></i> Refresh</label>
+		<input type="text" id="node-config-input-refreshInterval" placeholder="Optional" style="width: 55%;">
+		<label for="node-config-input-refreshInterval" style="width: 15%; text-align: center;">days</label>
+	</div>
 	<hr>
 	<div class="form-row">
 		<label for="node-config-input-autoInit"><i class="fa fa-wrench"></i> Auto Init</label>
@@ -81,16 +86,18 @@
 
 	<p>Alexa Account configuration node.</p>
 	<hr>
-	<h3 id="settings"><strong>Settings</strong></h3>
+	<h3 id="Settings"><strong>Settings</strong></h3>
 	<ul>
 		<li><strong>Auth Method</strong>
 			<ul>
 				<li><strong>Proxy</strong>
 					<ul>
 						<li>automatically captures your cookies using a proxy</li>
-						<li>enables cookie refreshing by sending a <code>msg.payload</code> of <code>refresh</code></li>
-						<li>can setup persistant automatic initialisation with <strong>File Path</strong> and a refresh
-							every few days</li>
+						<li><strong>This Ip</strong> has to be the ip of the Node-RED server</li>
+						<li>enter a <strong>File Path</strong> to a text file (can be relative or absolute) to save the
+							authentication result to make following authentications automatic (for alternative ways to save
+							the authentication result see the <em>Alexa Init</em> node)</li>
+						<li><strong>Refresh</strong> is the cookie refresh interval in days</li>
 					</ul>
 				</li>
 				<li><strong>Cookie</strong>
@@ -125,17 +132,17 @@
 		</li>
 	</ul>
 	<hr>
-	<h3 id="setup"><strong>Setup</strong></h3>
+	<h3 id="Setup"><strong>Setup</strong></h3>
 	<ol>
 		<li>
-			<p>Drag a <strong>Alexa Sequence</strong> node into your flow.</p>
+			<p>Drag an <strong>Alexa Routine</strong> node into your flow.</p>
 		</li>
 		<li>
 			<p>Create a new Account by pressing the edit button at the right side of the <em>Account</em> field.</p>
 		</li>
 		<li>
-			<p>Choose a <strong>Service Host</strong> and <strong>Page</strong> and optionally <strong>Language</strong>
-				depending on your location. For example:</p>
+			<p>Choose a <strong>Service Host</strong> and <strong>Page</strong> and <strong>Language</strong> depending on
+				your location. For example:</p>
 			<table>
 				<thead>
 					<tr>
@@ -148,20 +155,20 @@
 				<tbody>
 					<tr>
 						<td>USA</td>
-						<td>pitangui.amazon.com</td>
-						<td>amazon.com</td>
+						<td><a href="http://pitangui.amazon.com">pitangui.amazon.com</a></td>
+						<td><a href="http://amazon.com">amazon.com</a></td>
 						<td>en-US</td>
 					</tr>
 					<tr>
 						<td>UK</td>
-						<td>alexa.amazon.co.uk</td>
-						<td>amazon.co.uk</td>
+						<td><a href="http://alexa.amazon.co.uk">alexa.amazon.co.uk</a></td>
+						<td><a href="http://amazon.co.uk">amazon.co.uk</a></td>
 						<td>en-UK</td>
 					</tr>
 					<tr>
 						<td>GER</td>
-						<td>layla.amazon.de</td>
-						<td>amazon.de</td>
+						<td><a href="http://layla.amazon.de">layla.amazon.de</a></td>
+						<td><a href="http://amazon.de">amazon.de</a></td>
 						<td>de-DE</td>
 					</tr>
 				</tbody>
@@ -187,14 +194,13 @@
 			<p>Log in, wait until you see the node status <strong>ready</strong></p>
 		</li>
 		<li>
-			<p>Select a device. Clicking on the button on the far right of the device field will let you select from a list
-				of your devices.</p>
+			<p>Select a device in the <em>Alexa Routine</em> node.</p>
 		</li>
 	</ol>
-	<p>Now trigger the Alexa Sequence Node with any message and your Alexa will say &quot;Hello World!&quot;. (Hopefully!)
-	</p>
+	<p>Now trigger the <em>Alexa Routine</em> Node with any message and your Alexa will say &quot;Hello World!&quot;.
+		(Hopefully!)</p>
 	<hr>
-	<h3 id="references"><strong>References</strong></h3>
+	<h3 id="References"><strong>References</strong></h3>
 	<ul>
 		<li><a href="https://npmjs.com/package/node-red-contrib-alexa-remote2">npm</a> - the nodes npm repository</li>
 		<li><a href="https://github.com/586837r/node-red-contrib-alexa-remote2">GitHub</a> - the nodes GitHub repository
@@ -216,6 +222,7 @@
 			proxyOwnIp:			{ required: true,  value: 'localhost' },
 			proxyPort:			{ required: true,  value: 3456, validate: x => 0 <= Number(x) && Number(x) <= 65535 },
 			cookieFile:			{ required: false, value: ''},
+			refreshInterval:	{ required: false, value: '3'},
             alexaServiceHost:   { required: true,  value: 'pitangui.amazon.com' },
 			amazonPage:         { required: true,  value: 'amazon.com' },
             acceptLanguage:     { required: false,  value: 'en-US' },
@@ -231,13 +238,15 @@
             return this.name ? 'node_label_italic' : '';
 		}, 
 		oneditprepare: function () {
+			console.log('loaded', this);
+
 			const getInput = x => $(`#node-config-input-${x}`);
 			const getRow = x => getInput(x).parent();
 			
 			let rowmap = {
-				proxy: [ getRow('proxyOwnIp'), getRow('proxyPort'), getRow('cookieFile') ],
+				proxy: [ getRow('proxyOwnIp'), getRow('proxyPort'), getRow('cookieFile'), getRow('refreshInterval') ],
 				cookie: [ getRow('cookie') ],
-				password: [ getRow('email'), getRow('password') ]
+				password: [ getRow('email'), getRow('password') ],
 			}
 
 			getInput('authMethod').change(event => {
@@ -245,6 +254,9 @@
 					k === event.target.value ? v.forEach(r => r.show()) : v.forEach(r => r.hide());
 				});
 			});
+		},
+		oneditsave: function() {
+			console.log('saved', this);
 		}
 	});
 </script>
