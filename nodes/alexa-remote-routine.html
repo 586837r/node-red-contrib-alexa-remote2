@@ -1144,11 +1144,14 @@
 						}
 						const text = arTypedInput(data.text, ['str']);
 						const [devices, devicesRow] = common.bottom.row.deviceList(data.devices);
-						channel.type.on('change', () => {
+						const updateType = () => {
 							const value = channel.type.arSelect('value');
 							const type = value === 'ssml' ? ssml : 'str'
 							text.arTypedInput('types', [type]);
-						});
+						}
+						channel.type.on('change', updateType);
+						updateType();
+						
 						arRow(text, 'Text').appendTo(this);
 						devicesRow.appendTo(this);
 						return () => ({ text: text.arTypedInput('data'), devices: devices.arTypedInputOrInputList('data') });
