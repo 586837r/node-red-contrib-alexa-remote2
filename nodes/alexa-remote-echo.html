@@ -747,7 +747,7 @@
 							const options = hasAll ? [['ALEXA_ALL_DSN', '&#xf0ac;  All Devices']].concat(loader.devices) : loader.devices;
 							device.arTypedInputOrSelect('selectOptions', options);
 							device.arTypedInputOrSelect('selectActiveMaybe', loader.success);
-							if(!device.arTypedInputOrSelect('value')) device.arTypedInputOrSelect('selectSomething');
+							if(!device.arTypedInputOrSelect('value') && loader.success) device.arTypedInputOrSelect('selectSomething');
 						}
 						loader.listen('change', device, updateDevice);
 						what.on('change', updateDevice);
@@ -780,7 +780,7 @@
 						const updateDevice = () => {
 							device.arTypedInputOrSelect('selectOptions', loader.devices);
 							device.arTypedInputOrSelect('selectActiveMaybe', loader.success);
-							if(!device.arTypedInputOrSelect('value')) device.arTypedInputOrSelect('selectSomething');
+							if(!device.arTypedInputOrSelect('value') && loader.success) device.arTypedInputOrSelect('selectSomething');
 						}
 						loader.listen('change', device, updateDevice);
 						updateDevice();
@@ -830,7 +830,7 @@
 						const updateDevice = () => {
 							device.arTypedInputOrSelect('selectOptions', loader.devices);
 							device.arTypedInputOrSelect('selectActiveMaybe', loader.success);
-							if(!device.arTypedInputOrSelect('value')) device.arTypedInputOrSelect('selectSomething');
+							if(!device.arTypedInputOrSelect('value') && loader.success) device.arTypedInputOrSelect('selectSomething');
 						}
 						loader.listen('change', device, updateDevice);
 						updateDevice();
@@ -841,7 +841,7 @@
 							const bluetoothDevices = loader.bluetoothDevicesById[id] || [];
 							gadget.arTypedInputOrSelect('selectOptions', bluetoothDevices);
 							gadget.arTypedInputOrSelect('selectActiveMaybe', loader.success);
-							if(!gadget.arTypedInputOrSelect('value')) gadget.arTypedInputOrSelect('selectSomething');
+							if(!gadget.arTypedInputOrSelect('value') && loader.success) gadget.arTypedInputOrSelect('selectSomething');
 						}
 						loader.listen('change', gadget, updateBluetooth);
 						device.on('change', updateBluetooth);
@@ -864,7 +864,7 @@
 						const updateDevice = () => {
 							device.arTypedInputOrSelect('selectOptions', loader.devices);
 							device.arTypedInputOrSelect('selectActiveMaybe', loader.success);
-							if(!device.arTypedInputOrSelect('value')) device.arTypedInputOrSelect('selectSomething');
+							if(!device.arTypedInputOrSelect('value') && loader.success) device.arTypedInputOrSelect('selectSomething');
 						}
 						loader.listen('change', device, updateDevice);
 						updateDevice();

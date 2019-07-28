@@ -1,6 +1,4 @@
 const tools = require('../lib/common.js');
-const util = require('util');
-const convert = require('../lib/color-convert.js');
 
 module.exports = function (RED) {
 	function AlexaRemoteRoutine(input) {
@@ -47,7 +45,7 @@ module.exports = function (RED) {
 			const findAll = (ids, depth = 1) => {
 				let devices = [];
 				for (const id of ids) {
-					if (id === 'ALEXA_ALL_DSN') return { serialNumber: 'ALEXA_ALL_DSN', deviceType: 'ALEXA_ALL_DEVICE_TYPE', clusterMembers: [] };
+					if (id === 'ALEXA_ALL_DSN') return [{ serialNumber: 'ALEXA_ALL_DSN', deviceType: 'ALEXA_ALL_DEVICE_TYPE', clusterMembers: [] }];
 					const device = find(id)
 
 					if (device.clusterMembers.length !== 0 && depth !== 0) {
@@ -69,7 +67,7 @@ module.exports = function (RED) {
 
 				switch (node.type) {
 					case 'speak': {
-						if (node.payload.device) node.payload.devices = [node.payload.device];
+						if (!Array.isArray(node.payload.devices)) node.payload.devices = [node.payload.devices || node.payload.device];
 						if (!tools.matches(node.payload, { type: '', text: '', devices: [] })) throw invalid();
 						const devices = findAll(node.payload.devices);
 						if (devices.length === 0) return undefined;
@@ -133,7 +131,7 @@ module.exports = function (RED) {
 						}
 					}
 					case 'speakAtVolume': {
-						if (node.payload.device) node.payload.devices = [node.payload.device];
+						if (!Array.isArray(node.payload.devices)) node.payload.devices = [node.payload.devices || node.payload.device];
 						if (!tools.matches(node.payload, { type: '', text: '', volume: undefined, devices: [] })) throw new Error(`invalid sequence node: "${JSON.stringify(node)}"`);
 						const devices = findAll(node.payload.devices);
 						if(devices.length === 0) return undefined;
@@ -183,7 +181,7 @@ module.exports = function (RED) {
 						})
 					}
 					case 'stop': {
-						if (node.payload.device) node.payload.devices = [node.payload.device];
+						if (!Array.isArray(node.payload.devices)) node.payload.devices = [node.payload.devices || node.payload.device];
 						if (!tools.matches(node.payload, { devices: [] })) throw new Error(`invalid sequence node: "${JSON.stringify(node)}"`);
 						const devices = findAll(node.payload.devices);
 						if(devices.length === 0) return undefined;
@@ -204,7 +202,7 @@ module.exports = function (RED) {
 						}
 					}
 					case 'prompt': {
-						if (node.payload.device) node.payload.devices = [node.payload.device];
+						if (!Array.isArray(node.payload.devices)) node.payload.devices = [node.payload.devices || node.payload.device];
 						if (!tools.matches(node.payload, { type: '', devices: [] })) throw invalid();
 						const devices = findAll(node.payload.devices);
 						if(devices.length === 0) return undefined;
@@ -235,7 +233,7 @@ module.exports = function (RED) {
 						});
 					}
 					case 'volume': {
-						if (node.payload.device) node.payload.devices = [node.payload.device];
+						if (!Array.isArray(node.payload.devices)) node.payload.devices = [node.payload.devices || node.payload.device];
 						if (!tools.matches(node.payload, { value: undefined, devices: [] })) throw invalid();
 						const volume = Number(node.payload.value);
 						if (Number.isNaN(volume)) throw invalid();

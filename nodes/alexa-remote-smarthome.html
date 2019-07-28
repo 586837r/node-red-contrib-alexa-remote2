@@ -803,8 +803,8 @@
 
 							const row = $('<div>').css({ flex: '1', display: 'flex' }).appendTo(this.css({ flexDirection: 'column' }));
 							const separator = $('<div>').css({ minWidth: 10 }).appendTo(row);
-							const entity = arInputOrSelect(data.entity).css({ flex: '1' }).insertBefore(separator);
-							const action = arInputOrSelect(data.action).css({ flex: '1.5' }).insertAfter(separator);
+							const entity = arInputOrSelect(data.entity).css({ flex: '1' , minWidth: 150 }).insertBefore(separator);
+							const action = arInputOrSelect(data.action).css({ flex: '3' }).insertAfter(separator);
 
 							function prepareLockAction(data) {
 								data = template(data, { value: { type: 'str', value: 'locked' } });

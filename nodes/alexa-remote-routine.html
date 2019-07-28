@@ -133,6 +133,9 @@
 		flex: 1;
 		width: 50px;
 	}
+	.alexaRemote-arTypedInputOrInputList .hidden {
+		display: none !important;
+	}
 </style>
 
 <script type="text/javascript">
@@ -528,7 +531,7 @@
 					this._setup(this.input);
 				},
 				_change: function () {
-					this.element.trigger('change', [this.input.arTypedInput('type'), this.input.arTypedInput('value')]);
+					this.element.trigger('change', this.data());
 				},
 				_inputValue: function (value) {
 					if (arguments.length === 0) return this.input.arTypedInput('value');
@@ -651,6 +654,87 @@
 					if (typeof this.groupCallbacks === 'function') this.groupCallbacks = { getter: this.groupCallbacks };
 					if (this.groupObject) this.element.show(); else this.element.hide();
 					this.element.trigger('change', this.groupKey);
+				}
+			});
+			$.widget('alexaRemote.arTypedInputOrInputList', {
+				_create: function() {
+					this.input = $('<div>').arTypedInput({ types: ['str', 'json'] }).css({ flex: '1' });
+					this.list = $('<div>').arInputList(this.options);
+					this.button = $('<a>').addClass('editor-button');
+					this.element.addClass('alexaRemote-arTypedInputOrInputList').css({ display: 'flex'}).append(
+						this.input, 
+						this.list,
+						$('<div>').css({ width: 8 }),
+						this.button.css({ alignSelf: 'center' }).append($('<i>').attr('class', 'fa fa-list')),
+					);
+					
+					this.button.click(() => {
+						this.listActive(!this.listActive());
+					});
+
+					this._listVisible(false);
+				},
+				_change: function(data) {
+					this.element.trigger('change');
+				},
+				_listVisible: function(visible) {
+					if(arguments.length === 0) return !this.list.hasClass('hidden');
+
+					if(visible) {
+						this.input.addClass('hidden');
+						this.list.removeClass('hidden');
+					}
+					else {
+						this.list.addClass('hidden');
+						this.input.removeClass('hidden');
+						this.refresh();
+					}
+
+					this.button.css({ marginBottom: visible ? 24 : 0 });
+				},
+				listActive: function(active) {
+					if(arguments.length === 0) return this._listVisible();
+					
+					if(active) {
+						const data = this.input.arTypedInput('data');
+
+						let array; 
+						if(data.type === 'str') array = [data.value];
+						if(data.type === 'json') { try { array = JSON.parse(data.value); } catch(err) {}; }
+						
+						this.list.arInputList('value', Array.isArray(array) ? array : [undefined]);
+					}
+					else {
+						const array = this.list.arInputList('value');
+						const data = array.length <= 1 
+							? { type: 'str', value: array[0] || '' }
+							: { type: 'json', value: JSON.stringify(array) };
+
+						this.input.arTypedInput('data', data);	
+					}
+					this._listVisible(active);
+					this._change();
+				},
+				data: function(data) {
+					if(arguments.length === 0) {
+						return this.listActive() ? this.list.arInputList('value') : this.input.arTypedInput('data');
+					}
+
+					if(data === undefined) {
+						data = [undefined];
+					}
+
+					if(Array.isArray(data)) {
+						this.list.arInputList('value', data);
+						this._listVisible(true);
+					}
+					else {
+						this.input.arTypedInput('data', data);
+						this._listVisible(false);
+					}
+				},
+				refresh: function() {
+					this.input.arTypedInput('refresh');
 				}
 			});
 
@@ -784,6 +868,26 @@
 					.arInputGroups('value', value)
 					.arInputGroups('groups', groups);
 			}
+			function arSwap(a, b, onClick, {icon = 'fa fa-list'} = {}) {
+				const button = $('<a>').addClass('editor-button');
+					
+				this.button.click(() => {
+					const visible = b.is(':visible');
+					visible ? (b.hide(), a.show()) : (b.show(), a.hide());
+					onClick(visible);
+				});
+
+				return $('<div>').css({ display: 'flex' }).append(
+					a.css({ flex: '1' }),
+					b.css({ flex: '1' }),
+					$('<div>').css({ width: 8 }),
+					button.append($('<i>').attr('class', 'fa fa-list'))
+				);
+			}
+			function arTypedInputOrInputList(data, add, { header } = {}) {
+				return $('<div>').arTypedInputOrInputList({add: add, header: header})
+					.arTypedInputOrInputList('data', data);
+			}
 
 			function arRoutineNode(data = { node: 'speak' }, loader){
 				return $('<div>')
@@ -806,7 +910,6 @@
 					const options = [
 						['speak',				'&#xf04b;  Speak'], // play
 						['speakAtVolume', 		'&#xf0fe;  Speak At Volume'],
-					//  ['speakRegularSingle',	'&#xf04b;  Speak Alt'], // play
 						['wait',				'&#xf017;  Wait'], // clock-o
 						['stop',				'&#xf04d;  Stop'], // stop
 						['prompt',				'&#xf075;  Prompt'], // comment
@@ -819,75 +922,77 @@
 						['custom',				'&#xf061;  Custom'], // arrow-right
 					];
 
-					const common = { input: {}, right: { group: {}, getter: {} }, bottom: { group: {}, getter: {} } };
-					common.input.device = function(data) {
-						const input = arInputOrSelect(data);
+					const common = { input: {}, right: { group: {}, }, bottom: { group: {}, row: {} } };
+					common.input.device = function(data, all) {
+						data = template(data, { type: 'str', value: '' });
+						const input = arTypedInputOrSelect(data);
 						const updateInput = () => {
-							input.arInputOrSelect('selectOptions', loader.devices);
-							input.arInputOrSelect('selectActive', loader.success);
-							if(!input.arInputOrSelect('value')) input.arInputOrSelect('selectSomething');
+							input.arTypedInputOrSelect('selectOptions', all ? [['ALEXA_ALL_DSN', '&#xf0ac;  All Devices']].concat(loader.devices) : loader.devices);
+							input.arTypedInputOrSelect('selectActive', loader.success);
+							if(!input.arTypedInputOrSelect('value') && loader.success) input.arTypedInputOrSelect('selectSomething');
 						}
 						loader.listen('change', input, updateInput);
 						updateInput();
 						return input;
 					}
-					common.input.deviceOrAll = function(data) {
-						const input = arInputOrSelect(data);
-						const updateInput = () => {
-							input.arInputOrSelect('selectOptions', [['ALEXA_ALL_DSN', '&#xf0ac;  All Devices']].concat(loader.devices));
-							input.arInputOrSelect('selectActive', loader.success);
-							if(!input.arInputOrSelect('value')) input.arInputOrSelect('selectSomething');
+					common.input.deviceList = function(data, all) {
+						return arTypedInputOrInputList(data, function(data) {
+							data = template(data, '');
+							const input = arInputOrSelect(data).appendTo(this);
+							const updateInput = () => {
+								input.arInputOrSelect('selectOptions', all ? [['ALEXA_ALL_DSN', '&#xf0ac;  All Devices']].concat(loader.devices) : loader.devices);
+								input.arInputOrSelect('selectActive', loader.success);
+								if (!input.arInputOrSelect('value') && loader.success) input.arInputOrSelect('selectSomething');
+							}
+							loader.listen('change', input, updateInput);
+							updateInput();
+							return () => input.arInputOrSelect('value');
+						});
+					}
+					common.right.group.device = function(all) {
+						return function(data) {
+							data = template(data, { device: undefined });
+							const input = common.input.device(data.device, all).appendTo(this);											
+							return () => ({ device: input.arTypedInputOrSelect('value') });
 						}
-						loader.listen('change', input, updateInput);
-						updateInput();
-						return input;
 					}
-					common.input.deviceList = function(data) {
-						return arInputList(data, function(data) {
-							data = template(data, '');
-							const input = common.input.device(data).appendTo(this);
-							return () => input.arInputOrSelect('value');
-						});
+					common.bottom.row.deviceList = function(data, all) {
+						const input = common.input.deviceList(data, all);
+						const row = arRow(input, 'Devices');
+						const updateRow = () => {
+							// to center it to the list (without add button);	
+							const active = input.arTypedInputOrInputList('listActive')
+							row.children('label').css({ paddingBottom: active ? 24 : 0 });
+						} 
+						input.on('change', updateRow);
+						updateRow();
+						return [input, row];
 					}
-					common.input.deviceListOrAll = function(data) {
-						return arInputList(data, function(data) {
-							data = template(data, '');
-							const input = common.input.deviceOrAll(data).appendTo(this);
-							return () => input.arInputOrSelect('value');
-						});
+					common.bottom.group.lockAction = function () {
+						return function (data) {
+							data = template(data, { value: { type: 'str', value: 'locked' } });
+							const value = arTypedInputOrSelect(data.value, ['locked', 'unlocked', 'jammed']);
+							const valueRow = arRow(value, 'Lock State').appendTo(this);
+							return () => ({ value: value.arTypedInputOrSelect('data') });
+						}
 					}
-					common.right.group.device = function(data) {
-						data = template(data, { device: '' });
-						const input = common.input.device(data.device).appendTo(this);											
-						return () => ({ device: input.arInputOrSelect('value') });
+					common.bottom.group.device = function(all) {
+						return function(data) {
+							data = template(data, { device: undefined });
+							const input = common.input.device(data.device, all);
+							arRow(input, 'Device').appendTo(this);												
+							return () => ({ device: input.arTypedInputOrSelect('value') });
+						}
 					}
-					common.bottom.group.device = function(data) {
-						data = template(data, { device: '' });
-						const input = common.input.device(data.device);
-						arRow(input, 'Device').appendTo(this);												
-						return () => ({ device: input.arInputOrSelect('value') });
+					common.bottom.group.deviceList = function(all) {
+						return function(data) {
+							data = template(data, { devices: undefined });
+							const [devices, devicesRow] = common.bottom.row.deviceList(data.devices, all);
+							devicesRow.appendTo(this);
+							return () => ({	devices: input.arTypedInputOrInputList('data') });
+						}
 					}
-					common.bottom.group.deviceList = function(data) {
-						data = template(data, { devices: [undefined] });
-						const input = common.input.deviceList(data.devices)
-						const row = arRow(input, 'Devices').appendTo(this);
-						row.children('label').css({ paddingBottom: 24 }); // to center it to the list (without add button)
-						return () => ({	devices: input.arInputList('value') });
-					}
-					common.bottom.group.deviceListOrAll = function(data) {
-						data = template(data, { devices: [undefined] });
-						const input = common.input.deviceListOrAll(data.devices)
-						const row = arRow(input, 'Devices').appendTo(this);
-						row.children('label').css({ paddingBottom: 24 }); // to center it to the list (without add button)
-						return () => ({	devices: input.arInputList('value') });
-					}
-					common.bottom.group.lockAction = function(data) {
-						data = template(data, { value: { type: 'str', value: 'locked' } });
-						const value = arTypedInputOrSelect(data.value, ['locked', 'unlocked', 'jammed']);
-						const valueRow = arRow(value, 'Lock State').appendTo(this);
-						return () => ({	value: value.arTypedInputOrSelect('data') });
-					}
-					common.bottom.getter.number = function(label) {
+					common.bottom.group.number = function(label) {
 						return function(data) {
 							data = template(data, { value: { type: 'num', value: '50' } });
 							const value = arTypedInput(data.value, ['num']); 
@@ -895,7 +1000,7 @@
 							return () => ({	value: value.arTypedInput('data') });
 						}
 					}
-					common.bottom.getter.color = function (labelHtml, loaderMapProperty, loaderListProperty) {
+					common.bottom.group.color = function (labelHtml, loaderMapProperty, loaderListProperty) {
 						return function (data) {
 							data = template(data, { value: { type: 'str', value: '' } });
 							const value = arTypedInputOrSelect(data.value);
@@ -956,14 +1061,10 @@
 						const input = arTypedInput(data.value, ['num']).appendTo(this);
 						return () => ({ value: input.arTypedInput('data') });
 					}
-					groups.right.music = function(data) {
-						data = template(data, { device: '' });
-						const input = common.input.device(data.device).appendTo(this);											
-						return () => ({ device: input.arInputOrSelect('value') });
-					}
+					groups.right.music = common.right.group.device(false);
 					groups.right.prompt = function(data) {
-						data = template(data, { type: 'goodMorning' });
-						const select = arSelect(data.type, [
+						data = template(data, { type: { type: 'str', value: 'goodMorning' }});
+						const select = arTypedInputOrSelect(data.type, [
 							['goodMorning', 			'Good Morning'],
 							['weather',  				'Weather'],
 							['traffic',  				'Traffic'],
@@ -986,12 +1087,12 @@
 							const entities = loader.entities.filter(([id, label, properties, actions]) => actions.length !== 0);
 							entity.arInputOrSelect('selectOptions', entities);
 							entity.arInputOrSelect('selectActive', loader.success);
-							if (!entity.arInputOrSelect('value')) entity.arInputOrSelect('selectSomething');
+							if (!entity.arInputOrSelect('value') && loader.success) entity.arInputOrSelect('selectSomething');
 						}
 						loader.listen('change', entity, updateEntity);
 						updateEntity();
 
-						return () => ({ entity: entity.arInputOrSelect('value') });
+						return () => ({ entity: entity.arTypedInputOrSelect('value') });
 					}
 					groups.right.routine = function(data) {
 						data = template(data, { routine: { type: 'str', value: ''} });
@@ -999,8 +1100,8 @@
 
 						const updateRoutine = () => {
 							routine.arTypedInputOrSelect('selectOptions', loader.routines);
-							routine.arTypedInputOrSelect('selectActiveMaybe', loader.success);
-							if(!routine.arTypedInputOrSelect('value')) routine.arTypedInputOrSelect('selectSomething');
+							routine.arTypedInputOrSelect('selectActiveMaybe', loader.success && !routine.arTypedInputOrSelect('value'));
+							if(!routine.arTypedInputOrSelect('value') && loader.success) routine.arTypedInputOrSelect('selectSomething');
 						}
 						loader.listen('change', routine, updateRoutine);
 						updateRoutine();
@@ -1024,7 +1125,7 @@
 					}
 
 					groups.bottom.speak = function(data) {
-						data = template(data, { text: { type: '', value: '' }, devices: [undefined] });
+						data = template(data, { text: { type: '', value: '' }, devices: undefined });
 						const ssml = {
 							value: "ssml",
 							label: "SSML",
@@ -1038,18 +1139,18 @@
 							}
 						}
 						const text = arTypedInput(data.text, ['str']);
-						const devices = common.input.deviceList(data.devices);
+						const [devices, devicesRow] = common.bottom.row.deviceList(data.devices);
 						channel.type.on('change', () => {
 							const value = channel.type.arSelect('value');
 							const type = value === 'ssml' ? ssml : 'str'
 							text.arTypedInput('types', [type]);
 						});
 						arRow(text, 'Text').appendTo(this);
-						arRow(devices, 'Devices').appendTo(this).children('label').css({ paddingBottom: 24 }); // to center it to the list (without add button);
-						return () => ({ text: text.arTypedInput('data'), devices: devices.arInputList('value') });
+						devicesRow.appendTo(this);
+						return () => ({ text: text.arTypedInput('data'), devices: devices.arTypedInputOrInputList('data') });
 					};
 					groups.bottom.speakAtVolume = function(data) {
-						data = template(data, { text: { type: 'str', value: '' }, volume: {type: 'num', value: '50'}, devices: [undefined] });
+						data = template(data, { text: { type: 'str', value: '' }, volume: {type: 'num', value: '50'}, devices: undefined });
 						const ssml = {
 							value: "ssml",
 							label: "SSML",
@@ -1063,7 +1164,7 @@
 							}
 						}
 						const text = arTypedInput(data.text, ['str']);
-						const devices = common.input.deviceList(data.devices);
+						const [devices, devicesRow] = common.bottom.row.deviceList(data.devices);
 						const volume = arTypedInput(data.volume, ['num']);
 						channel.type.on('change', () => {
 							const value = channel.type.arSelect('value');
@@ -1072,16 +1173,16 @@
 						});
 						arRow(text, 'Text').appendTo(this);
 						arRow(volume, 'Volume').appendTo(this);
-						arRow(devices, 'Devices').appendTo(this).children('label').css({ paddingBottom: 24 }); // to center it to the list (without add button);
+						devicesRow.appendTo(this).children('label');
 						return () => ({ 
 							text: text.arTypedInput('data'), 
 							volume: volume.arTypedInput('data'),
 							devices: devices.arInputList('value'),
 						});
 					}
-					groups.bottom.stop = common.bottom.group.deviceListOrAll;
-					groups.bottom.prompt = common.bottom.group.deviceList;
-					groups.bottom.volume = common.bottom.group.deviceList;
+					groups.bottom.stop = common.bottom.group.deviceList(true);
+					groups.bottom.prompt = common.bottom.group.deviceList(false);
+					groups.bottom.volume = common.bottom.group.deviceList(false);
 					groups.bottom.music = function(data) {
 						data = template(data, {provider: { type: 'str', value: ''}, search: {type: 'str', value: ''}, duration: { type: 'num', value: ''}});
 						const provider = arTypedInputOrSelect(data.provider);
@@ -1096,7 +1197,7 @@
 						const updateProvider = () => {
 							provider.arTypedInputOrSelect('selectOptions', loader.musicProviders);
 							provider.arTypedInputOrSelect('selectActiveMaybe', loader.success);
-							if (!provider.arTypedInputOrSelect('value')) provider.arTypedInputOrSelect('selectSomething');
+							if (!provider.arTypedInputOrSelect('value') && loader.success) provider.arTypedInputOrSelect('selectSomething');
 						}
 						loader.listen('change', provider, updateProvider);
 						updateProvider();
@@ -1107,12 +1208,12 @@
 						data = template(data, { entity: '', action: '', value: {}, scale: {} });
 						const action = arInputOrSelect(data.action);
 						const parameters = arInputGroups(data.action, data, {
-							setColor: common.bottom.getter.color('Color', 'colorNameToHex', 'colorNames'),
-							setColorTemperature: common.bottom.getter.color('Color Temp.', 'colorTemperatureNameToHex', 'colorTemperatureNames'),
-							setBrightness: common.bottom.getter.number('Brightness'),
-							setPercentage: common.bottom.getter.number('Percentage'),
-							setLockState: common.bottom.group.lockAction,
-							lockAction: common.bottom.group.lockAction,
+							setColor: 				common.bottom.group.color('Color', 'colorNameToHex', 'colorNames'),
+							setColorTemperature: 	common.bottom.group.color('Color Temp.', 'colorTemperatureNameToHex', 'colorTemperatureNames'),
+							setBrightness: 			common.bottom.group.number('Brightness'),
+							setPercentage: 			common.bottom.group.number('Percentage'),
+							setLockState: 			common.bottom.group.lockAction(),
+							lockAction: 			common.bottom.group.lockAction(),
 							setTargetTemperature: function (data) {
 								data = template(data, { value: { type: 'num', value: '20' }, scale: { type: 'str', value: 'celsius' } });
 								const scale = arTypedInputOrSelect(data.scale, ['celsius', 'fahrenheit']);
@@ -1128,7 +1229,7 @@
 							const [label, properties, actions] = loader.entityById[entityId] || [];
 							if(actions) action.arInputOrSelect('selectOptions', actions);
 							action.arInputOrSelect('selectActive', loader.success);
-							if(!action.arInputOrSelect('value') || user) action.arInputOrSelect('selectSomething'); 
+							if(!action.arInputOrSelect('value') && loader.success || user) action.arInputOrSelect('selectSomething'); 
 						};
 						action.on('change', () => parameters.arInputGroups('group', action.arInputOrSelect('value')));
 						loader.listen('change', action, updateAction);
@@ -1139,7 +1240,7 @@
 
 						return () => Object.assign({ action: action.arInputOrSelect('value') }, parameters.arInputGroups('value'));
 					}
-					groups.bottom.routine = common.bottom.group.device;
+					groups.bottom.routine = common.bottom.group.device(false);
 					groups.bottom.node = function (data) {
 						data = template(data, { children: [{}] }, 1);
 						const list = arInputList(data.children, function (data) {
