@@ -1,3 +1,5 @@
+- **3.0.1**
+  - fix ui bug for ssml input
 - **3.0.0**
   - added refresh interval for proxy Account config
   - replaced/overhauled all other nodes, only Account config of version 2 is compatible
