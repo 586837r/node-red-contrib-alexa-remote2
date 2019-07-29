@@ -1,3 +1,5 @@
+- **3.0.3**
+  - fixed routine stop, prompt, volume saving
 - **3.0.2**
   - fix init errors of smarthome and routines
 - **3.0.1**
