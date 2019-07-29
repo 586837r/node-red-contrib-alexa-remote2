@@ -1241,6 +1241,13 @@
 				.arRoutineNode({ loader: loader })
 				.arRoutineNode('data', this.routineNode);
 
+			const info = $('<div>').addClass('form-tips').html('<b>Note:</b> Select an initialised account first to be able to select from a list of devices!').insertBefore(inputs);
+			function updateInfo() {
+				loader.success ? info.hide() : info.show();
+			}
+			loader.on('change', updateInfo);
+			updateInfo();
+
 			function updateLoader() {
 				const account = $('#node-input-account').val();
 				if(loader.account === account) return /*console.log('updateLoader', {result: 'same account', account: account, loader: loader})*/;
