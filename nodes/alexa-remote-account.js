@@ -315,6 +315,7 @@ module.exports = function (RED) {
 			config.proxyLogLevel = 'warn';
 			config.cookieJustCreated = true; // otherwise it just tries forever...
 			config.bluetooth = false;
+			config.setupProxy = false;
 
 			switch (this.authMethod) {
 				case 'proxy':
@@ -349,6 +350,9 @@ module.exports = function (RED) {
 				case 'password': this.setState('INIT_PASSWORD'); break;
 			}
 
+			console.log(`Alexa-Remote: starting initialisation:`);
+			tools.log({authMethod: this.authMethod, initType: initType, cookie: config.cookie});
+
 			// the this.alexa we init could change once the this.alexa.initExt is complete because
 			// this.resetAlexa() or this.initAlexa() might have been called again during this time
 			// so we need to check if this.alexa has changed and if so handle it differently
@@ -375,14 +379,6 @@ module.exports = function (RED) {
 			}
 
 			const cookieData = await alexa.initExt(config, proxyWaitCallback, warnCallback).catch(error => {
-				if(alexa !== this.alexa) return;
-				this.setState('ERROR', error && error.message);
-				throw error;
-			});
-
-			await alexa.checkAuthenticationExt().then(authenticated => {
-				if(!authenticated) throw new Error('Authentication unsuccessful.');
-			}).catch(error => {
 				if(alexa !== this.alexa) return;
 				this.setState('ERROR', error && error.message);
 				throw error;
