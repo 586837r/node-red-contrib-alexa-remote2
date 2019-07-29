@@ -1,3 +1,5 @@
+- **3.0.4**
+  - fixed routine saving
 - **3.0.3**
   - fixed routine stop, prompt, volume saving
 - **3.0.2**
