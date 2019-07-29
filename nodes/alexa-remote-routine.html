@@ -904,7 +904,7 @@
 							data = template(data, { device: undefined });
 							const input = common.input.device(data.device, all);
 							arRow(input, 'Device').appendTo(this);												
-							return () => ({ device: input.arTypedInputOrSelect('value') });
+							return () => ({ device: input.arTypedInputOrSelect('data') });
 						}
 					}
 					common.bottom.group.deviceList = function(all) {
@@ -967,12 +967,7 @@
 						channel.type = type;
 						return () => ({ type: type.arSelect('value') });
 					}
-					groups.right.speakAtVolume = function(data) {
-						data = template(data, { type: 'regular' });
-						const type = arSelect(data.type, ['regular', ['ssml', 'SSML'], 'announcement']).appendTo(this);
-						channel.type = type;
-						return () => ({ type: type.arSelect('value') });
-					}
+					groups.right.speakAtVolume = groups.right.speak;
 					groups.right.wait = function(data) {
 						data = template(data, { time: { type: 'num', value: '1' }});
 						const type = arTypedInput(data.time, ['num']).appendTo(this);
@@ -999,7 +994,7 @@
 							['calendarTomorrow',		`Tomorrow's Calendar`],
 							['calendarNext',			`Next Event`],
 						]).appendTo(this);
-						return () => ({ type: select.arSelect('value') });
+						return () => ({ type: select.arTypedInputOrSelect('data') });
 					}
 					groups.right.smarthome = function(data) {
 						data = template(data, {entity: '' });
@@ -1015,7 +1010,7 @@
 						loader.listen('change', entity, updateEntity);
 						updateEntity();
 
-						return () => ({ entity: entity.arTypedInputOrSelect('value') });
+						return () => ({ entity: entity.arInputOrSelect('value') });
 					}
 					groups.right.routine = function(data) {
 						data = template(data, { routine: { type: 'str', value: ''} });
