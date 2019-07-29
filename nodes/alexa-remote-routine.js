@@ -45,7 +45,12 @@ module.exports = function (RED) {
 			const findAll = (ids, depth = 1) => {
 				let devices = [];
 				for (const id of ids) {
-					if (id === 'ALEXA_ALL_DSN') return [{ serialNumber: 'ALEXA_ALL_DSN', deviceType: 'ALEXA_ALL_DEVICE_TYPE', clusterMembers: [] }];
+					if (id === 'ALEXA_ALL_DSN') return [{ 
+						serialNumber: 'ALEXA_ALL_DSN', 
+						deviceType: 'ALEXA_ALL_DEVICE_TYPE', 
+						clusterMembers: [],
+						deviceOwnerCustomerId: customerId,
+					}];
 					const device = find(id)
 
 					if (device.clusterMembers.length !== 0 && depth !== 0) {
@@ -81,7 +86,7 @@ module.exports = function (RED) {
 										deviceType: devices[0].deviceType,
 										deviceSerialNumber: devices[0].serialNumber,
 										locale: locale,
-										customerId: customerId,
+										customerId: devices[0].deviceOwnerCustomerId,
 										textToSpeak: node.payload.text
 									}
 								}
@@ -214,7 +219,7 @@ module.exports = function (RED) {
 								deviceType: devices[0].deviceType,
 								deviceSerialNumber: devices[0].serialNumber,
 								locale: locale,
-								customerId: customerId
+								customerId: devices[0].deviceOwnerCustomerId,
 							}
 						}
 
@@ -247,7 +252,7 @@ module.exports = function (RED) {
 								deviceType: devices[0].deviceType,
 								deviceSerialNumber: devices[0].serialNumber,
 								locale: locale,
-								customerId: customerId,
+								customerId: devices[0].deviceOwnerCustomerId,
 								value: volume,
 							}
 						}
@@ -274,7 +279,7 @@ module.exports = function (RED) {
 							'@type': 'com.amazon.alexa.behaviors.model.OpaquePayloadOperationNode',
 							type: 'Alexa.Music.PlaySearchPhrase',
 							operationPayload: {
-								customerId: customerId,
+								customerId: device.deviceOwnerCustomerId,
 								deviceType: device.deviceType,
 								deviceSerialNumber: device.serialNumber,
 								musicProviderId: node.payload.provider,
