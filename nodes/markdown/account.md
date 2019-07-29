@@ -42,7 +42,8 @@ automatic.
 7. Deploy
 8. Follow the url you see in the node status
 9. Log in, wait until you see the node status **ready**
-10. Select a device in the *Alexa Routine* node.
+10. Write "Hello World!" in the *Alexa Routine* node text field.
+11. Select a device in the *Alexa Routine* node devices field.
 
 Now trigger the *Alexa Routine* Node with any message and your Alexa will say "Hello World!". (Hopefully!)
 
