@@ -993,7 +993,7 @@
 							data = template(data, { devices: undefined });
 							const [devices, devicesRow] = common.bottom.row.deviceList(data.devices, all);
 							devicesRow.appendTo(this);
-							return () => ({	devices: input.arTypedInputOrInputList('data') });
+							return () => ({	devices: devices.arTypedInputOrInputList('data') });
 						}
 					}
 					common.bottom.group.number = function(label) {
