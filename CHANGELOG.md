@@ -1,3 +1,5 @@
+- **3.0.5**
+  - fixed potential issue in routine node regarding customerId, cleanup, error reporting
 - **3.0.4**
   - fixed routine saving
 - **3.0.3**
