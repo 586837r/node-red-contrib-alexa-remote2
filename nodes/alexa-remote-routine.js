@@ -430,7 +430,10 @@ module.exports = function (RED) {
 
 			nativizeNode(evaluated).then(native => {
 				tools.log({ evaluated: evaluated, native: native });
-				alexa.sendSequenceNodeExt(native).then(send).catch(error);
+				alexa.sendSequenceNodeExt(native).then(response => {
+					if(!tools.matches(response, { message: '' })) return response;
+					throw new Error(`Response: ${response.message}`);
+				}).then(send).catch(error);
 			}).catch(error);
 		});
 	}
