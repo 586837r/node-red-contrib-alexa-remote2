@@ -10,12 +10,13 @@ module.exports = function (RED) {
 
 		this.on('input', function (msg) {
 			const send = tools.nodeGetSendCb(this, msg);
+			const warn = tools.nodeGetWarnCb(this);
 			const error = tools.nodeGetErrorCb(this);
 			if (this.account.state.code !== 'READY') return error('Account not initialised!');
 			this.status({ shape: 'dot', fill: 'grey', text: 'sending' });
 			const alexa = this.account.alexa;
 			const evaluated = tools.nodeEvaluateProperties(RED, this, msg, this.routineNode);
-			tools.log({ raw: this.routineNode, eval: evaluated });
+			tools.log({ raw: this.routineNode, evaluated: evaluated });
 			const customerId = alexa.ownerCustomerId;
 			const locale = this.account.locale || 'en-US';
 
@@ -111,7 +112,7 @@ module.exports = function (RED) {
 								type: 'AlexaAnnouncement',
 								operationPayload: {
 									expireAfter: 'PT5S',
-									customerId: customerId,
+									customerId: devices[0].deviceOwnerCustomerId,
 									content: [{
 										locale: locale,
 										display: {
@@ -124,8 +125,8 @@ module.exports = function (RED) {
 										}
 									}],
 									target: {
-										customerId: customerId,
-										devices: findAll(node.payload.devices).map(device => ({
+										customerId: devices[0].deviceOwnerCustomerId,
+										devices: devices.map(device => ({
 											deviceSerialNumber: device.serialNumber,
 											deviceTypeId: device.deviceType,
 										}))
@@ -196,7 +197,7 @@ module.exports = function (RED) {
 							type: 'Alexa.DeviceControls.Stop',
 							skillId: 'amzn1.ask.1p.alexadevicecontrols',
 							operationPayload: {
-								customerId: customerId,
+								customerId: devices[0].deviceOwnerCustomerId,
 								devices: devices.map(device => ({
 									deviceSerialNumber: device.serialNumber,
 									deviceType: device.deviceType,
@@ -410,8 +411,8 @@ module.exports = function (RED) {
 
 						const nativeChildren = [];
 						for (const child of node.payload.children) {
-							const native = await nativizeNode(child)
-							nativeChildren.push(native);
+							const native = await nativizeNode(child);
+							if(native) nativeChildren.push(native);
 						}
 
 						return {
@@ -429,7 +430,8 @@ module.exports = function (RED) {
 			}
 
 			nativizeNode(evaluated).then(native => {
-				tools.log({ evaluated: evaluated, native: native });
+				tools.log({ native: native });
+				if(!native) return warn('no devices');
 				alexa.sendSequenceNodeExt(native).then(response => {
 					if(!tools.matches(response, { message: '' })) return response;
 					throw new Error(`Response: ${response.message}`);
