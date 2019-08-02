@@ -1,5 +1,6 @@
 - **3.0.6**
   - fixed ui url to be relative (fix for redmatic) 
+  - fix routine music duration to be optional
 - **3.0.5**
   - fixed potential issue in routine node regarding customerId, cleanup, error reporting
 - **3.0.4**
