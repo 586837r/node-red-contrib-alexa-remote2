@@ -68,13 +68,15 @@ module.exports = function (RED) {
 			}
 
 			async function nativizeNode(node) {
-				const invalid = () => new Error(`invalid sequence node: "${JSON.stringify(node)}"`);
-				if (!tools.matches(node, { type: '', payload: {} })) throw invalid();
+				const invalid = (expected) => new Error(`invalid sequence node: "${JSON.stringify(node)}" expected layout: "${JSON.stringify(expected)}"`);
+				const check = (template) => { if (!tools.matches(node, template)) throw invalid(template); }
+				const checkPayload = (template) => { if (!tools.matches(node.payload, template)) throw invalid(template); }
+				check({ type: '', payload: {} });
 
 				switch (node.type) {
 					case 'speak': {
 						if (!Array.isArray(node.payload.devices)) node.payload.devices = [node.payload.devices || node.payload.device];
-						if (!tools.matches(node.payload, { type: '', text: '', devices: [] })) throw invalid();
+						checkPayload({ type: '', text: '', devices: [] });
 						const devices = findAll(node.payload.devices);
 						if (devices.length === 0) return undefined;
 
@@ -138,7 +140,7 @@ module.exports = function (RED) {
 					}
 					case 'speakAtVolume': {
 						if (!Array.isArray(node.payload.devices)) node.payload.devices = [node.payload.devices || node.payload.device];
-						if (!tools.matches(node.payload, { type: '', text: '', volume: undefined, devices: [] })) throw new Error(`invalid sequence node: "${JSON.stringify(node)}"`);
+						checkPayload({ type: '', text: '', volume: undefined, devices: [] });
 						const devices = findAll(node.payload.devices);
 						if(devices.length === 0) return undefined;
 
@@ -188,7 +190,7 @@ module.exports = function (RED) {
 					}
 					case 'stop': {
 						if (!Array.isArray(node.payload.devices)) node.payload.devices = [node.payload.devices || node.payload.device];
-						if (!tools.matches(node.payload, { devices: [] })) throw new Error(`invalid sequence node: "${JSON.stringify(node)}"`);
+						checkPayload({ devices: [] });
 						const devices = findAll(node.payload.devices);
 						if(devices.length === 0) return undefined;
 
@@ -209,7 +211,7 @@ module.exports = function (RED) {
 					}
 					case 'prompt': {
 						if (!Array.isArray(node.payload.devices)) node.payload.devices = [node.payload.devices || node.payload.device];
-						if (!tools.matches(node.payload, { type: '', devices: [] })) throw invalid();
+						checkPayload({ type: '', devices: [] });
 						const devices = findAll(node.payload.devices);
 						if(devices.length === 0) return undefined;
 
@@ -240,7 +242,7 @@ module.exports = function (RED) {
 					}
 					case 'volume': {
 						if (!Array.isArray(node.payload.devices)) node.payload.devices = [node.payload.devices || node.payload.device];
-						if (!tools.matches(node.payload, { value: undefined, devices: [] })) throw invalid();
+						checkPayload({ value: undefined, devices: [] });
 						const volume = Number(node.payload.value);
 						if (Number.isNaN(volume)) throw invalid();
 						const devices = findAll(node.payload.devices);
@@ -273,7 +275,7 @@ module.exports = function (RED) {
 						});
 					}
 					case 'music': {
-						if (!tools.matches(node.payload, { device: undefined, provider: '', search: '', duration: 300 })) throw invalid();
+						checkPayload({ device: undefined, provider: '', search: '' });
 						const device = find(node.payload.device);
 
 						const native = {
@@ -291,7 +293,7 @@ module.exports = function (RED) {
 							skillId: null,
 						}
 
-						if (node.payload.duration) {
+						if (typeof node.payload.duration === 'number') {
 							native.operationPayload.waitTimeInSeconds = node.payload.duration;
 						}
 
@@ -312,7 +314,7 @@ module.exports = function (RED) {
 						}
 					}
 					case 'smarthome': {
-						if (!tools.matches(node.payload, { entity: '', action: '' })) throw new Error(`invalid sequence node: "${JSON.stringify(node)}"`);
+						checkPayload({ entity: '', action: '' });
 
 						const entity = alexa.findSmarthomeEntityExt(node.payload.entity);
 						if (!entity) throw new Error(`could not find smarthome entity: "${node.payload.device}"`);
@@ -366,7 +368,7 @@ module.exports = function (RED) {
 						}
 					}
 					case 'routine': {
-						if (!tools.matches(node.payload, { routine: '', device: undefined })) throw invalid();
+						checkPayload({ routine: '', device: undefined });
 
 						const device = find(node.payload.device);
 						const routine = alexa.findRoutineExt(node.payload.routine);
@@ -400,7 +402,7 @@ module.exports = function (RED) {
 						}
 					}
 					case 'node': {
-						if (!tools.matches(node.payload, { type: '', children: [] })) throw invalid();
+						checkPayload({ type: '', children: [] });
 
 						const suffix =
 							node.payload.type === 'serial' ? 'SerialNode' :
@@ -422,7 +424,7 @@ module.exports = function (RED) {
 						}
 					}
 					case 'custom': {
-						if (!tools.matches(node.payload, {})) throw invalid();
+						checkPayload({});
 						return await nativizeNode(node.payload);
 					}
 					default: throw invalid();
