@@ -463,12 +463,12 @@ module.exports = function (RED) {
 		}
 	});
 
-	RED.httpAdmin.get('/alexa-remote-routines.json', (req, res) => accountHttpResponse(RED, 'routinesForUiJson', 'Routines', req, res));
-	RED.httpAdmin.get('/alexa-remote-devices.json', (req, res) => accountHttpResponse(RED, 'devicesForUiJson', 'Devices', req, res));
-	RED.httpAdmin.get('/alexa-remote-smarthome.json', (req, res) => accountHttpResponse(RED, 'smarthomeForUiJson', 'Smarthome Devices', req, res));
-	RED.httpAdmin.get('/alexa-remote-bluetooth.json', (req, res) => accountHttpResponse(RED, 'bluetoothForUiJson', 'Bluetooth Devices', req, res));
-	RED.httpAdmin.get('/alexa-remote-notifications.json', (req, res) => accountHttpResponse(RED, 'notificationsForUiJson', 'Notifications', req, res));
-	RED.httpAdmin.get('/alexa-remote-sounds.json', (req, res) => {
+	RED.httpAdmin.get('/alexa-remote-routines.json', 		RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'routinesForUiJson', 'Routines', req, res));
+	RED.httpAdmin.get('/alexa-remote-devices.json', 		RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'devicesForUiJson', 'Devices', req, res));
+	RED.httpAdmin.get('/alexa-remote-smarthome.json', 		RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'smarthomeForUiJson', 'Smarthome Devices', req, res));
+	RED.httpAdmin.get('/alexa-remote-bluetooth.json', 		RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'bluetoothForUiJson', 'Bluetooth Devices', req, res));
+	RED.httpAdmin.get('/alexa-remote-notifications.json', 	RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'notificationsForUiJson', 'Notifications', req, res));
+	RED.httpAdmin.get('/alexa-remote-sounds.json', 			RED.auth.needsPermission('alexa-remote.read'), (req, res) => {
 		const account = RED.nodes.getNode(req.query.account);
 		const device = req.query.device;
 		const label = 'Sounds';
