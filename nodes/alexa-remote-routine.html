@@ -1254,9 +1254,9 @@
 				loader.update(false, account);
 				if(!account || account === '_ADD_') return /*console.log('updateLoader', {result: 'invalid account', account: account, loader: loader})*/;
 
-				const getRoutines = $.get('/alexa-remote-routines.json', { account: account }, null, 'json');
-				const getDevices = $.get('/alexa-remote-devices.json', { account: account }, null, 'json');
-				const getSmarthome = $.get('/alexa-remote-smarthome.json', { account: account }, null, 'json');
+				const getRoutines = $.get('alexa-remote-routines.json', { account: account }, null, 'json');
+				const getDevices = $.get('alexa-remote-devices.json', { account: account }, null, 'json');
+				const getSmarthome = $.get('alexa-remote-smarthome.json', { account: account }, null, 'json');
 
 				$.when(getDevices, getRoutines, getSmarthome)
 					.done(([devices], [routines], [smarthome]) => { loader.update(true, account, devices, routines, smarthome); /*console.log('updateLoader', {result: 'success', account: account, loader: loader});*/ })

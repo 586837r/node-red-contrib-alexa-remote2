@@ -708,10 +708,10 @@
 				loader.update(false, account);
 				if (!account || account === '_ADD_') return /*console.log('updateLoader', {result: 'invalid account', account: account, loader: loader})*/;
 
-				const getRoutines = $.get('/alexa-remote-routines.json', { account: account }, null, 'json');
-				const getDevices = $.get('/alexa-remote-devices.json', { account: account }, null, 'json');
-				const getSmarthome = $.get('/alexa-remote-smarthome.json', { account: account }, null, 'json');
-				const getNotifications = $.get('/alexa-remote-notifications.json', {account:account}, null, 'json');
+				const getRoutines = $.get('alexa-remote-routines.json', { account: account }, null, 'json');
+				const getDevices = $.get('alexa-remote-devices.json', { account: account }, null, 'json');
+				const getSmarthome = $.get('alexa-remote-smarthome.json', { account: account }, null, 'json');
+				const getNotifications = $.get('alexa-remote-notifications.json', {account:account}, null, 'json');
 
 				$.when(getDevices, getRoutines, getSmarthome, getNotifications)
 					.done(([devices], [routines], [smarthome], [notifications]) => { loader.update(true, account, devices, routines, smarthome, notifications); /*console.log('updateLoader', {result: 'success', account: account, loader: loader});*/ })
@@ -724,7 +724,7 @@
 				if(this.soundLoadLocks[device]) return;
 				this.soundLoadLocks[device] = true;
 
-				$.get('/alexa-remote-sounds.json', { account: account, device: device }, null, 'json')
+				$.get('alexa-remote-sounds.json', { account: account, device: device }, null, 'json')
 					.done(data => { this.soundsById[device] = data; this.emit('sound'); })
 					.fail(res => RED.notify(res.responseText || 'Unknown error, reopen this node...', 'error'));
 			}

@@ -711,7 +711,7 @@
 				loader.update(false, account);
 				if(!account || account === '_ADD_') return /*console.log('updateLoader', {result: 'invalid account', account: account, loader: loader})*/;
 
-				$.get('/alexa-remote-smarthome.json', { account: account }, null, 'json')
+				$.get('alexa-remote-smarthome.json', { account: account }, null, 'json')
 					.done(data => { loader.update(true, account, data); /*console.log('updateLoader', {result: 'success', account: account, loader: loader});*/ })
 					.fail(res => RED.notify(res.responseText || 'Unknown error, reopen this node...', 'error'));
 			}
