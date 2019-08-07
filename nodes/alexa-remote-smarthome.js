@@ -94,7 +94,7 @@ module.exports = function (RED) {
 								msg.topic = entity.name;
 								msg.payload = entity.children
 									.filter(e => e.type !== 'GROUP')
-									.map(e => mapQueryToMsg(e, {}, false))
+									.map(e => mapQueryToMsg(e, query, false))
 									.filter(m => m);
 
 								return msg;
