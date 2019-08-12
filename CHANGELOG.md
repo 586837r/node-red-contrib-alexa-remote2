@@ -1,3 +1,9 @@
+- **3.1.0**
+  - added improved error reporting (both log and ui)
+  - fixed smarthome input interface and added docu
+  - fixed smarthome group querying ignoring property
+  - update dependency alexa-remote2 to 2.5.5
+    - fixed events for some countries
 - **3.0.6**
   - fixed ui url to be relative (fix for redmatic) 
   - fix routine music duration to be optional
