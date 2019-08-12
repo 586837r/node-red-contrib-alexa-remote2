@@ -27,13 +27,13 @@ function accountHttpResponse(RED, property, label, req, res) {
 		return res.end(`Could not load ${label}: Account not initialised!`);
 	}
 
-	if(!account.hasOwnProperty(property)) {
+	if(!account.ui.hasOwnProperty(property)) {
 		res.writeHeader(500, {'Content-Type': 'text/plain'});
 		return res.end(`Could not load ${label}: Account not correctly initialised!`);
 	}
 
 	res.writeHeader(200, {'Content-Type': 'application/json'});
-	res.end(typeof account[property] === 'string' ? account[property] : JSON.stringify(account[property]));
+	res.end(typeof account.ui[property] === 'string' ? account.ui[property] : JSON.stringify(account.ui[property]));
 }
 
 function getSmarthomeEntityLabel(entity) {
@@ -190,10 +190,10 @@ module.exports = function (RED) {
 		this.initing = false;
 		this.state = { code: 'UNINITIALISED', message: '' }
 
-		this.smarthomeForUiJson = null;
-		this.devicesForUiJson = null;
 		this.refreshTimeoutStartTime = null;
 		this.refreshTimeout = null;
+		this.errorMessages = {};
+		this.ui = {};
 
 		this.setState = function(code, message) {
 			this.state = {
@@ -226,78 +226,127 @@ module.exports = function (RED) {
 			this.alexa.resetExt();
 			this.initialised = false;
 			this.alexa = new AlexaRemote();
+
+			this.ui.smarthome 		= JSON.stringify({ entityById: {}, colorNames: [], colorTemperatureNames: []});
+			this.ui.devices 		= JSON.stringify([]);
+			this.ui.notifications 	= JSON.stringify([]);
+			this.ui.routines 		= JSON.stringify([]);
+			this.ui.musicProviders 	= JSON.stringify([]);
+			this.ui.bluetooth 		= JSON.stringify({});
+			this.ui.errors 			= JSON.stringify({});
+
+			this.errorMessages = {};
+
 			this.setState('UNINITIALISED');
 		}
 
-		this.buildSmarthomeForUi = function() {
-			const smarthomeForUi = {};
-			smarthomeForUi.entityById = Array.from(this.alexa.smarthomeSimplifiedByEntityIdExt.values())
-				.sort((a,b) => {
-					if(a.type !== b.type) {
-						return a.type === 'APPLIANCE' ? -1 : 1;
-					}
-					
-					const an = a.name.toLowerCase();
-					const bn = b.name.toLowerCase();
-	
-					return an < bn ? -1 : an > bn ? 1 : 0;
-				})
-				.reduce((obj, entity) => (obj[entity.entityId] = 
-					[getSmarthomeEntityLabel(entity), entity.properties, entity.actions, entity.type]
-				, obj), {});
-
-			smarthomeForUi.colorNames = Array.from(this.alexa.colorNameToLabelExt.entries());
-			smarthomeForUi.colorTemperatureNames = Array.from(this.alexa.colorTemperatureNameToLabelExt.entries());
-
-			//tools.log({smarthomeForUi: smarthomeForUi}, 10, 250);
-			this.smarthomeForUiJson = JSON.stringify(smarthomeForUi);
+		this.captureErrorMessage = async function(name, asyncFn) {
+			return asyncFn().then(some => {
+				delete this.errorMessages[name];
+				this.buildErrorsForUi();
+				return some;
+			}).catch(error => {
+				error.message = `building ${name} for ui failed: "${error.message}"`;
+				this.errorMessages[name] = error.message;
+				this.buildErrorsForUi();
+				throw error;
+			});
 		}
-		this.buildDevicesForUi = function() {
-			const devicesForUi = Array.from(this.alexa.deviceByIdExt.values())
+		this.buildSmarthomeForUi = async function() {
+			return this.captureErrorMessage('smarthome', async () => {	
+				//throw new Error('TESTING');
+				const entityById = Array.from(this.alexa.smarthomeSimplifiedByEntityIdExt.values())
+					.sort((a,b) => {
+						if(a.type !== b.type) {
+							return a.type === 'APPLIANCE' ? -1 : 1;
+						}
+						
+						const an = a.name.toLowerCase();
+						const bn = b.name.toLowerCase();
+		
+						return an < bn ? -1 : an > bn ? 1 : 0;
+					})
+					.reduce((obj, entity) => (obj[entity.entityId] = 
+						[getSmarthomeEntityLabel(entity), entity.properties, entity.actions, entity.type]
+					, obj), {});
+	
+				const colorNames = Array.from(this.alexa.colorNameToLabelExt.entries());
+				const colorTemperatureNames = Array.from(this.alexa.colorTemperatureNameToLabelExt.entries());
+	
+				//tools.log({smarthomeForUi: smarthomeForUi}, 10, 250);
+				this.ui.smarthome = JSON.stringify({
+					entityById: entityById,
+					colorNames: colorNames,
+					colorTemperatureNames: colorTemperatureNames,
+				});
+			});
+		}
+		this.buildDevicesForUi = async function() {
+			return this.captureErrorMessage('devices', async () => {
+				//throw new Error('TESTING');
+				const devices = Array.from(this.alexa.deviceByIdExt.values())
 				.sort((a,b) => getDeviceSortValue(a) - getDeviceSortValue(b))
 				.map(dev => [dev.serialNumber, getDeviceLabel(dev), dev.capabilities]);
 
-			this.devicesForUiJson = JSON.stringify(devicesForUi);
+				this.ui.devices = JSON.stringify(devices);
+			});
 		}
-		this.buildNotificationsForUi = function() {
-			const notificationsForUi = Array.from(this.alexa.notificationByIdExt.values())
+		this.buildNotificationsForUi = async function() {
+			return this.captureErrorMessage('notifications', async () => {
+				//throw new Error('TESTING');
+				const notifications = Array.from(this.alexa.notificationByIdExt.values())
 				.sort((a,b) => getNotificationSortValue(a) - getNotificationSortValue(b))
 				.map(noti => [noti.notificationIndex, getNotificationLabel(noti), noti.type, noti.deviceSerialNumber]);
 
-			this.notificationsForUiJson = JSON.stringify(notificationsForUi);
+				this.ui.notifications = JSON.stringify(notifications);
+			});
 		}
 		this.buildRoutinesForUi = async function() {
-			// const [routines, musicProviders] = await Promise.all([
-			// 	this.alexa.getAutomationRoutinesPromise(),
-			// 	this.alexa.getMusicProvidersPromise(),
-			// ]);
-
-			const routines = Array.from(this.alexa.routineByIdExt.values());
-			const musicProviders = this.alexa.musicProvidersExt;
-
-			const routinesForUi = routines
+			return this.captureErrorMessage('routines', async () => {
+				//throw new Error('TESTING');
+				const routines = Array.from(this.alexa.routineByIdExt.values())
 				.sort((a,b) => (a.status === 'DISABLED' ? 1 : -1) - (b.status === 'DISABLED' ? 1 : -1))
 				.map(routine => [routine.automationId, getRoutineLabel(routine, this.alexa.smarthomeSimplifiedByEntityIdExt)]);
 
-			const musicProvidersForUi = musicProviders
+				this.ui.routines = JSON.stringify(routines);
+			});
+		}
+		this.buildMusicProvidersForUi = async function() {
+			return this.captureErrorMessage('musicProviders', async () => {
+				//throw new Error('TESTING');
+				const musicProviders = this.alexa.musicProvidersExt
 				.filter(provider => provider.supportedOperations.includes('Alexa.Music.PlaySearchPhrase'))
 				.map(provider => [provider.id, provider.displayName]);
 
-			this.routinesForUiJson = JSON.stringify({
-				routines: routinesForUi,
-				musicProviders: musicProvidersForUi
+				this.ui.musicProviders = JSON.stringify(musicProviders);
 			});
 		}
-		this.buildBluetoothForUi = async function(warnCb) {
-			const bluetoothStates = (await this.alexa.getBluetoothPromise()).bluetoothStates;
+		this.buildBluetoothForUi = async function() {
+			return this.captureErrorMessage('bluetooth', async () => {
+				//throw new Error('TESTING');
+				const bluetoothStates = (await this.alexa.getBluetoothPromise()).bluetoothStates;
 
-			const bluetoothForUi = bluetoothStates
-				.filter(state => Array.isArray(state.pairedDeviceList))
-				.reduce((o, state) => (o[state.deviceSerialNumber] = state.pairedDeviceList
-					.map(device => [device.address, getBluetoothDeviceLabel(device)]
-				), o), {})
+				const bluetoothForUi = bluetoothStates
+					.filter(state => Array.isArray(state.pairedDeviceList))
+					.reduce((o, state) => (o[state.deviceSerialNumber] = state.pairedDeviceList
+						.map(device => [device.address, getBluetoothDeviceLabel(device)]
+					), o), {})
+	
+				this.ui.bluetooth = JSON.stringify(bluetoothForUi);
+			});
+		}
+		this.buildErrorsForUi = function() {
+			const a = this.errorMessages;
+			const b = this.alexa.errorMessagesExt;
+			const keys = new Set(Object.getOwnPropertyNames(a), Object.getOwnPropertyNames(b));
+			const combined = {};
 
-			this.bluetoothForUiJson = JSON.stringify(bluetoothForUi);
+			for(const key of keys) {
+				combined[key] = a[key] || b[key];
+			}
+
+			tools.log({errorMessages: a, errorMessagesExt: b, combined: combined});
+			this.ui.errors = JSON.stringify(combined);
 		}
 
 		this.initAlexa = async function(input, ignoreFile = false) {
@@ -367,7 +416,7 @@ module.exports = function (RED) {
 
 			const warnCallback = (error) => {
 				if(alexa !== this.alexa) return;
-				this.warn(error.message);
+				this.warn(error.stack || error.message || String(error));
 			}
 
 			if(initType === 'proxy') {
@@ -395,19 +444,19 @@ module.exports = function (RED) {
 				try { fs.writeFileSync(this.cookieFile, json, 'utf8') }
 				catch (error) { warnCb(error) }
 			}
-
-			this.buildDevicesForUi();
-			this.buildSmarthomeForUi();
-			this.buildNotificationsForUi();
-
-			this.alexa.on('change-device', () => this.buildDevicesForUi());
-			this.alexa.on('change-smarthome', () => this.buildSmarthomeForUi());
-			this.alexa.on('change-notification', () => this.buildNotificationsForUi());
-
+			
 			await Promise.all([
-				this.buildRoutinesForUi().catch(error => (error.message = `building routines for ui failed: "${error.message}"`, warnCb(error))),
-				this.buildBluetoothForUi().catch(error => (error.message = `building bluetooth for ui failed: "${error.message}"`, warnCb(error))),,
+				this.buildDevicesForUi().catch(warnCb),
+				this.buildMusicProvidersForUi().catch(warnCb),
+				this.buildNotificationsForUi().catch(warnCb),
+				this.buildSmarthomeForUi().catch(warnCb),
+				this.buildRoutinesForUi().catch(warnCb),
+				this.buildBluetoothForUi().catch(warnCb),
 			]);
+
+			this.alexa.on('change-device', () => this.buildDevicesForUi().catch(warnCb));
+			this.alexa.on('change-smarthome', () => this.buildSmarthomeForUi().catch(warnCb));
+			this.alexa.on('change-notification', () => this.buildNotificationsForUi().catch(warnCb));
 
 			// see above why
 			if(alexa !== this.alexa) {
@@ -463,11 +512,13 @@ module.exports = function (RED) {
 		}
 	});
 
-	RED.httpAdmin.get('/alexa-remote-routines.json', 		RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'routinesForUiJson', 'Routines', req, res));
-	RED.httpAdmin.get('/alexa-remote-devices.json', 		RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'devicesForUiJson', 'Devices', req, res));
-	RED.httpAdmin.get('/alexa-remote-smarthome.json', 		RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'smarthomeForUiJson', 'Smarthome Devices', req, res));
-	RED.httpAdmin.get('/alexa-remote-bluetooth.json', 		RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'bluetoothForUiJson', 'Bluetooth Devices', req, res));
-	RED.httpAdmin.get('/alexa-remote-notifications.json', 	RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'notificationsForUiJson', 'Notifications', req, res));
+	RED.httpAdmin.get('/alexa-remote-error-messages.json',	RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'errors', 'Error Messages', req, res));
+	RED.httpAdmin.get('/alexa-remote-routines.json', 		RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'routines', 'Routines', req, res));
+	RED.httpAdmin.get('/alexa-remote-musicProviders.json', 	RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'musicProviders', 'Music Providers', req, res));
+	RED.httpAdmin.get('/alexa-remote-devices.json', 		RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'devices', 'Devices', req, res));
+	RED.httpAdmin.get('/alexa-remote-smarthome.json', 		RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'smarthome', 'Smarthome Devices', req, res));
+	RED.httpAdmin.get('/alexa-remote-bluetooth.json', 		RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'bluetooth', 'Bluetooth Devices', req, res));
+	RED.httpAdmin.get('/alexa-remote-notifications.json', 	RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'notifications', 'Notifications', req, res));
 	RED.httpAdmin.get('/alexa-remote-sounds.json', 			RED.auth.needsPermission('alexa-remote.read'), (req, res) => {
 		const account = RED.nodes.getNode(req.query.account);
 		const device = req.query.device;

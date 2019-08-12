@@ -627,6 +627,18 @@
 					this.element.trigger('change', this.groupKey);
 				}
 			});
+			$.widget('alexaRemote.arTips', {
+				_create: function() {
+					this.element.addClass('form-tips').css({marginBottom: 12});
+				},
+				show: function(arg = true) {
+					if(typeof arg === 'string') this.element.html(arg);
+					arg ? this.element.show() : this.element.hide();
+				},
+				hide: function(arg = true) {
+					this.show(!arg);
+				}
+			});
 
 			function arFormRow(element, label = '', icon = '') {
 				return $('<div>').addClass('form-row arFormRow').append(
@@ -692,17 +704,23 @@
 					.arInputGroups('value', value)
 					.arInputGroups('groups', groups);
 			}
+			function arTips(text = true) {
+				return $('<div>').arTips().arTips('show', text);
+			}
 
 			const loader = new EventEmitter();
 			loader.colorNameToHex = new Map([["blanched_almond", "#ffeacc"], ["pale_goldenrod", "#ede9aa"], ["deep_pink", "#ff1491"], ["cyan", "#00ffff"], ["light_goldenrod", "#f9f9d1"], ["pale_green", "#99f999"], ["medium_blue", "#0000cc"], ["dark_turquoise", "#00ced1"], ["hot_pink", "#ff68b6"], ["dark_olive_green", "#546b2d"], ["dodger_blue", "#1e8eff"], ["red", "#ff0000"], ["goldenrod", "#d8a421"], ["blue", "#0000ff"], ["fuchsia", "#ff00ff"], ["medium_turquoise", "#47d1cc"], ["light_steel_blue", "#afc4dd"], ["navajo_white", "#ffddad"], ["antique_white", "#f9ead6"], ["cornsilk", "#fff7db"], ["dark_slate_blue", "#483d8c"], ["light_pink", "#ffb5c1"], ["gainsboro", "#dbdbdb"], ["slate_blue", "#6a59cc"], ["light_slate_gray", "#778799"], ["wheat", "#f4ddb2"], ["plum", "#dda0dd"], ["dark_magenta", "#8c008c"], ["peach_puff", "#ffd8ba"], ["sea_green", "#2d8c56"], ["blue_violet", "#8a2be2"], ["burlywood", "#ddb687"], ["dark_cyan", "#008c8c"], ["dark_green", "#006300"], ["rebecca_purple", "#663399"], ["web_purple", "#7f007f"], ["pale_turquoise", "#afeded"], ["olive_drab", "#6a8e23"], ["dark_red", "#8c0000"], ["alice_blue", "#eff7ff"], ["medium_aquamarine", "#66ccaa"], ["orchid", "#d870d6"], ["old_lace", "#fcf4e5"], ["seashell", "#fff4ed"], ["brown", "#a52828"], ["dark_gray", "#a8a8a8"], ["dark_orange", "#ff8c00"], ["sandy_brown", "#f4a360"], ["dim_gray", "#686868"], ["turquoise", "#3fe0d0"], ["purple", "#a021ef"], ["tan", "#d1b58c"], ["pink", "#ffbfcc"], ["dark_goldenrod", "#b7860a"], ["misty_rose", "#ffe2e0"], ["aqua", "#00ffff"], ["yellow", "#ffff00"], ["light_gray", "#d3d3d3"], ["pale_violet_red", "#db7094"], ["medium_spring_green", "#00f99a"], ["light_sea_green", "#21b2ab"], ["forest_green", "#218c21"], ["moccasin", "#ffe1b5"], ["web_gray", "#7f7f7f"], ["deep_sky_blue", "#00bfff"], ["white_smoke", "#f4f4f4"], ["gold", "#ffd500"], ["lime", "#c7ff1f"], ["olive", "#7f7f00"], ["web_green", "#007f00"], ["light_coral", "#ef7f7f"], ["royal_blue", "#3f67e0"], ["floral_white", "#fff9ef"], ["navy_blue", "#00007f"], ["bisque", "#ffe2c4"], ["coral", "#ff7e4f"], ["yellow_green", "#99cc33"], ["salmon", "#ffa07a"], ["papaya_whip", "#ffefd6"], ["light_yellow", "#ffffe0"], ["medium_sea_green", "#3db270"], ["steel_blue", "#4482b5"], ["light_green", "#8eed8e"], ["firebrick", "#b22121"], ["midnight_blue", "#191970"], ["linen", "#f9efe5"], ["violet", "#ed82ed"], ["cadet_blue", "#5e9ea0"], ["light_salmon", "#ffa07a"], ["spring_green", "#00ff80"], ["mint_cream", "#f4fff9"], ["dark_khaki", "#bcb76b"], ["maroon", "#af3061"], ["web_maroon", "#7f0000"], ["dark_sea_green", "#8ebc8e"], ["crimson", "#db143c"], ["tomato", "#ff6347"], ["lawn_green", "#7efc00"], ["white", "#ffffff"], ["lavender", "#9f80ff"], ["green_yellow", "#afff2d"], ["chocolate", "#d1691e"], ["lavender_blush", "#ffeff4"], ["dark_orchid", "#9933cc"], ["sky_blue", "#87ceea"], ["magenta", "#ff00ff"], ["medium_violet_red", "#c61485"], ["gray", "#bfbfbf"], ["orange_red", "#ff4400"], ["silver", "#bfbfbf"], ["green", "#00ff00"], ["light_cyan", "#e0ffff"], ["chartreuse", "#80ff00"], ["dark_salmon", "#e8967a"], ["sienna", "#a0512d"], ["saddle_brown", "#8c4411"], ["thistle", "#d8bfd8"], ["lemon_chiffon", "#fff9cc"], ["light_blue", "#add8e5"], ["indigo", "#4a0082"], ["indian_red", "#cc5b5b"], ["medium_orchid", "#ba54d3"], ["dark_violet", "#9400d3"], ["ghost_white", "#f7f7ff"], ["lime_green", "#33cc33"], ["medium_purple", "#9470db"], ["teal", "#007f7f"], ["beige", "#f4f4db"], ["peru", "#cc833f"], ["dark_blue", "#00008c"], ["light_sky_blue", "#87cdf9"], ["ivory", "#ffffef"], ["honeydew", "#efffef"], ["dark_slate_gray", "#2d4f4f"], ["orange", "#ffa600"], ["cornflower", "#6393ed"], ["slate_gray", "#707f8e"], ["medium_slate_blue", "#7a68ed"], ["azure", "#efffff"], ["powder_blue", "#afe0e5"], ["snow", "#fff9f9"], ["aquamarine", "#7fffd2"], ["khaki", "#efe58c"], ["black", "#000000"], ["rosy_brown", "#bc8e8e"],]);
 			loader.colorTemperatureNameToHex = new Map([["sunset", "#ff9227"], ["warm", "#ff9227"], ["evening", "#ff9227"], ["warm_white", "#ff9227"], ["candlelight", "#ff9227"], ["relax", "#ff9227"], ["soft_white", "#ffa757"], ["incandescent", "#ffa757"], ["soft", "#ffa757"], ["reading_white", "#ffa757"], ["reading", "#ffa757"], ["white", "#ffcea6"], ["daytime", "#ffedde"], ["daylight_white", "#ffedde"], ["daytime_white", "#ffedde"], ["daylight", "#ffedde"], ["cool_white", "#f3f2ff"], ["cool", "#f3f2ff"], ["bright_white", "#f3f2ff"]]);
-			loader.update = function(success, account='', data) {
+			loader.update = function(success, account='', smarthome, messages) {
 				this.success 				= success;
 				this.account 				= account;
-				this.colorNames 			= !success ? [] : data.colorNames;
-				this.colorTemperatureNames 	= !success ? [] : data.colorTemperatureNames;
-				this.entityById 			= !success ? {} : data.entityById;
-				this.entities 				= !success ? [] : Object.entries(this.entityById).map(([id, [label, properties, actions, type]]) => [id, label, properties, actions, type]);
+				this.smarthome				= !success ? { colorNames: [], colorTemperatureNames: [], entityById: {}} : smarthome;
+				this.smarthome.entities		= Object.entries(this.smarthome.entityById).map(([id, [label, properties, actions, type]]) => [id, label, properties, actions, type]);
+				this.smarthome.entitiesWithActions 			= this.smarthome.entities.filter(([id, label, properties, actions]) => actions.length !== 0);
+				this.smarthome.entitiesWithProperties 		= this.smarthome.entities.filter(([id, label, properties, actions]) => properties.length !== 0);
+				this.smarthome.entitiesThatAreAppliances 	= this.smarthome.entities.filter(([id, label, properties, actions, type]) => type === 'APPLIANCE');
+				this.smarthome.entitiesThatAreGroups 		= this.smarthome.entities.filter(([id, label, properties, actions, type]) => type === 'GROUP');
+				this.messages 								= !success ? {} : messages;
 				this.emit('change', this.success);
 			}
 			loader.load = function() {
@@ -711,8 +729,11 @@
 				loader.update(false, account);
 				if(!account || account === '_ADD_') return /*console.log('updateLoader', {result: 'invalid account', account: account, loader: loader})*/;
 
-				$.get('alexa-remote-smarthome.json', { account: account }, null, 'json')
-					.done(data => { loader.update(true, account, data); /*console.log('updateLoader', {result: 'success', account: account, loader: loader});*/ })
+				const getSmarthome = $.get('alexa-remote-smarthome.json', { account: account }, null, 'json');
+				const getMessages = $.get('alexa-remote-error-messages.json', { account: account }, null, 'json');
+
+				$.when(getSmarthome, getMessages)
+					.done(([smarthome], [messages]) => { loader.update(true, account, smarthome, messages); /*console.log('updateLoader', {result: 'success', account: account, loader: loader});*/ })
 					.fail(res => RED.notify(res.responseText || 'Unknown error, reopen this node...', 'error'));
 			}
 			loader.update(false);
@@ -761,13 +782,13 @@
 								format.arInputGroups('group', property.arInputOrSelect('value'));
 							}
 							const updateProperty = (user) => {
-								const [label, properties, actions] = loader.entityById[entity.arInputOrSelect('value')] || [];
+								const [label, properties, actions] = loader.smarthome.entityById[entity.arInputOrSelect('value')] || [];
 								property.arInputOrSelect('selectOptions', [['all', 'All Properties']].concat(properties || []));
 								property.arInputOrSelect('selectActive', loader.success);
 								if (user || !property.arInputOrSelect('value')) property.arInputOrSelect('selectSomething');
 							}
 							const updateEntity = () => {
-								const entities = loader.entities.filter(([id, label, properties, actions]) => properties.length !== 0);
+								const entities = loader.smarthome.entitiesWithProperties;
 								entity.arInputOrSelect('selectOptions', entities);
 								entity.arInputOrSelect('selectActive', loader.success);
 								if (!entity.arInputOrSelect('value')) entity.arInputOrSelect('selectSomething');
@@ -804,13 +825,14 @@
 							const row = $('<div>').css({ flex: '1', display: 'flex' }).appendTo(this.css({ flexDirection: 'column' }));
 							const separator = $('<div>').css({ minWidth: 10 }).appendTo(row);
 							const entity = arInputOrSelect(data.entity).css({ flex: '1' , minWidth: 150 }).insertBefore(separator);
-							const action = arInputOrSelect(data.action).css({ flex: '3' }).insertAfter(separator);
+							const action = arInputOrSelect(data.action).css({ flex: '1.5' }).insertAfter(separator);
 
+							const flex = '1.5';
 							function prepareLockAction(data) {
 								data = template(data, { value: { type: 'str', value: 'locked' } });
 
-								const value = arTypedInputOrSelect(data.value, ['locked', 'unlocked', 'jammed']).css({ marginTop: 10});
-								arRow(value, 'Lock State').appendTo(this);
+								const value = arTypedInputOrSelect(data.value, ['locked', 'unlocked', 'jammed']);
+								arRow(value, 'Lock State', flex).appendTo(this);
 
 								return () => ({	value: value.arTypedInputOrSelect('data') });
 							}
@@ -818,7 +840,7 @@
 								return function (data) {
 									data = template(data, { value: { type: 'str', value: '' } });
 									const value = arTypedInputOrSelect(data.value);
-									const row = arRow(value, labelHtml).appendTo(this);
+									const row = arRow(value, labelHtml, flex).appendTo(this);
 									const label = row.children('label');
 									const separator = $('<div>').css({ width: 8 }).hide();
 									const preview = $('<div>').css({ width: 34, height: 34, border: '1px solid #ccc', borderRadius: 4, boxSizing: 'border-box' }).hide();
@@ -840,7 +862,7 @@
 										preview.css({ background: color });
 									}
 									const updateValue = () => {
-										value.arTypedInputOrSelect('selectOptions', loader[loaderListProperty]).arTypedInputOrSelect('choose');
+										value.arTypedInputOrSelect('selectOptions', loader.smarthome[loaderListProperty]).arTypedInputOrSelect('choose');
 									}
 									value.on('change', updatePreview);
 									loader.listen('change', value, updateValue);
@@ -854,7 +876,7 @@
 								return function (data) {
 									data = template(data, { value: { type: 'num', value: '50' } });
 									const value = arTypedInput(data.value, ['num']);
-									arRow(value, label).appendTo(this);
+									arRow(value, label, flex).appendTo(this);
 									return () => ({ value: value.arTypedInput('data') });
 								}
 							}
@@ -870,8 +892,8 @@
 									data = template(data, { value: { type: 'num', value: '20' }, scale: { type: 'str', value: 'celsius' } });
 									const scale = arTypedInputOrSelect(data.scale, ['celsius', 'fahrenheit']);
 									const value = arTypedInput(data.value, ['num']);
-									arRow(scale, 'Scale').appendTo(this);
-									arRow(value, 'Value').appendTo(this);
+									arRow(scale, 'Scale', flex).appendTo(this);
+									arRow(value, 'Value', flex).appendTo(this);
 									return () => ({ scale: scale.arTypedInputOrSelect('data'), value: value.arTypedInput('data') });
 								},
 							}).css({ flex: '1', flexDirection: 'column', marginTop: 12 }).insertAfter(row);
@@ -881,13 +903,13 @@
 								parameters.arInputGroups('group', value);
 							};
 							const updateAction = (user) => {
-								const [label, properties, actions] = loader.entityById[entity.arInputOrSelect('value')] || [];
+								const [label, properties, actions] = loader.smarthome.entityById[entity.arInputOrSelect('value')] || [];
 								action.arInputOrSelect('selectOptions', actions || []);
 								action.arInputOrSelect('selectActive', loader.success);
 								if (user || !action.arInputOrSelect('value')) action.arInputOrSelect('selectSomething');
 							};
 							const updateEntity = () => {
-								const entities = loader.entities.filter(([id, label, properties, actions]) => actions.length !== 0);
+								const entities = loader.smarthome.entitiesWithActions;
 								entity.arInputOrSelect('selectOptions', entities);
 								entity.arInputOrSelect('selectActive', loader.success);
 								if (!entity.arInputOrSelect('value')) entity.arInputOrSelect('selectSomething');
@@ -923,39 +945,40 @@
 						const what = arSelect(data.what, ['device', 'group', 'allDevices']);
 						arFormRow(what, 'What', 'fa fa-question-circle').appendTo(this);
 
-						const getInputGroupByType = function (entityType) {
-							return function (data) {
-								data = template(data, { type: 'str', value: '' });
+						const group = arInputGroups(data.what, data.entity, { 
+							device: function(data) {
+								data = template(data, {type:'str', value: ''});
 
-								const entity = $('<div>').appendTo(this)
-									.arTypedInputOrSelect({ label: 'Name or Id', icon: 'fa fa-ticket', button: true })
-									.arTypedInputOrSelect('type', data.type)
-									.arTypedInputOrSelect('value', data.value)
-									.arTypedInputOrSelect('choose');
+								const entity = arTypedInputOrSelect(data);
+								arFormRow(entity, 'Name or Id', 'fa fa-ticket').appendTo(this);
 
 								const updateEntity = () => {
-									entity.arTypedInputOrSelect('selectOptions', loader.entities.filter(([id, label, properties, actions, type]) => type === entityType));
+									entity.arTypedInputOrSelect('selectOptions', loader.smarthome.entitiesThatAreAppliances);
 									entity.arTypedInputOrSelect('selectActiveMaybe', loader.success);
 									if (!entity.arTypedInputOrSelect('value')) entity.arTypedInputOrSelect('selectSomething');
-								};
-								const requestUpdate = () => {
-									if (!inDocument(entity)) return;
-									loader.once('change', requestUpdate);
-									updateEntity();
 								}
-								requestUpdate();
+								loader.listen('change', entity, updateEntity);
+								updateEntity();
 
-								return () => ({
-									type: entity.arTypedInputOrSelect('type'),
-									value: entity.arTypedInputOrSelect('value')
-								});
+								return () => entity.arTypedInputOrSelect('data');
+							},
+							group: function(data) {
+								data = template(data, {type:'str', value: ''});
+
+								const entity = arTypedInputOrSelect(data);
+								arFormRow(entity, 'Name or Id', 'fa fa-ticket').appendTo(this);
+
+								const updateEntity = () => {
+									entity.arTypedInputOrSelect('selectOptions', loader.smarthome.entitiesThatAreGroups);
+									entity.arTypedInputOrSelect('selectActiveMaybe', loader.success);
+									if (!entity.arTypedInputOrSelect('value')) entity.arTypedInputOrSelect('selectSomething');
+								}
+								loader.listen('change', entity, updateEntity);
+								updateEntity();
+
+								return () => entity.arTypedInputOrSelect('data');
 							}
-						}
-
-						const group = arInputGroups(data.what, data.entity, { 
-							device: getInputGroupByType('APPLIANCE'),
-							group: getInputGroupByType('GROUP')
-						});
+						}).css({flexDirection: 'column'}).appendTo(this);
 
 						what.on('change', () => group.arInputGroups('group', what.arSelect('value')));
 						what.trigger('change');
@@ -969,19 +992,41 @@
 			const select = arSelect(data.option, ['get', 'query', 'action', 'discover', 'forget']);
 			arFormRow(select, 'Select', 'fa fa-sort').insertBefore(inputs);
 			const divider = $('<hr>').css({ margin: '12px 0px' }).insertBefore(inputs);
-			const info = $('<div>').addClass('form-tips').css({marginBottom: 12}).html('<b>Note:</b> Select an initialised account first to be able to select from a list of devices!').insertBefore(inputs);
+			const info = arTips().insertBefore(inputs);
 
 			select.on('change', () => inputs.arInputGroups('group', select.arSelect('value')));
 
 			function updateInfo() {
 				const value = select.arSelect('value');
+				
+				if (value === 'get' || value === 'discover') {
+					return info.arTips('hide');
+				}
 
-				if(loader.success) {
-					info.hide();
+				if (!loader.success) {
+					return info.arTips('show', '<b>Note:</b> Select an initialised account first to be able to select from a list of devices!');
 				}
-				else if(value === 'query' || value === 'action' || value === 'forget') {
-					info.show();
+
+				let message = '';
+
+				switch (value) {
+					case 'query':
+						if (loader.messages.smarthome)
+							message += `Loading appliances failed: "${loader.messages.smarthome}". `;
+						if (!loader.messages.smarthome && loader.smarthome.entitiesWithProperties.length === 0)
+							message += `There are no appliances with queryable properties. `;
+						break;
+					case 'action':
+						if (loader.messages.smarthome)
+							message += `Loading appliances failed: "${loader.messages.smarthome}". `;
+						if (loader.messages.colors)
+							message += `Loading colors failed: "${loader.messages.colors}". `;
+						if (!loader.messages.smarthome && loader.smarthome.entitiesWithActions.length === 0)
+							message += `There are no appliances with executable actions. `;
+						break;
 				}
+
+				info.arTips('show', message ? `<b>Warning:</b> ` + message : false);
 			}
 			updateInfo();
 			loader.on('change', updateInfo);
