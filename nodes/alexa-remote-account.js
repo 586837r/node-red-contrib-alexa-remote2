@@ -345,7 +345,6 @@ module.exports = function (RED) {
 				combined[key] = a[key] || b[key];
 			}
 
-			tools.log({errorMessages: a, errorMessagesExt: b, combined: combined});
 			this.ui.errors = JSON.stringify(combined);
 		}
 
