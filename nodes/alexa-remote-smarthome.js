@@ -18,7 +18,9 @@ module.exports = function (RED) {
 			if(this.account.state.code !== 'READY') return error('Account not initialised!');
 			this.status({ shape: 'dot', fill: 'grey', text: 'sending' });
 			const alexa = this.account.alexa;
-			const {option, value} = this.config;
+			const option = this.config.option;
+			let value = this.config.value;
+			const invalid = (what) => error(`invalid input: "${JSON.stringify(what || this.config)}"`);
 
 			switch(option) {
 				case 'get': {
@@ -28,18 +30,21 @@ module.exports = function (RED) {
 						case 'entities': 	return alexa.getSmarthomeEntitiesPromise().then(send).catch(error);
 						case 'definitions': return alexa.getSmarthomeBehaviourActionDefinitionsPromise().then(send).catch(error);
 						case 'simplified': 	return alexa.smarthomeSimplifiedByEntityIdExt ? send(alexa.smarthomeSimplifiedByEntityIdExt) : error('Not available?!');
-						default: 			return error(`invalid input: "${JSON.stringify(this.config)}"`);
+						default: 			return invalid();
 					}
 				}
 				case 'query': {
-					if(!tools.matches(value, [{	entity: '',	property: '' }])) {
-						return error(`invalid input: "${JSON.stringify(this.config)}"`);
-					}
+					if(!Array.isArray(value)) return invalid();
 
 					// i don't know either
 					const getIdForQuery = (entity) => entity.type === 'APPLIANCE' ? entity.applianceId : entity.entityId;
 
 					const queries = value.length === 0 ? msg.payload : value;
+
+					if(!tools.matches(queries, [{ entity: '' }])) {
+						return error(`query: input must be an array of objects with the string property "entity" and optionally "property"`);
+					}
+					
 					const entities = queries.map(query => {
 						const entity = alexa.findSmarthomeEntityExt(query.entity);
 						if(!entity) error(`smarthome entity not found: "${query.entity}"`, query.entity);
@@ -145,9 +150,7 @@ module.exports = function (RED) {
 					}).catch(error);	
 				}
 				case 'action': {
-					if(!tools.matches(value, [{}])) {
-						return error(`invalid input: "${JSON.stringify(this.config)}"`);
-					}
+					if(!Array.isArray(value)) return invalid();
 
 					const inputs = value.length === 0 ? msg.payload : value.map(input => {
 						const result = {};
@@ -163,8 +166,8 @@ module.exports = function (RED) {
 						return result;
 					});
 
-					if(!tools.matches(inputs, [{entity: '', action: ''}])) {
-						return error(`invalid input: "${JSON.stringify(inputs)}"`);
+					if(!tools.matches(inputs, [{ entity: '', action: '' }])) {
+						return error(`action: input must be an array of objects with the string properties "entity" and "action"`);
 					}
 
 					const entities = inputs.map(input => {
@@ -211,7 +214,7 @@ module.exports = function (RED) {
 							}
 							case 'setTargetTemperature': {
 								native.parameters['targetTemperature.value'] = Number(input.value);
-								native.parameters['targetTemperature.scale'] = String(input.scale).trim().toUpperCase();
+								native.parameters['targetTemperature.scale'] = String(input.scale || 'celsius').trim().toUpperCase();
 								break;
 							}
 						}
@@ -282,6 +285,9 @@ module.exports = function (RED) {
 							return error(`invalid input: "${JSON.stringify(this.config)}"`);
 						}
 					}
+				}
+				default: {
+					return invalid();
 				}
 			}
 		});
