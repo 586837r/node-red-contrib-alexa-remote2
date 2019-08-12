@@ -12,6 +12,21 @@ Each item in the list creates its own message on success and its own error on fa
 
 ---
 
+### **Input**
+
+- **Query** will use `msg.payload` as input if the list is empty. The payload must be an array of objects with the properties:
+  - **entity**: name or id of a smarthome appliance or group
+  - **property**: undefined for all properties or something like `color`, `brightness`, `powerState`, ...
+  - **format** *(only for `color` property)*: `hex`, `rgb`, `hsv` or anything else for the native format
+
+- **Action** will use `msg.payload` as input if the list is empty. The payload must be an array of objects with the properties:
+  - **entity**: name or id of a smarthome appliance or group
+  - **action**: something like `turnOn`, `turnOff`, `setColor`, `setColorTemperature`, `setBrightness`, `lockAction`, `setPercentage`, `setTargetTemperature`, ...
+  - **value**: the value for `setColor` and other supported actions
+  - **scale** *(only for `setTargetTemperature` action)*: either `celsius` or `fahrenheit`
+
+---
+
 ### **References**
  - [npm](https://npmjs.com/package/node-red-contrib-alexa-remote2) - the nodes npm repository
  - [GitHub](https://github.com/586837r/node-red-contrib-alexa-remote2) - the nodes GitHub repository

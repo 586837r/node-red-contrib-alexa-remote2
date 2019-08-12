@@ -25,16 +25,54 @@
 
 	<p>Interface to Smarthome features.</p>
 	<hr>
-	<h3 id="Options"><strong>Options</strong></h3>
+	<h3><strong>Info</strong></h3>
 	<ul>
-		<li><strong>Action</strong> and <strong>Query</strong> let you send multiple commands/requests at once. You can
-			increase the <em>Outputs</em> to split the message by the Items in the list. For example if you have 3 items in
-			the list and 3 outputs then each output corresponds to one item. If you have less outputs than items then the
-			last output will have an array of messages. You can have the same Appliance multiple times in the list.
-			Each item in the list creates its own message on success and its own error on failure.</li>
+		<li>
+			<p><strong>Action</strong> and <strong>Query</strong> let you send multiple commands/requests at once. You can
+				increase the <em>Outputs</em> to split the message by the Items in the list. For example if you have 3 items
+				in the list and 3 outputs then each output corresponds to one item. If you have less outputs than items then
+				the last output will have an array of messages. You can have the same Appliance multiple times in the list.
+				Each item in the list creates its own message on success and its own error on failure.</p>
+		</li>
+		<li>
+			<p><strong>Color</strong> can be a color name (case and non-alpha insensitive) or a hex value like
+				<code>#FF0000</code> or <code>FF0000</code></p>
+		</li>
+		<li>
+			<p><strong>Color Temperature</strong> can be a color temperature name (case and non-alpha insensitive), a Kelvin
+				value or a hex value like <code>#FF0000</code> or <code>FF0000</code></p>
+		</li>
 	</ul>
 	<hr>
-	<h3 id="References"><strong>References</strong></h3>
+	<h3><strong>Input</strong></h3>
+	<ul>
+		<li>
+			<p><strong>Query</strong> will use <code>msg.payload</code> as input if the list is empty. The payload must be
+				an array of objects with the properties:</p>
+			<ul>
+				<li><strong>entity</strong>: name or id of a smarthome appliance or group</li>
+				<li><strong>property</strong>: undefined for all properties or something like <code>color</code>,
+					<code>brightness</code>, <code>powerState</code>, ...</li>
+				<li><strong>format</strong> <em>(only for <code>color</code> property)</em>: <code>hex</code>,
+					<code>rgb</code>, <code>hsv</code> or anything else for the native format</li>
+			</ul>
+		</li>
+		<li>
+			<p><strong>Action</strong> will use <code>msg.payload</code> as input if the list is empty. The payload must be
+				an array of objects with the properties:</p>
+			<ul>
+				<li><strong>entity</strong>: name or id of a smarthome appliance or group</li>
+				<li><strong>action</strong>: something like <code>turnOn</code>, <code>turnOff</code>,
+					<code>setColor</code>, <code>setColorTemperature</code>, <code>setBrightness</code>,
+					<code>lockAction</code>, <code>setPercentage</code>, <code>setTargetTemperature</code>, ...</li>
+				<li><strong>value</strong>: the value for <code>setColor</code> and other supported actions</li>
+				<li><strong>scale</strong> <em>(only for <code>setTargetTemperature</code> action)</em>: either
+					<code>celsius</code> or <code>fahrenheit</code></li>
+			</ul>
+		</li>
+	</ul>
+	<hr>
+	<h3><strong>References</strong></h3>
 	<ul>
 		<li><a href="https://npmjs.com/package/node-red-contrib-alexa-remote2">npm</a> - the nodes npm repository</li>
 		<li><a href="https://github.com/586837r/node-red-contrib-alexa-remote2">GitHub</a> - the nodes GitHub repository

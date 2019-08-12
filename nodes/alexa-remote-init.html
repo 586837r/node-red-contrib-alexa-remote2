@@ -32,7 +32,7 @@
 	<p>This node is for manual control of Account Node intialisation.
 		The associated Account Node should have <em>Auto Init</em> turned off to use this node.</p>
 	<hr>
-	<h3 id="Inputs"><strong>Inputs</strong></h3>
+	<h3><strong>Inputs</strong></h3>
 	<ul>
 		<li><strong>payload</strong>
 			<ul>
@@ -42,7 +42,7 @@
 		</li>
 	</ul>
 	<hr>
-	<h3 id="Outputs"><strong>Outputs</strong></h3>
+	<h3><strong>Outputs</strong></h3>
 	<ul>
 		<li><strong>payload</strong>
 			<ul>
@@ -52,14 +52,14 @@
 		</li>
 	</ul>
 	<hr>
-	<h3 id="Info"><strong>Info</strong></h3>
+	<h3><strong>Info</strong></h3>
 	<p>Instead of saving the the Authentication result to a file specified in the Account Config Node you can also manually
-		initialise the Account and save the Authentication result however you want. Here is an example how you can do that:
-	</p>
+		initialise the Account and save the Authentication result however you want. Here is an example of how you can do
+		that:</p>
 	<pre><code><div>[{&quot;id&quot;:&quot;bf44407a.c20d4&quot;,&quot;type&quot;:&quot;alexa-remote-init&quot;,&quot;z&quot;:&quot;c0bfc064.e8d26&quot;,&quot;name&quot;:&quot;&quot;,&quot;account&quot;:&quot;&quot;,&quot;option&quot;:&quot;initialise&quot;,&quot;x&quot;:260,&quot;y&quot;:2800,&quot;wires&quot;:[[&quot;123e6678.5acbaa&quot;]]},{&quot;id&quot;:&quot;c7f04444.fed188&quot;,&quot;type&quot;:&quot;inject&quot;,&quot;z&quot;:&quot;c0bfc064.e8d26&quot;,&quot;name&quot;:&quot;&quot;,&quot;topic&quot;:&quot;&quot;,&quot;payload&quot;:&quot;alexa&quot;,&quot;payloadType&quot;:&quot;flow&quot;,&quot;repeat&quot;:&quot;&quot;,&quot;crontab&quot;:&quot;00 12 * * 3,4,0&quot;,&quot;once&quot;:false,&quot;onceDelay&quot;:0.1,&quot;x&quot;:110,&quot;y&quot;:2800,&quot;wires&quot;:[[&quot;bf44407a.c20d4&quot;]]},{&quot;id&quot;:&quot;123e6678.5acbaa&quot;,&quot;type&quot;:&quot;change&quot;,&quot;z&quot;:&quot;c0bfc064.e8d26&quot;,&quot;name&quot;:&quot;&quot;,&quot;rules&quot;:[{&quot;t&quot;:&quot;set&quot;,&quot;p&quot;:&quot;alexa&quot;,&quot;pt&quot;:&quot;flow&quot;,&quot;to&quot;:&quot;payload&quot;,&quot;tot&quot;:&quot;msg&quot;}],&quot;action&quot;:&quot;&quot;,&quot;property&quot;:&quot;&quot;,&quot;from&quot;:&quot;&quot;,&quot;to&quot;:&quot;&quot;,&quot;reg&quot;:false,&quot;x&quot;:420,&quot;y&quot;:2800,&quot;wires&quot;:[[]]}]
 	</div></code></pre>
 	<hr>
-	<h3 id="References"><strong>References</strong></h3>
+	<h3><strong>References</strong></h3>
 	<ul>
 		<li><a href="https://npmjs.com/package/node-red-contrib-alexa-remote2">npm</a> - the nodes npm repository</li>
 		<li><a href="https://github.com/586837r/node-red-contrib-alexa-remote2">GitHub</a> - the nodes GitHub repository
