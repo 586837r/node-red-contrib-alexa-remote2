@@ -75,10 +75,12 @@ module.exports = function (RED) {
 
 				switch (node.type) {
 					case 'speak': {
-						if (!Array.isArray(node.payload.devices)) node.payload.devices = [node.payload.devices || node.payload.device];
-						checkPayload({ type: '', text: '', devices: [] });
+						if (!Array.isArray(node.payload.devices)) {
+							const single = node.payload.devices || node.payload.device;
+							node.payload.devices = single ? [single] : [];
+						}
+						checkPayload({ type: '', text: '' });
 						const devices = findAll(node.payload.devices);
-						if (devices.length === 0) return undefined;
 
 						switch (node.payload.type) {
 							case 'regular':
@@ -114,7 +116,7 @@ module.exports = function (RED) {
 								type: 'AlexaAnnouncement',
 								operationPayload: {
 									expireAfter: 'PT5S',
-									customerId: devices[0].deviceOwnerCustomerId,
+									customerId: devices.length === 0 ? customerId : devices[0].deviceOwnerCustomerId,
 									content: [{
 										locale: locale,
 										display: {
@@ -127,8 +129,8 @@ module.exports = function (RED) {
 										}
 									}],
 									target: {
-										customerId: devices[0].deviceOwnerCustomerId,
-										devices: devices.map(device => ({
+										customerId: devices.length === 0 ? customerId : devices[0].deviceOwnerCustomerId,
+										devices: devices.length === 0 ? undefined : devices.map(device => ({
 											deviceSerialNumber: device.serialNumber,
 											deviceTypeId: device.deviceType,
 										}))
