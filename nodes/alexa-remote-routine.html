@@ -27,7 +27,8 @@
 			<p>Echo devices can be referenced by id or name (not case sensitive)</p>
 		</li>
 		<li>
-			<p>Announcement and SSML speak options will speak to all devices if you don't specify any device</p>
+			<p>Announcement and SSML speak options will speak to all devices if you don't specify any device (does not work
+				with <em>Speak At Volume</em>)</p>
 		</li>
 		<li>
 			<p>With the <strong>Custom</strong> option, you can feed in a routine node as js object for completely dynamic
@@ -37,7 +38,8 @@
 				<li><code>{ type: 'speakAtVolume', payload: { type: 'regular', text: 'Hello!', volume: 50 devices: ['My Echo']}</code>
 					<ul>
 						<li>type: <code>regular</code>, <code>ssml</code>, <code>announcement</code></li>
-						<li>devices: string or array, can be falsy to send to all devices (only announcement and ssml)</li>
+						<li>devices: string or array, can be falsy to send to all devices (only for type speak with
+							announcement or ssml type)</li>
 					</ul>
 				</li>
 				<li><code>{ type: 'stop', payload: { devices: ['My Echo']}</code></li>

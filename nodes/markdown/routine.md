@@ -5,13 +5,13 @@ Emulates Alexa Routine behaviour.
 ### **Info**
 
 - Echo devices can be referenced by id or name (not case sensitive)
-- Announcement and SSML speak options will speak to all devices if you don't specify any device
+- Announcement and SSML speak options will speak to all devices if you don't specify any device (does not work with *Speak At Volume*)
 
 - With the **Custom** option, you can feed in a routine node as js object for completely dynamic routines. The objects can look like this:
   - ```{ type: 'speak', payload: { type: 'regular', text: 'Hello!', devices: ['My Echo']}```
   - ```{ type: 'speakAtVolume', payload: { type: 'regular', text: 'Hello!', volume: 50 devices: ['My Echo']}```
     - type: `regular`, `ssml`, `announcement` 
-    - devices: string or array, can be falsy to send to all devices (only announcement and ssml)
+    - devices: string or array, can be falsy to send to all devices (only for type speak with announcement or ssml type)
   - ```{ type: 'stop', payload: { devices: ['My Echo']}```
   - ```{ type: 'stop', payload: { devices: ['My Echo']}```
   - ```{ type: 'prompt', payload: { type: 'goodMorning', devices: ['My Echo']}```
