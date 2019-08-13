@@ -10,6 +10,7 @@ Emulates Alexa Routine behaviour.
   - ```{ type: 'speak', payload: { type: 'regular', text: 'Hello!', devices: ['My Echo']}```
   - ```{ type: 'speakAtVolume', payload: { type: 'regular', text: 'Hello!', volume: 50 devices: ['My Echo']}```
     - type: `regular`, `ssml`, `announcement` 
+    - devices: string or array, can be falsy to send to all devices (only announcement and ssml)
   - ```{ type: 'stop', payload: { devices: ['My Echo']}```
   - ```{ type: 'stop', payload: { devices: ['My Echo']}```
   - ```{ type: 'prompt', payload: { type: 'goodMorning', devices: ['My Echo']}```

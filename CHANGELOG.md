@@ -1,3 +1,5 @@
+- **3.2.0**
+  - added announcement/ssml to all devices when no device is specified
 - **3.1.0**
   - added improved error reporting (both log and ui)
   - fixed smarthome input interface and added docu

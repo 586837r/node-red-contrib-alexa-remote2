@@ -34,6 +34,7 @@
 				<li><code>{ type: 'speakAtVolume', payload: { type: 'regular', text: 'Hello!', volume: 50 devices: ['My Echo']}</code>
 					<ul>
 						<li>type: <code>regular</code>, <code>ssml</code>, <code>announcement</code></li>
+						<li>devices: string or array, can be falsy to send to all devices (only announcement and ssml)</li>
 					</ul>
 				</li>
 				<li><code>{ type: 'stop', payload: { devices: ['My Echo']}</code></li>
