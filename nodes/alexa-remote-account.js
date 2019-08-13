@@ -176,8 +176,6 @@ module.exports = function (RED) {
 	function AlexaRemoteAccountNode(input) {
 		RED.nodes.createNode(this, input);
 
-		tools.log({self:this, status:this.status});
-
 		tools.assign(this, ['authMethod', 'proxyOwnIp', 'proxyPort', 'cookieFile', 'refreshInterval', 'alexaServiceHost', 'amazonPage', 'acceptLanguage', 'userAgent'], input);
 		this.useWsMqtt = input.useWsMqtt === 'on';
 		this.autoInit  = input.autoInit  === 'on';
