@@ -84,6 +84,7 @@ module.exports = function (RED) {
 
 						switch (node.payload.type) {
 							case 'regular':
+								if (devices.length === 0) return undefined;
 								if (devices.length === 1) return {
 									'@type': 'com.amazon.alexa.behaviors.model.OpaquePayloadOperationNode',
 									type: 'Alexa.Speak',
@@ -141,8 +142,11 @@ module.exports = function (RED) {
 						}
 					}
 					case 'speakAtVolume': {
-						if (!Array.isArray(node.payload.devices)) node.payload.devices = [node.payload.devices || node.payload.device];
-						checkPayload({ type: '', text: '', volume: undefined, devices: [] });
+						if (!Array.isArray(node.payload.devices)) {
+							const single = node.payload.devices || node.payload.device;
+							node.payload.devices = single ? [single] : [];
+						}
+						checkPayload({ type: '', text: '', volume: undefined });
 						const devices = findAll(node.payload.devices);
 						if(devices.length === 0) return undefined;
 
