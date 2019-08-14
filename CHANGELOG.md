@@ -1,3 +1,5 @@
+- **3.2.1**
+  - fix for customerId related errors like `Response: Input failed to validate.`
 - **3.2.0**
   - added announcement/ssml to all devices when no device is specified
 - **3.1.0**
