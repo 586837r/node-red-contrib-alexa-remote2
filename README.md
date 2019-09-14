@@ -1,6 +1,6 @@
 # node-red-contrib-alexa-remote2
 
-![npm](https://img.shields.io/npm/v/node-red-contrib-alexa-remote2.svg) ![downloads](https://img.shields.io/npm/dt/node-red-contrib-alexa-remote2.svg)
+[![npm](https://img.shields.io/npm/v/node-red-contrib-alexa-remote2.svg)](https://www.npmjs.com/package/node-red-contrib-alexa-remote2) [![downloads](https://img.shields.io/npm/dt/node-red-contrib-alexa-remote2.svg)](https://www.npmjs.com/package/node-red-contrib-alexa-remote2)
 
 This is a collection of Node-RED nodes for interacting with the Alexa API.
 You can emulate routine behaviour, control and query your devices and much more!
