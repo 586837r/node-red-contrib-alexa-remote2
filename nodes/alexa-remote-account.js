@@ -8,7 +8,7 @@ const AlexaRemote = require('../lib/alexa-remote-ext.js');
 const tools = require('../lib/common.js');
 const known = require('../lib/known-color-values.js');
 const convert = require('../lib/color-convert.js');
-const deltaE = require('../lib/delta-e.js')
+const deltaE = require('../lib/delta-e.js');
 
 const DEBUG_THIS = tools.DEBUG_THIS;
 const DEBUG_ALEXA_REMOTE2 = tools.DEBUG_ALEXA_REMOTE2;
@@ -118,7 +118,7 @@ function getRoutineLabel(routine, smarthomeSimplifiedByEntityIdExt) {
 		let action = type.slice(type.lastIndexOf('.') + 1);
 		let shortId = trigger.payload.gadgetDsn.slice(-3);
 		if(action === 'ButtonPress') action = 'pressed';
-		return `&#xf111;  Button ${shortId} ${tools.keyToLabel(action)}${suffix}` // circle
+		return `&#xf111;  Button ${shortId} ${tools.keyToLabel(action)}${suffix}`; // circle
 	}
 
 	if(type === 'CustomUtterance') {
@@ -136,10 +136,10 @@ function getRoutineLabel(routine, smarthomeSimplifiedByEntityIdExt) {
 	if(type === 'AbsoluteTimeSchedule') {
 		const time = trigger.schedule && trigger.schedule.triggerTime || '??????';
 		const formatted = `${time.slice(0,2)}:${time.slice(2,4)}:${time.slice(4,6)}`;
-		return `&#xf017;  Schedule ${formatted}${suffix}` // clock-o
+		return `&#xf017;  Schedule ${formatted}${suffix}`; // clock-o
 	}
 
-	return `&#xf059;  ${id}${suffix}` // question-circle
+	return `&#xf059;  ${id}${suffix}`; // question-circle
 }
 
 function getBluetoothDeviceLabel(device) {
@@ -170,7 +170,7 @@ const getNotificationSortValue = (noti) => {
 		: 30000;
 
 	return nameValue + typeValue;
-}
+};
 
 module.exports = function (RED) {
 	function AlexaRemoteAccountNode(input) {
@@ -186,7 +186,7 @@ module.exports = function (RED) {
 		this.alexa = new AlexaRemote().setMaxListeners(32);
 		this.emitter = new EventEmitter().setMaxListeners(64);
 		this.initing = false;
-		this.state = { code: 'UNINITIALISED', message: '' }
+		this.state = { code: 'UNINITIALISED', message: '' };
 
 		this.refreshTimeoutStartTime = null;
 		this.refreshTimeout = null;
@@ -197,9 +197,9 @@ module.exports = function (RED) {
 			this.state = {
 				code: code,
 				message: message || code
-			}
+			};
 			this.emitter.emit('state', code, message);
-		}
+		};
 		this.renewTimeout = function() {
 			if(this.refreshTimeout !== null) {
 				clearTimeout(this.refreshTimeout);
@@ -214,7 +214,7 @@ module.exports = function (RED) {
 				this.log('auto refreshing cookie...');
 				this.refreshAlexa().catch();
 			}, this.refreshInterval);
-		}
+		};
 		this.resetAlexa = function () {
 			if(this.refreshTimeout !== null) {
 				clearTimeout(this.refreshTimeout);
@@ -236,7 +236,7 @@ module.exports = function (RED) {
 			this.errorMessages = {};
 
 			this.setState('UNINITIALISED');
-		}
+		};
 
 		this.captureErrorMessage = async function(name, asyncFn) {
 			return asyncFn().then(some => {
@@ -249,7 +249,7 @@ module.exports = function (RED) {
 				this.buildErrorsForUi();
 				throw error;
 			});
-		}
+		};
 		this.buildSmarthomeForUi = async function() {
 			return this.captureErrorMessage('smarthome', async () => {	
 				//throw new Error('TESTING');
@@ -265,8 +265,8 @@ module.exports = function (RED) {
 						return an < bn ? -1 : an > bn ? 1 : 0;
 					})
 					.reduce((obj, entity) => (obj[entity.entityId] = 
-						[getSmarthomeEntityLabel(entity), entity.properties, entity.actions, entity.type]
-					, obj), {});
+						[getSmarthomeEntityLabel(entity), entity.properties, entity.actions, entity.type],
+					obj), {});
 	
 				const colorNames = Array.from(this.alexa.colorNameToLabelExt.entries());
 				const colorTemperatureNames = Array.from(this.alexa.colorTemperatureNameToLabelExt.entries());
@@ -278,7 +278,7 @@ module.exports = function (RED) {
 					colorTemperatureNames: colorTemperatureNames,
 				});
 			});
-		}
+		};
 		this.buildDevicesForUi = async function() {
 			return this.captureErrorMessage('devices', async () => {
 				//throw new Error('TESTING');
@@ -288,7 +288,7 @@ module.exports = function (RED) {
 
 				this.ui.devices = JSON.stringify(devices);
 			});
-		}
+		};
 		this.buildNotificationsForUi = async function() {
 			return this.captureErrorMessage('notifications', async () => {
 				//throw new Error('TESTING');
@@ -298,7 +298,7 @@ module.exports = function (RED) {
 
 				this.ui.notifications = JSON.stringify(notifications);
 			});
-		}
+		};
 		this.buildRoutinesForUi = async function() {
 			return this.captureErrorMessage('routines', async () => {
 				//throw new Error('TESTING');
@@ -308,7 +308,7 @@ module.exports = function (RED) {
 
 				this.ui.routines = JSON.stringify(routines);
 			});
-		}
+		};
 		this.buildMusicProvidersForUi = async function() {
 			return this.captureErrorMessage('musicProviders', async () => {
 				//throw new Error('TESTING');
@@ -318,7 +318,7 @@ module.exports = function (RED) {
 
 				this.ui.musicProviders = JSON.stringify(musicProviders);
 			});
-		}
+		};
 		this.buildBluetoothForUi = async function() {
 			return this.captureErrorMessage('bluetooth', async () => {
 				//throw new Error('TESTING');
@@ -328,11 +328,11 @@ module.exports = function (RED) {
 					.filter(state => Array.isArray(state.pairedDeviceList))
 					.reduce((o, state) => (o[state.deviceSerialNumber] = state.pairedDeviceList
 						.map(device => [device.address, getBluetoothDeviceLabel(device)]
-					), o), {})
+					), o), {});
 	
 				this.ui.bluetooth = JSON.stringify(bluetoothForUi);
 			});
-		}
+		};
 		this.buildErrorsForUi = function() {
 			const a = this.errorMessages;
 			const b = this.alexa.errorMessagesExt;
@@ -344,7 +344,7 @@ module.exports = function (RED) {
 			}
 
 			this.ui.errors = JSON.stringify(combined);
-		}
+		};
 
 		this.initAlexa = async function(input, ignoreFile = false) {
 			// we can hopefully do without this now by checking if this.alexa changes
@@ -409,12 +409,12 @@ module.exports = function (RED) {
 				const text = `open ${url} in your browser`;
 				this.warn(text);
 				this.setState('WAIT_PROXY', text);
-			}
+			};
 
 			const warnCallback = (error) => {
 				if(alexa !== this.alexa) return;
 				this.warn(error.stack || error.message || String(error));
-			}
+			};
 
 			if(initType === 'proxy') {
 				await tools.portAvailable(config.proxyPort).catch(error => {
@@ -438,8 +438,8 @@ module.exports = function (RED) {
 			if(this.authMethod === 'proxy' && this.cookieFile) {
 				const data = alexa.cookieData;
 				const json = JSON.stringify(data);
-				try { fs.writeFileSync(this.cookieFile, json, 'utf8') }
-				catch (error) { warnCb(error) }
+				try { fs.writeFileSync(this.cookieFile, json, 'utf8'); }
+				catch (error) { warnCb(error); }
 			}
 			
 			await Promise.all([
@@ -463,7 +463,7 @@ module.exports = function (RED) {
 			this.setState('READY');
 			this.renewTimeout();
 			return cookieData;
-		}
+		};
 		this.refreshAlexa = async function() {
 			if(this.state.code !== 'READY') throw new Error('account must be initialised before refreshing');
 			this.setState('REFRESH');
@@ -477,7 +477,7 @@ module.exports = function (RED) {
 				this.renewTimeout();
 				throw error;
 			});
-		}
+		};
 		this.updateAlexa = async function() {
 			if(this.state.code !== 'READY') throw new Error('account must be initialised before updating');
 			this.setState('UPDATE');
@@ -489,7 +489,7 @@ module.exports = function (RED) {
 				this.setState('ERROR', error && error.message);
 				throw error;
 			});
-		}
+		};
 
 		this.on('close', function () {
 			this.resetAlexa();
@@ -541,4 +541,4 @@ module.exports = function (RED) {
 			return res.end(`Could not load sounds: "${error}"`);
 		});
 	});
-}
+};

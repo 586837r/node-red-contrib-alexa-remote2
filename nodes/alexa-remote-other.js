@@ -81,5 +81,5 @@ module.exports = function (RED) {
 			}
 		});
 	}
-	RED.nodes.registerType("alexa-remote-other", AlexaRemoteOther)
-}
+	RED.nodes.registerType("alexa-remote-other", AlexaRemoteOther);
+};

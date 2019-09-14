@@ -7,7 +7,7 @@ function findByDevice(list, device) {
 }
 
 function filterByDevice(list, device) {
-	return list.filter(n => n.deviceSerialNumber === device.serialNumber)
+	return list.filter(n => n.deviceSerialNumber === device.serialNumber);
 }
 
 module.exports = function (RED) {
@@ -113,5 +113,5 @@ module.exports = function (RED) {
 			}
 		});
 	}
-	RED.nodes.registerType("alexa-remote-echo", AlexaRemoteEcho)
-}
+	RED.nodes.registerType("alexa-remote-echo", AlexaRemoteEcho);
+};

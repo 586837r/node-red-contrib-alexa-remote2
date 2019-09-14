@@ -11,7 +11,7 @@ module.exports = function (RED) {
 			this.status({ fill: "green", shape: "dot", text: "event fired!" });
 			setTimeout(() => this.status({ fill: "grey", shape: "dot", text: "listening" }), 2000);
 			this.send({ payload: val });
-		}
+		};
 		this.onStatus = (code) => {
 			if(code !== 'READY') return;
 
@@ -20,7 +20,7 @@ module.exports = function (RED) {
 
 			this.account.alexa.removeListener(this.event, this.onAlexaEvent);
 			this.account.alexa.addListener(this.event, this.onAlexaEvent);
-		}
+		};
 
 		if(!this.account.useWsMqtt) {
 			return this.status({ fill: "red", shape: "dot", text: "events not supported by account" });
@@ -36,7 +36,7 @@ module.exports = function (RED) {
 			this.account.emitter.removeListener('status', this.onStatus);
 			this.account.alexa.removeListener(this.event, this.onAlexaEvent);
 			this.account.emitter.removeListener('state', this.onStatus);
-		})
+		});
 	}
-	RED.nodes.registerType("alexa-remote-event", AlexaRemoteEventNode)
-}
+	RED.nodes.registerType("alexa-remote-event", AlexaRemoteEventNode);
+};

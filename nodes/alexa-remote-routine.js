@@ -41,7 +41,7 @@ module.exports = function (RED) {
 				const device = alexa.find(id);
 				if (!device) throw new Error(`could not find device: "${id}"`);
 				return device;
-			}
+			};
 
 			const findAll = (ids, depth = 1) => {
 				let devices = [];
@@ -52,7 +52,7 @@ module.exports = function (RED) {
 						clusterMembers: [],
 						deviceOwnerCustomerId: customerId,
 					}];
-					const device = find(id)
+					const device = find(id);
 
 					if (device.clusterMembers.length !== 0 && depth !== 0) {
 						// we are dealing with a group so we seperate it into members because
@@ -65,12 +65,12 @@ module.exports = function (RED) {
 					}
 				}
 				return devices;
-			}
+			};
 
 			async function nativizeNode(node) {
 				const invalid = (expected) => new Error(`invalid sequence node: "${JSON.stringify(node)}" expected layout: "${JSON.stringify(expected)}"`);
-				const check = (template) => { if (!tools.matches(node, template)) throw invalid(template); }
-				const checkPayload = (template) => { if (!tools.matches(node.payload, template)) throw invalid(template); }
+				const check = (template) => { if (!tools.matches(node, template)) throw invalid(template); };
+				const checkPayload = (template) => { if (!tools.matches(node.payload, template)) throw invalid(template); };
 				check({ type: '', payload: {} });
 
 				switch (node.type) {
@@ -95,7 +95,7 @@ module.exports = function (RED) {
 										customerId: devices[0].deviceOwnerCustomerId,
 										textToSpeak: node.payload.text
 									}
-								}
+								};
 
 								return await nativizeNode({
 									type: 'node',
@@ -137,7 +137,7 @@ module.exports = function (RED) {
 										}))
 									}
 								}
-							}
+							};
 							default: throw new Error(`invalid sequence node: "${JSON.stringify(node)}"`);
 						}
 					}
@@ -192,7 +192,7 @@ module.exports = function (RED) {
 									}
 								]
 							}
-						})
+						});
 					}
 					case 'stop': {
 						if (!Array.isArray(node.payload.devices)) node.payload.devices = [node.payload.devices || node.payload.device];
@@ -213,7 +213,7 @@ module.exports = function (RED) {
 								isAssociatedDevice: false
 							},
 							name: null
-						}
+						};
 					}
 					case 'prompt': {
 						if (!Array.isArray(node.payload.devices)) node.payload.devices = [node.payload.devices || node.payload.device];
@@ -230,7 +230,7 @@ module.exports = function (RED) {
 								locale: locale,
 								customerId: devices[0].deviceOwnerCustomerId,
 							}
-						}
+						};
 
 						return await nativizeNode({
 							type: 'node',
@@ -264,7 +264,7 @@ module.exports = function (RED) {
 								customerId: devices[0].deviceOwnerCustomerId,
 								value: volume,
 							}
-						}
+						};
 
 						return await nativizeNode({
 							type: 'node',
@@ -297,7 +297,7 @@ module.exports = function (RED) {
 								locale: locale,
 							},
 							skillId: null,
-						}
+						};
 
 						if (typeof node.payload.duration === 'number') {
 							native.operationPayload.waitTimeInSeconds = node.payload.duration;
@@ -317,7 +317,7 @@ module.exports = function (RED) {
 								waitTimeInSeconds: node.payload.time
 							},
 							name: null,
-						}
+						};
 					}
 					case 'smarthome': {
 						checkPayload({ entity: '', action: '' });
@@ -347,14 +347,14 @@ module.exports = function (RED) {
 							case 'lockAction': {
 								parameters.targetLockState = {
 									value: String(node.payload.value).trim().toUpperCase()
-								}
+								};
 								break;
 							}
 							case 'setTargetTemperature': {
 								parameters.targetTemperature = {
 									scale: String(node.payload.scale).trim().toUpperCase() || 'CELSIUS',
 									value: Number(node.payload.value)
-								}
+								};
 								break;
 							}
 						}
@@ -371,7 +371,7 @@ module.exports = function (RED) {
 								],
 								name: null,
 							}
-						}
+						};
 					}
 					case 'routine': {
 						checkPayload({ routine: '', device: undefined });
@@ -405,7 +405,7 @@ module.exports = function (RED) {
 								title: 'Node-RED'
 							},
 							name: null
-						}
+						};
 					}
 					case 'node': {
 						checkPayload({ type: '', children: [] });
@@ -427,7 +427,7 @@ module.exports = function (RED) {
 							'@type': `com.amazon.alexa.behaviors.model.${suffix}`,
 							nodesToExecute: nativeChildren,
 							name: null,
-						}
+						};
 					}
 					case 'custom': {
 						checkPayload({});
@@ -447,5 +447,5 @@ module.exports = function (RED) {
 			}).catch(error);
 		});
 	}
-	RED.nodes.registerType("alexa-remote-routine", AlexaRemoteRoutine)
-}
+	RED.nodes.registerType("alexa-remote-routine", AlexaRemoteRoutine);
+};

@@ -111,7 +111,7 @@ module.exports = function (RED) {
 								if(reportErrors) {
 									const errorObj = errorById.get(id) || { message: `no response for smarthome entity "${entity.name}" (${id})!`};
 									error(errorObj.message, errorObj);								
-								};
+								}
 								return null;
 							}
 
@@ -250,7 +250,7 @@ module.exports = function (RED) {
 							const id = entity.entityId;
 							const controlResponse = controlResponseById.get(id);
 							if(!controlResponse) {
-								const errorObj = errorById.get(id) || {message: `no response for smarthome entity: "${entity.name}" (${id})!`}
+								const errorObj = errorById.get(id) || {message: `no response for smarthome entity: "${entity.name}" (${id})!`};
 								error(errorObj.message, errorObj);
 							}
 
@@ -270,12 +270,12 @@ module.exports = function (RED) {
 					switch(value.what) {
 						case 'device': {
 							if(!tools.matches(value, { entity: {type: '', value: ''} })) return error(`invalid input: "${JSON.stringify(this.config)}"`);
-							const id = RED.util.evaluateNodeProperty(value.entity.value, value.entity.type, this, msg);;
+							const id = RED.util.evaluateNodeProperty(value.entity.value, value.entity.type, this, msg);
 							return alexa.deleteSmarthomeDeviceExt(id).then(send).catch(error);
 						}		
 						case 'group': {
 							if(!tools.matches(value, { entity: {type: '', value: ''} })) return error(`invalid input: "${JSON.stringify(this.config)}"`);
-							const id = RED.util.evaluateNodeProperty(value.entity.value, value.entity.type, this, msg);;
+							const id = RED.util.evaluateNodeProperty(value.entity.value, value.entity.type, this, msg);
 							return alexa.deleteSmarthomeGroupExt(id).then(send).catch(error);
 						}		
 						case 'allDevices': 	{
@@ -292,5 +292,5 @@ module.exports = function (RED) {
 			}
 		});
 	}
-	RED.nodes.registerType("alexa-remote-smarthome", AlexaRemoteSmarthome)
-}
+	RED.nodes.registerType("alexa-remote-smarthome", AlexaRemoteSmarthome);
+};
