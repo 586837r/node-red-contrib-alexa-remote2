@@ -702,10 +702,6 @@
 				this.success = success;
 				this.account = account;
 				this.devices = !success ? [] : devices;
-				this.colorNames = !success ? [] : smarthome.colorNames;
-				this.colorTemperatureNames = !success ? [] : smarthome.colorTemperatureNames;
-				this.entityById = !success ? {} : smarthome.entityById;
-				this.entities = !success ? [] : Object.entries(this.entityById).map(([id, [label, properties, actions, type]]) => [id, label, properties, actions, type]);
 				this.soundsById = this.soundsById || {};
 				this.soundLoadLocks = this.soundLoadLocks || {};
 				this.notifications = !success ? [] : notifications;
