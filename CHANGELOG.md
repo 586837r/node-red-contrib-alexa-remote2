@@ -1,3 +1,5 @@
+- **3.2.2**
+  - fixed *Alexa Other* html load error `smarthome is not defined` 
 - **3.2.1**
   - fix for customerId related errors like `Response: Input failed to validate.`
 - **3.2.0**
