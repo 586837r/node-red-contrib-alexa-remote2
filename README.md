@@ -23,6 +23,7 @@ The goal is to expose all of [alexa-remote2](https://www.npmjs.com/package/alexa
    | USA | pitangui.amazon.com | amazon.com   | en-US    |
    | UK  | alexa.amazon.co.uk  | amazon.co.uk | en-UK    |
    | GER | layla.amazon.de     | amazon.de    | de-DE    |
+   | ITA | alexa.amazon.it     | amazon.it    | it-IT    |
    
 4. Set **This IP** to the ip of your Node-RED server
 5. Enter a **File Path** to save the authentication result so following authentications will be 
