@@ -379,9 +379,10 @@ module.exports = function (RED) {
 						const device = find(node.payload.device);
 						const routine = alexa.findRoutineExt(node.payload.routine);
 						if (!routine) throw new Error(`could not find routine: "${node.payload.routine}"`);
-
+						
 						const routineNode = tools.clone(routine.sequence.startNode);
-						tools.mapObject(routineNode, (key, val) => {
+	
+						tools.mapObjectValues(routineNode, (key, val) => {
 							if (key === 'deviceType' && val === 'ALEXA_CURRENT_DEVICE_TYPE') return device.deviceType;
 							if (key === 'deviceTypeId' && val === 'ALEXA_CURRENT_DEVICE_TYPE') return device.deviceType;
 							if (key === 'deviceSerialNumber' && val === 'ALEXA_CURRENT_DSN') return device.serialNumber;
