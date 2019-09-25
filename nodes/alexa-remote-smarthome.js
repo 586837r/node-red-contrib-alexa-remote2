@@ -177,11 +177,13 @@ module.exports = function (RED) {
 					});
 					if(entities.includes(undefined)) return;
 
-					const requests = inputs.map((input, i) => {
+					let requests = new Array(inputs.length);
+					for(let i = 0; i < inputs.length; i++) {
+						const input = inputs[i];
 						const entity = entities[i];
 						if(!entity) return;
-
-						const native = {};
+						
+						const native = requests[i] = {};
 						native.entityId = entity.entityId;
 						native.entityType = entity.entityType;
 						native.parameters = { action: input.action };
@@ -218,9 +220,9 @@ module.exports = function (RED) {
 								break;
 							}
 						}
+					}
 
-						return native;
-					}).filter(o => o);
+					requests = requests.filter(o => o);
 
 					return alexa.executeSmarthomeDeviceActionExt(requests).then(response => {
 						if(tools.matches(response, {message: ''})) return error(`error response: ${response.message}`);
