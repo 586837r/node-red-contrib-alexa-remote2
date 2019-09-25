@@ -187,6 +187,7 @@ module.exports = function (RED) {
 		this.emitter = new EventEmitter().setMaxListeners(64);
 		this.initing = false;
 		this.state = { code: 'UNINITIALISED', message: '' };
+		this.errorCb = tools.nodeGetErrorCb(this);
 
 		this.refreshTimeoutStartTime = null;
 		this.refreshTimeout = null;
@@ -212,7 +213,7 @@ module.exports = function (RED) {
 			this.refreshTimeoutStartTime = Date.now();
 			this.refreshTimeout = setTimeout(() => {
 				this.log('auto refreshing cookie...');
-				this.refreshAlexa().catch();
+				this.refreshAlexa().catch(this.errorCb);
 			}, this.refreshInterval);
 		};
 		this.resetAlexa = function () {
@@ -468,7 +469,8 @@ module.exports = function (RED) {
 			if(this.state.code !== 'READY') throw new Error('account must be initialised before refreshing');
 			this.setState('REFRESH');
 
-			return this.alexa.refreshExt().then(value => {
+			//return this.alexa.refreshExt().then(value => {
+			return this.initAlexa(undefined).then(value => {
 				this.setState('READY');
 				this.renewTimeout();
 				return value;
@@ -496,8 +498,7 @@ module.exports = function (RED) {
 		});
 		
 		if(this.autoInit) {
-			const errorCb = tools.nodeGetErrorCb(this);
-			this.initAlexa(undefined).catch(errorCb);
+			this.initAlexa(undefined).catch(this.errorCb);
 		}
 	}
 
