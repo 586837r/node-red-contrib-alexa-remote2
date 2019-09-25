@@ -621,7 +621,7 @@
 			});
 			$.widget('alexaRemote.arTips', {
 				_create: function() {
-					this.element.addClass('form-tips').css({marginBottom: 12});
+					this.element.addClass('form-tips').css({marginBottom: 12, maxWidth: 'unset'});
 				},
 				show: function(arg = true) {
 					if(typeof arg === 'string') this.element.html(arg);
