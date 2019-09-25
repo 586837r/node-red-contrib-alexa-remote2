@@ -1,3 +1,7 @@
+- **3.2.3**
+  - refresh does initialisation now (might help with authentication problems)
+  - request smarthome colors only if required (fixes warning)
+  - fixed *Execute Routine*
 - **3.2.2**
   - fixed *Alexa Other* html load error `smarthome is not defined` 
 - **3.2.1**
