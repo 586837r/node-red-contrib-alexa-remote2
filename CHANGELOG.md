@@ -1,3 +1,5 @@
+- **3.2.5**
+  - *Speak At Volume* will now speak even if it can't get the current volume (volume won't be changed)
 - **3.2.4**
   - add *Speak At Volume* warning
 - **3.2.3**
