@@ -1,3 +1,5 @@
+- **3.2.6**
+  - fix routine music playing for some search phrases
 - **3.2.5**
   - *Speak At Volume* will now speak even if it can't get the current volume (volume won't be changed)
 - **3.2.4**
