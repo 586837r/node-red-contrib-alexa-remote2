@@ -307,25 +307,27 @@ module.exports = function (RED) {
 						checkPayload({ device: undefined, provider: '', search: '' });
 						const device = find(node.payload.device);
 
-						const native = {
-							'@type': 'com.amazon.alexa.behaviors.model.OpaquePayloadOperationNode',
-							type: 'Alexa.Music.PlaySearchPhrase',
-							operationPayload: {
-								customerId: device.deviceOwnerCustomerId,
-								deviceType: device.deviceType,
-								deviceSerialNumber: device.serialNumber,
-								musicProviderId: node.payload.provider,
-								searchPhrase: node.payload.search,
-								sanitizedSearchPhrase: node.payload.search.trim().toLowerCase(),
-								locale: locale,
-							},
-							skillId: null,
+						const operationPayload = {
+							deviceType: device.deviceType,
+							deviceSerialNumber: device.serialNumber,
+							locale: locale,
+							customerId: device.deviceOwnerCustomerId,
+							musicProviderId: node.payload.provider,
+							searchPhrase: node.payload.search,
 						};
 
-						if (typeof node.payload.duration === 'number') {
-							native.operationPayload.waitTimeInSeconds = node.payload.duration;
+						if (typeof node.payload.duration === 'number' && node.payload.duration !== 0) {
+							operationPayload.waitTimeInSeconds = node.payload.duration;
 						}
 
+						const native = {
+							type: 'Alexa.Music.PlaySearchPhrase',
+							operationPayload: JSON.stringify(operationPayload),
+						};
+
+						await alexa.validateRoutineNodeExt(native);
+						
+						native['@type'] = 'com.amazon.alexa.behaviors.model.OpaquePayloadOperationNode';
 						return native;
 					}
 					case 'wait': {
