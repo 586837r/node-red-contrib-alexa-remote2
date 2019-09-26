@@ -19,88 +19,88 @@
 		}
 	</style>
 
-    <p>Emulates Alexa Routine behaviour.</p>
-    <hr>
-    <h3><strong>Info</strong></h3>
-    <ul>
-        <li>
-            <p>Echo devices can be referenced by id or name (not case sensitive)</p>
-        </li>
-        <li>
-            <p>Announcement and SSML speak options will speak to all devices if you don't specify any device (does not work
-                with <em>Speak At Volume</em>)</p>
-        </li>
-        <li>
-            <p><strong>Speak At Volume</strong> only works if the echo has recently been playing music!</p>
-        </li>
-        <li>
-            <p>With the <strong>Custom</strong> option, you can feed in a routine node as js object for completely dynamic
-                routines. The objects can look like this:</p>
-            <ul>
-                <li><code>{ type: 'speak', payload: { type: 'regular', text: 'Hello!', devices: ['My Echo']}</code></li>
-                <li><code>{ type: 'speakAtVolume', payload: { type: 'regular', text: 'Hello!', volume: 50 devices: ['My Echo']}</code>
-                    <ul>
-                        <li>type: <code>regular</code>, <code>ssml</code>, <code>announcement</code></li>
-                        <li>devices: string or array, can be falsy to send to all devices (only for type speak with
-                            announcement or ssml type)</li>
-                    </ul>
-                </li>
-                <li><code>{ type: 'stop', payload: { devices: ['My Echo']}</code></li>
-                <li><code>{ type: 'stop', payload: { devices: ['My Echo']}</code></li>
-                <li><code>{ type: 'prompt', payload: { type: 'goodMorning', devices: ['My Echo']}</code>
-                    <ul>
-                        <li>prompt: <code>goodMorning</code>, <code>weather</code>, <code>traffic</code>,
-                            <code>flashBriefing</code>, <code>singSong</code>, <code>joke</code>, <code>tellStory</code>,
-                            <code>calendarToday</code>, <code>calendarTomorrow</code>, <code>calendarNext</code></li>
-                    </ul>
-                </li>
-                <li><code>{ type: 'volume', payload: { value: 50, devices: ['My Echo']}</code>
-                    <ul>
-                        <li>value 0..100</li>
-                    </ul>
-                </li>
-                <li><code>{ type: 'music', payload: { provider: 'AMAZON_MUSIC', search: '', device: 'My Echo', duration: 300}</code>
-                    <ul>
-                        <li>provider: <code>AMAZON_MUSIC</code>, <code>TUNEIN</code>, <code>CLOUDPLAYER</code>,
-                            <code>SPOTIFY</code></li>
-                        <li>duration is optional</li>
-                    </ul>
-                </li>
-                <li><code>{ type: 'wait', payload: { time: 3 }</code>
-                    <ul>
-                        <li>time in seconds</li>
-                    </ul>
-                </li>
-                <li><code>{ type: 'smarthome', payload: { entity: 'Lamp', action: 'setColor', value: '#FF00FF' }</code>
-                    <em>(seconds)</em>
-                    <ul>
-                        <li>entity can be an id or name (case insensitive)</li>
-                        <li>action: <code>turnOn</code>, <code>turnOff</code>, <code>setColor</code>,
-                            <code>setColorTemperature</code>, <code>setBrightness</code>, <code>setPercentage</code>,
-                            <code>lockAction</code>, <code>setTargetTemperature</code></li>
-                    </ul>
-                </li>
-                <li><code>{ type: 'routine', payload: { routine: 'hello' }</code>
-                    <ul>
-                        <li>routine can be an id or utterance (case insensitive)</li>
-                    </ul>
-                </li>
-                <li><code>{ type: 'pushNotification', payload: { text: 'Hello from Node-RED!' }</code></li>
-                <li><code>{ type: 'node', payload: { type: 'serial', children: [ { type: 'speak', payload: {...}}] }</code>
-                    <ul>
-                        <li>type: <code>serial</code>, <code>parallel</code></li>
-                    </ul>
-                </li>
-            </ul>
-        </li>
-    </ul>
-    <hr>
-    <h3><strong>References</strong></h3>
-    <ul>
-        <li><a href="https://npmjs.com/package/node-red-contrib-alexa-remote2">npm</a> - the nodes npm repository</li>
-        <li><a href="https://github.com/586837r/node-red-contrib-alexa-remote2">GitHub</a> - the nodes GitHub repository
-        </li>
-    </ul>
+	<p>Emulates Alexa Routine behaviour.</p>
+	<hr>
+	<h3><strong>Info</strong></h3>
+	<ul>
+			<li>
+					<p>Echo devices can be referenced by id or name (not case sensitive)</p>
+			</li>
+			<li>
+					<p>Announcement and SSML speak options will speak to all devices if you don't specify any device (does not work
+							with <em>Speak At Volume</em>)</p>
+			</li>
+			<li>
+					<p><strong>Speak At Volume</strong> can only change the volume if the echo has recently been playing music!</p>
+			</li>
+			<li>
+					<p>With the <strong>Custom</strong> option, you can feed in a routine node as js object for completely dynamic
+							routines. The objects can look like this:</p>
+					<ul>
+							<li><code>{ type: 'speak', payload: { type: 'regular', text: 'Hello!', devices: ['My Echo']}</code></li>
+							<li><code>{ type: 'speakAtVolume', payload: { type: 'regular', text: 'Hello!', volume: 50 devices: ['My Echo']}</code>
+									<ul>
+											<li>type: <code>regular</code>, <code>ssml</code>, <code>announcement</code></li>
+											<li>devices: string or array, can be falsy to send to all devices (only for type speak with
+													announcement or ssml type)</li>
+									</ul>
+							</li>
+							<li><code>{ type: 'stop', payload: { devices: ['My Echo']}</code></li>
+							<li><code>{ type: 'stop', payload: { devices: ['My Echo']}</code></li>
+							<li><code>{ type: 'prompt', payload: { type: 'goodMorning', devices: ['My Echo']}</code>
+									<ul>
+											<li>prompt: <code>goodMorning</code>, <code>weather</code>, <code>traffic</code>,
+													<code>flashBriefing</code>, <code>singSong</code>, <code>joke</code>, <code>tellStory</code>,
+													<code>calendarToday</code>, <code>calendarTomorrow</code>, <code>calendarNext</code></li>
+									</ul>
+							</li>
+							<li><code>{ type: 'volume', payload: { value: 50, devices: ['My Echo']}</code>
+									<ul>
+											<li>value 0..100</li>
+									</ul>
+							</li>
+							<li><code>{ type: 'music', payload: { provider: 'AMAZON_MUSIC', search: '', device: 'My Echo', duration: 300}</code>
+									<ul>
+											<li>provider: <code>AMAZON_MUSIC</code>, <code>TUNEIN</code>, <code>CLOUDPLAYER</code>,
+													<code>SPOTIFY</code></li>
+											<li>duration is optional</li>
+									</ul>
+							</li>
+							<li><code>{ type: 'wait', payload: { time: 3 }</code>
+									<ul>
+											<li>time in seconds</li>
+									</ul>
+							</li>
+							<li><code>{ type: 'smarthome', payload: { entity: 'Lamp', action: 'setColor', value: '#FF00FF' }</code>
+									<em>(seconds)</em>
+									<ul>
+											<li>entity can be an id or name (case insensitive)</li>
+											<li>action: <code>turnOn</code>, <code>turnOff</code>, <code>setColor</code>,
+													<code>setColorTemperature</code>, <code>setBrightness</code>, <code>setPercentage</code>,
+													<code>lockAction</code>, <code>setTargetTemperature</code></li>
+									</ul>
+							</li>
+							<li><code>{ type: 'routine', payload: { routine: 'hello' }</code>
+									<ul>
+											<li>routine can be an id or utterance (case insensitive)</li>
+									</ul>
+							</li>
+							<li><code>{ type: 'pushNotification', payload: { text: 'Hello from Node-RED!' }</code></li>
+							<li><code>{ type: 'node', payload: { type: 'serial', children: [ { type: 'speak', payload: {...}}] }</code>
+									<ul>
+											<li>type: <code>serial</code>, <code>parallel</code></li>
+									</ul>
+							</li>
+					</ul>
+			</li>
+	</ul>
+	<hr>
+	<h3><strong>References</strong></h3>
+	<ul>
+			<li><a href="https://npmjs.com/package/node-red-contrib-alexa-remote2">npm</a> - the nodes npm repository</li>
+			<li><a href="https://github.com/586837r/node-red-contrib-alexa-remote2">GitHub</a> - the nodes GitHub repository
+			</li>
+	</ul>
 </script>
 
 <style>
@@ -1116,7 +1116,7 @@
 							const type = value === 'ssml' ? ssml : 'str'
 							text.arTypedInput('types', [type]);
 						});
-						arTips('<b>Warning:</b> Only works if the echo has recently been playing music!').appendTo(this);
+						//arTips('<b>Warning:</b> Only works if the echo has recently been playing music!').appendTo(this);
 						arRow(text, 'Text').appendTo(this);
 						arRow(volume, 'Volume').appendTo(this);
 						devicesRow.appendTo(this).children('label');

@@ -150,13 +150,36 @@ module.exports = function (RED) {
 						const devices = findAll(node.payload.devices);
 						if(devices.length === 0) return undefined;
 
+						let devicesWithVolume = [];
+
 						for (const device of devices) {
-							if (deviceToVolume.has(device)) continue;
+							if (deviceToVolume.has(device)) {
+								devicesWithVolume.push(device);
+								continue;
+							}
+
 							const media = await alexa.getMediaPromise(device);
-							if (!tools.matches(media, { volume: 50 })) throw new Error(`unexpected response while getting volume: "${JSON.stringify(media)}"`);
-							deviceToVolume.set(device, media.volume);
+
+							if (tools.matches(media, { volume: 50 })) {
+								deviceToVolume.set(device, media.volume);
+								devicesWithVolume.push(device);
+							}
+							else {
+								//warn(`could not fetch volume for device "${device.accountName || device.serialNumber}", falling back to regular speak`);
+							}
 						}
 
+						if(devicesWithVolume.length == 0) {
+							return await nativizeNode({
+								type: 'speak',
+								payload: {
+									type: node.payload.type,
+									text: node.payload.text,
+									devices: devices,
+								}
+							});
+						}
+						
 						return await nativizeNode({
 							type: 'node',
 							payload: {
@@ -166,7 +189,7 @@ module.exports = function (RED) {
 										type: 'volume',
 										payload: {
 											value: node.payload.volume,
-											devices: devices,
+											devices: devicesWithVolume,
 										}
 									},
 									{
@@ -181,7 +204,7 @@ module.exports = function (RED) {
 										type: 'node',
 										payload: {
 											type: 'parallel',
-											children: devices.map(device => ({
+											children: devicesWithVolume.map(device => ({
 												type: 'volume',
 												payload: {
 													value: deviceToVolume.get(device),

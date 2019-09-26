@@ -6,7 +6,7 @@ Emulates Alexa Routine behaviour.
 
 - Echo devices can be referenced by id or name (not case sensitive)
 - Announcement and SSML speak options will speak to all devices if you don't specify any device (does not work with *Speak At Volume*)
-- **Speak At Volume** only works if the echo has recently been playing music!
+- **Speak At Volume** can only change the volume if the echo has recently been playing music!
 
 - With the **Custom** option, you can feed in a routine node as js object for completely dynamic routines. The objects can look like this:
   - ```{ type: 'speak', payload: { type: 'regular', text: 'Hello!', devices: ['My Echo']}```
