@@ -36,42 +36,45 @@
 
 <style>
 	#dialog-form .red-ui-editableList-item-sortable.red-ui-editableList-item-removable:last-child {
-		border-bottom: none;
+		border-bottom: none !important;
 	}
 	#dialog-form .red-ui-editableList-border.red-ui-editableList-container {
 		overflow-y: auto !important;
 	}
 
 	.alexaRemote-arRow {
-		flex: 1;
-		display: flex;
-		margin-bottom: 12px;
+		flex: 1 !important;
+		display: flex !important;
+		margin-bottom: 12px !important;
 	}
 	.alexaRemote-arRow > *:first-child {
-		min-width: 150px;
-		flex: 1;
+		min-width: 150px !important;
+		flex: 1 !important;
 	}
 	.alexaRemote-arRow_label {
-		flex: 1;
-		display: flex;
-		align-items: center;
-		justify-content: flex-end;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;	
+		flex: 1 !important;
+		display: flex !important;
+		align-items: center !important;
+		justify-content: flex-end !important;
+		white-space: nowrap !important;
+		overflow: hidden !important;
+		text-overflow: ellipsis !important;	
 	}
 
 	.alexaRemote-arSelect, .alexaRemote-arBaseOrSelect > select {
-		font-family: FontAwesome, "Helvetica Neue", Helvetica, Arial, sans-serif;
+		font-family: FontAwesome, "Helvetica Neue", Helvetica, Arial, sans-serif !important;
 	}
 
 	.alexaRemote-arBaseOrSelect {
-		display: flex;
+		display: flex !important;
 	}
 
 	.alexaRemote-arBaseOrSelect > select, .alexaRemote-arSelect {
-		flex: 1;
-		width: 50px;
+		flex: 1 !important;
+		width: 100% !important;
+	}
+	.alexaRemote-arTypedInputOrInputList .hidden {
+		display: none !important;
 	}
 </style>
 
@@ -321,7 +324,7 @@
 				_create: function () {
 					this.input = $('<input>').appendTo(this.element)
 						.typedInput({ types: this.options.types.concat(['msg', 'flow', 'global', 'jsonata', 'env']) })
-						.typedInput('width', '98%'); // alright what the heck, typedInput adds +2% on its own
+						.typedInput('width', '100%');
 
 					if (this.options.placeholder) {
 						this.element.find('.red-ui-typedInput-input > input')
@@ -494,7 +497,7 @@
 					this._setup(this.input);
 				},
 				_change: function () {
-					this.element.trigger('change', [this.input.arTypedInput('type'), this.input.arTypedInput('value')]);
+					this.element.trigger('change', this.data());
 				},
 				_inputValue: function (value) {
 					if (arguments.length === 0) return this.input.arTypedInput('value');
@@ -515,7 +518,7 @@
 				},
 				choose: function () {
 					const type = this.input.arTypedInput('type');
-					type === this.options.optionType ? this._super() : this.selectActive(false);
+					type === this.options.optionType ? this._super(...arguments) : this.selectActive(false);
 				},
 				type: function (type) {
 					if (arguments.length === 0) {
@@ -619,6 +622,87 @@
 					this.element.trigger('change', this.groupKey);
 				}
 			});
+			$.widget('alexaRemote.arTypedInputOrInputList', {
+				_create: function() {
+					this.input = $('<div>').arTypedInput({ types: ['str', 'json'] }).css({ flex: '1' });
+					this.list = $('<div>').arInputList(this.options);
+					this.button = $('<a>').addClass('editor-button');
+					this.element.addClass('alexaRemote-arTypedInputOrInputList').css({ display: 'flex'}).append(
+						this.input, 
+						this.list,
+						$('<div>').css({ width: 8 }),
+						this.button.css({ alignSelf: 'center' }).append($('<i>').attr('class', 'fa fa-list')),
+					);
+					
+					this.button.click(() => {
+						this.listActive(!this.listActive());
+					});
+
+					this._listVisible(false);
+				},
+				_change: function(data) {
+					this.element.trigger('change');
+				},
+				_listVisible: function(visible) {
+					if(arguments.length === 0) return !this.list.hasClass('hidden');
+
+					if(visible) {
+						this.input.addClass('hidden');
+						this.list.removeClass('hidden');
+					}
+					else {
+						this.list.addClass('hidden');
+						this.input.removeClass('hidden');
+						this.refresh();
+					}
+
+					this.button.css({ marginBottom: visible ? 24 : 0 });
+				},
+				listActive: function(active) {
+					if(arguments.length === 0) return this._listVisible();
+					
+					if(active) {
+						const data = this.input.arTypedInput('data');
+
+						let array; 
+						if(data.type === 'str') array = [data.value];
+						if(data.type === 'json') { try { array = JSON.parse(data.value); } catch(err) {}; }
+						
+						this.list.arInputList('value', Array.isArray(array) ? array : [undefined]);
+					}
+					else {
+						const array = this.list.arInputList('value');
+						const data = array.length <= 1 
+							? { type: 'str', value: array[0] || '' }
+							: { type: 'json', value: JSON.stringify(array) };
+
+						this.input.arTypedInput('data', data);	
+					}
+					this._listVisible(active);
+					this._change();
+				},
+				data: function(data) {
+					if(arguments.length === 0) {
+						return this.listActive() ? this.list.arInputList('value') : this.input.arTypedInput('data');
+					}
+
+					if(data === undefined) {
+						data = [undefined];
+					}
+
+					if(Array.isArray(data)) {
+						this.list.arInputList('value', data);
+						this._listVisible(true);
+					}
+					else {
+						this.input.arTypedInput('data', data);
+						this._listVisible(false);
+					}
+				},
+				refresh: function() {
+					this.input.arTypedInput('refresh');
+				}
+			});
 			$.widget('alexaRemote.arTips', {
 				_create: function() {
 					this.element.addClass('form-tips').css({marginBottom: 12, maxWidth: 'unset'});
@@ -658,7 +742,8 @@
 			function arSelect(data = '', options = []) {
 				return $('<select>').arSelect()
 					.arSelect('selectOptions', options)
-					.arSelect('value', data);
+					.arSelect('value', data)
+					.css({ flex: '1', width: 100 });
 			}
 			function arTypedInput(data = { type: 'str', value: '' }, types = ['str'], { placeholder = '' } = {}) {
 				return $('<div>')
@@ -672,7 +757,7 @@
 					.arInputList('value', data);
 			}
 			function arInputOrSelect(data = '', options = [], { button = false, placeholder = '', choose = true, some = true } = {}) {
-				const div = $('<div>')
+				const div = $('<div>').css({ flex: '1' })
 					.arInputOrSelect({ button: button, placeholder: placeholder })
 					.arInputOrSelect('selectOptions', options)
 					.arInputOrSelect('value', data);
@@ -690,11 +775,15 @@
 				return div;
 			}
 			function arInputGroups(group, value, groups = {}, clean = true) {
-				return $('<div>').css({display: 'flex'})
+				return $('<div>')
 					.arInputGroups({ clean: clean })
 					.arInputGroups('group', group)
 					.arInputGroups('value', value)
 					.arInputGroups('groups', groups);
+			}
+			function arTypedInputOrInputList(data, add, { header } = {}) {
+				return $('<div>').arTypedInputOrInputList({add: add, header: header})
+					.arTypedInputOrInputList('data', data);
 			}
 			function arTips(text = true) {
 				return $('<div>').arTips().arTips('show', text);
