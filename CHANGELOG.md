@@ -1,3 +1,5 @@
+- **3.2.7**
+  - fix ui for Node-RED v1.0.0
 - **3.2.6**
   - fix routine music playing for some search phrases
 - **3.2.5**
