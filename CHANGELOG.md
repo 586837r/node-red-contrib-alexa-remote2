@@ -1,3 +1,5 @@
+- **3.2.8**
+  - fix bluetooth pair/unpair
 - **3.2.7**
   - fix ui for Node-RED v1.0.0
 - **3.2.6**
