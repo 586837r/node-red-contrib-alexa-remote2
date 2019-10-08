@@ -25,13 +25,13 @@ module.exports = function (RED) {
 					if(!tools.matches(value, { what: '' })) return error(`invalid input: "${JSON.stringify(config)}"`);
 
 					switch(value.what) {
-						case 'accounts': 			return alexa.getAccountPromise				().then(send).catch(error);
-						case 'contacts': 			return alexa.getContactsPromise				().then(send).catch(error);
-						case 'conversations': 		return alexa.getConversationsPromise		().then(o => o.conversations).then(send).catch(error);
+						case 'accounts': 						return alexa.getAccountPromise						().then(send).catch(error);
+						case 'contacts': 						return alexa.getContactsPromise						().then(send).catch(error);
+						case 'conversations': 			return alexa.getConversationsPromise			().then(o => o.conversations).then(send).catch(error);
 						case 'automationRoutines': 	return alexa.getAutomationRoutinesPromise	().then(send).catch(error);
-						case 'musicProviders': 		return alexa.getMusicProvidersPromise		().then(send).catch(error);
-						case 'homeGroup':			return alexa.getHomeGroupPromise			().then(send).catch(error);
-						case 'notifications':		return alexa.getNotificationsPromise		().then(o => o.notifications).then(send).catch(error);
+						case 'musicProviders': 			return alexa.getMusicProvidersPromise			().then(send).catch(error);
+						case 'homeGroup':						return alexa.getHomeGroupPromise					().then(send).catch(error);
+						case 'notifications':				return alexa.getNotificationsPromise			().then(o => o.notifications).then(send).catch(error);
 
 						case 'list':
 							if(!tools.matches(value, { list: '' })) return error(`invalid input: "${JSON.stringify(config)}"`);

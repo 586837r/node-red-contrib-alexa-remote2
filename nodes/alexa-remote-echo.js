@@ -72,9 +72,9 @@ module.exports = function (RED) {
 					switch(value.what) {
 						case 'alarmVolume': 	return alexa.getDeviceNotificationStatesExt()	.then(list => find(list)).then(send).catch(error);
 						case 'preferences': 	return alexa.getDevicePreferencesPromise()		.then(o => o.devicePreferences).then(list => find(list)).then(send).catch(error);
-						case 'doNotDisturb': 	return alexa.getDoNotDisturbPromise()			.then(o => o.doNotDisturbDeviceStatusList).then(list => find(list)).then(send).catch(error);
-						case 'wakeWord': 		return alexa.getWakeWordsPromise()				.then(o => o.wakeWords).then(list => find(list)).then(send).catch(error);
-						case 'bluetooth': 		return alexa.getBluetoothPromise()				.then(o => o.bluetoothStates).then(list => find(list)).then(send).catch(error);
+						case 'doNotDisturb': 	return alexa.getDoNotDisturbPromise()					.then(o => o.doNotDisturbDeviceStatusList).then(list => find(list)).then(send).catch(error);
+						case 'wakeWord': 			return alexa.getWakeWordsPromise()						.then(o => o.wakeWords).then(list => find(list)).then(send).catch(error);
+						case 'bluetooth': 		return alexa.getBluetoothPromise()						.then(o => o.bluetoothStates).then(list => find(list)).then(send).catch(error);
 						default: 				return error(`invalid input: "${JSON.stringify(config)}"`);
 					}
 				
@@ -84,10 +84,10 @@ module.exports = function (RED) {
 				
 				case 'bluetooth': 
 					if(!tools.matches(value, { action: '', device: '', gadget: '' })) return error(`invalid input: "${JSON.stringify(config)}"`);
-					switch(action) {
-						case 'pair': return alexa.connectBluetoothPromise(value.device, value.gadget).then(send).catch(error);
-						case 'unpair': return alexa.unpaireBluetoothPromise(value.device, value.gadget).then(send).catch(error);
-						case 'disconnect': return alexa.disconnectBluetoothPromise(value.device, value.gadget).then(send).catch(error);
+					switch(value.action) {
+						case 'pair': return alexa.pairBluetoothExt(value.device, value.gadget).then(send).catch(error);
+						case 'unpair': return alexa.unpairBluetoothExt(value.device, value.gadget).then(send).catch(error);
+						case 'disconnect': return alexa.disconnectBluetoothExt(value.device, value.gadget).then(send).catch(error);
 						default: return error(`invalid input: "${JSON.stringify(config)}"`);
 					}
 				
