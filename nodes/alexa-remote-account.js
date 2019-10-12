@@ -171,6 +171,7 @@ module.exports = function (RED) {
 		tools.assign(this, ['authMethod', 'proxyOwnIp', 'proxyPort', 'cookieFile', 'refreshInterval', 'alexaServiceHost', 'amazonPage', 'acceptLanguage', 'userAgent'], input);
 		this.useWsMqtt = input.useWsMqtt === 'on';
 		this.autoInit  = input.autoInit  === 'on';
+		this.name = input.name;
 		this.locale = this.acceptLanguage;
 		this.refreshInterval = Number(this.refreshInterval) * 1000 * 60 * 60 * 24;
 		if(this.refreshInterval < 15000) this.refreshInterval = NaN;
@@ -389,8 +390,10 @@ module.exports = function (RED) {
 				case 'password': this.setState('INIT_PASSWORD'); break;
 			}
 
+			this.logCb(`intialising ${this.name ? `"${this.name}" ` : ''}with the ${initType.toUpperCase()} method and ${config.cookie ? '' : 'NO '}saved data...`);
+
 			this.debugCb(`Alexa-Remote: starting initialisation:`);
-			this.debugCb({authMethod: this.authMethod, initType: initType, cookie: config.cookie});
+			this.debugCb(`Alexa-Remote: ${JSON.stringify({authMethod: this.authMethod, initType: initType, cookie: config.cookie})}`);
 
 			// the this.alexa we init could change once the this.alexa.initExt is complete because
 			// this.resetAlexa() or this.initAlexa() might have been called again during this time
