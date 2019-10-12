@@ -1016,32 +1016,33 @@
 					groups.right.prompt = function(data) {
 						data = template(data, { type: { type: 'str', value: 'goodMorning' }});
 						const select = arTypedInputOrSelect(data.type, [
-							['goodMorning', 			'Good Morning'],
-							['weather',  					'Weather'],
-							['traffic',  					'Traffic'],
-							['flashBriefing',			'News Flash Briefing'],
-							['singSong',   				'Sing a Song'],
-							['joke',							'Tell a Joke'],
-							['tellStory',   			'Tell me a Story'],
-							['calendarToday',  		`Today's Calendar`],
-							['calendarTomorrow',	`Tomorrow's Calendar`],
-							['calendarNext',			`Next Event`],
-							['funFact', 					`Fun Fact`],
-							['cleanUp',						`Clean Up`],
-							['imHome',						`I'm Home`],
+							['goodMorning',      'Good Morning'],
+							['goodNight',        'Good Night'],
+							['weather',          'Weather'],
+							['traffic',          'Traffic'],
+							['flashBriefing',    'News Flash Briefing'],
+							['singSong',         'Sing a Song'],
+							['joke',             'Tell a Joke'],
+							['tellStory',        'Tell me a Story'],
+							['calendarToday',    `Today's Calendar`],
+							['calendarTomorrow', `Tomorrow's Calendar`],
+							['calendarNext',     `Next Event`],
+							['funFact',          `Fun Fact`],
+							['cleanUp',          `Clean Up`],
+							['imHome',           `I'm Home`],
 						]).appendTo(this);
 						return () => ({ type: select.arTypedInputOrSelect('data') });
 					}
 					groups.right.phrase = function(data) {
 						data = template(data, { category: { type: 'str', value: 'confirmations' }});
 						const select = arTypedInputOrSelect(data.category, [
-							['birthday', 					`Birthday`],
-							['compliments',  			`Compliments`],
-							['confirmations',  		`Confirmations`],
-							['goodbye',						`Goodbye`],
-							['goodmorning',   		`Good Morning`],
-							['goodnight',					`Good Night`],
-							['iamhome',   				`I'm Home`],
+							['birthday',      `Birthday`],
+							['compliments',   `Compliments`],
+							['confirmations', `Confirmations`],
+							['goodbye',       `Goodbye`],
+							['goodmorning',   `Good Morning`],
+							['goodnight',     `Good Night`],
+							['iamhome',       `I'm Home`],
 						]).appendTo(this);
 						return () => ({ category: select.arTypedInputOrSelect('data') });
 					}

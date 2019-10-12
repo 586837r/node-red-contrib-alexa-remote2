@@ -24,19 +24,20 @@ module.exports = function (RED) {
 
 			function nativizePromptType(prompt) {
 				switch (prompt) {
-					case 'goodMorning': return 'Alexa.GoodMorning.Play';
-					case 'weather': return 'Alexa.Weather.Play';
-					case 'traffic': return 'Alexa.Traffic.Play';
-					case 'flashBriefing': return 'Alexa.FlashBriefing.Play';
-					case 'singSong': return 'Alexa.SingASong.Play';
-					case 'joke': return 'Alexa.Joke.Play';
-					case 'tellStory': return 'Alexa.TellStory.Play';
-					case 'calendarToday': return 'Alexa.Calendar.PlayToday';
+					case 'goodMorning':      return 'Alexa.GoodMorning.Play';
+					case 'goodNight':        return 'Alexa.GoodNight.Play';
+					case 'weather':          return 'Alexa.Weather.Play';
+					case 'traffic':          return 'Alexa.Traffic.Play';
+					case 'flashBriefing':    return 'Alexa.FlashBriefing.Play';
+					case 'singSong':         return 'Alexa.SingASong.Play';
+					case 'joke':             return 'Alexa.Joke.Play';
+					case 'tellStory':        return 'Alexa.TellStory.Play';
+					case 'calendarToday':    return 'Alexa.Calendar.PlayToday';
 					case 'calendarTomorrow': return 'Alexa.Calendar.PlayTomorrow';
-					case 'calendarNext': return 'Alexa.Calendar.PlayNext';
-					case 'funFact':	return 'Alexa.FunFact.Play';
-					case 'cleanUp': return 'Alexa.CleanUp.Play';
-					case 'imHome': return 'Alexa.ImHome.Play';
+					case 'calendarNext':     return 'Alexa.Calendar.PlayNext';
+					case 'funFact':          return 'Alexa.FunFact.Play';
+					case 'cleanUp':          return 'Alexa.CleanUp.Play';
+					case 'imHome':           return 'Alexa.ImHome.Play';
 					default: throw new Error(`invalid prompt: "${prompt}"`);
 				}
 			}
