@@ -34,6 +34,9 @@ module.exports = function (RED) {
 					case 'calendarToday': return 'Alexa.Calendar.PlayToday';
 					case 'calendarTomorrow': return 'Alexa.Calendar.PlayTomorrow';
 					case 'calendarNext': return 'Alexa.Calendar.PlayNext';
+					case 'funFact':	return 'Alexa.FunFact.Play';
+					case 'cleanUp': return 'Alexa.CleanUp.Play';
+					case 'imHome': return 'Alexa.ImHome.Play';
 					default: throw new Error(`invalid prompt: "${prompt}"`);
 				}
 			}

@@ -1008,15 +1008,18 @@
 						data = template(data, { type: { type: 'str', value: 'goodMorning' }});
 						const select = arTypedInputOrSelect(data.type, [
 							['goodMorning', 			'Good Morning'],
-							['weather',  				'Weather'],
-							['traffic',  				'Traffic'],
+							['weather',  					'Weather'],
+							['traffic',  					'Traffic'],
 							['flashBriefing',			'News Flash Briefing'],
 							['singSong',   				'Sing a Song'],
-							['joke',					'Tell a Joke'],
+							['joke',							'Tell a Joke'],
 							['tellStory',   			'Tell me a Story'],
-							['calendarToday',  			`Today's Calendar`],
-							['calendarTomorrow',		`Tomorrow's Calendar`],
+							['calendarToday',  		`Today's Calendar`],
+							['calendarTomorrow',	`Tomorrow's Calendar`],
 							['calendarNext',			`Next Event`],
+							['funFact', 					`Fun Fact`],
+							['cleanUp',						`Clean Up`],
+							['imHome',						`I'm Home`],
 						]).appendTo(this);
 						return () => ({ type: select.arTypedInputOrSelect('data') });
 					}
