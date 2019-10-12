@@ -1,3 +1,7 @@
+- **3.3.0**
+  - added new prompts
+  - added phrases
+  - fixed logging to use categories properly
 - **3.2.8**
   - fix bluetooth pair/unpair
 - **3.2.7**
