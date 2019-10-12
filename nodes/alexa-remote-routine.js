@@ -272,6 +272,40 @@ module.exports = function (RED) {
 							}
 						});
 					}
+					case 'phrase': {
+						if (!Array.isArray(node.payload.devices)) node.payload.devices = [node.payload.devices || node.payload.device];
+						checkPayload({ category: '', devices: [] });
+						const devices = findAll(node.payload.devices);
+						if(devices.length === 0) return undefined;
+
+						if (devices.length === 1) return {
+							'@type': 'com.amazon.alexa.behaviors.model.OpaquePayloadOperationNode',
+							type: 'Alexa.CannedTts.Speak',
+							skillId: 'amzn1.ask.1p.saysomething',
+							operationPayload: {
+								customerId: devices[0].deviceOwnerCustomerId,
+								deviceType: devices[0].deviceType,
+								deviceSerialNumber: devices[0].serialNumber,
+								cannedTtsStringId: `alexa.cannedtts.speak.curatedtts-category-${node.payload.category}/alexa.cannedtts.speak.curatedtts-random`,
+								locale: locale,
+							},
+							name: null
+						};
+
+						return await nativizeNode({
+							type: 'node',
+							payload: {
+								type: 'parallel',
+								children: devices.map(device => ({
+									type: 'prompt',
+									payload: {
+										type: node.payload.type,
+										device: device,
+									}
+								}))
+							}
+						});
+					}
 					case 'volume': {
 						if (!Array.isArray(node.payload.devices)) node.payload.devices = [node.payload.devices || node.payload.device];
 						checkPayload({ value: undefined, devices: [] });

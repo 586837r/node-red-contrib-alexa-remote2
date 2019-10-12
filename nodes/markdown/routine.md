@@ -16,7 +16,9 @@ Emulates Alexa Routine behaviour.
   - ```{ type: 'stop', payload: { devices: ['My Echo']}```
   - ```{ type: 'stop', payload: { devices: ['My Echo']}```
   - ```{ type: 'prompt', payload: { type: 'goodMorning', devices: ['My Echo']}```
-    - prompt: `goodMorning`, `weather`, `traffic`, `flashBriefing`, `singSong`, `joke`, `tellStory`, `calendarToday`, `calendarTomorrow`, `calendarNext`
+    - prompt: `goodMorning`, `weather`, `traffic`, `flashBriefing`, `singSong`, `joke`, `tellStory`, `calendarToday`, `calendarTomorrow`, `calendarNext`, `funFact`, `cleanUp`, `imHome`
+  - ```{ type: 'phrase', payload: { category: 'confirmations', devices: ['My Echo']}```
+    - category: `birthday`, `compliments`, `confirmations`, `goodbye`, `goodmorning`, `goodnight`, `iamhome`
   - ```{ type: 'volume', payload: { value: 50, devices: ['My Echo']}```
     - value 0..100
   - ```{ type: 'music', payload: { provider: 'AMAZON_MUSIC', search: '', device: 'My Echo', duration: 300}```

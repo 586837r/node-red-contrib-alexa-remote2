@@ -51,7 +51,15 @@
 									<ul>
 											<li>prompt: <code>goodMorning</code>, <code>weather</code>, <code>traffic</code>,
 													<code>flashBriefing</code>, <code>singSong</code>, <code>joke</code>, <code>tellStory</code>,
-													<code>calendarToday</code>, <code>calendarTomorrow</code>, <code>calendarNext</code></li>
+													<code>calendarToday</code>, <code>calendarTomorrow</code>, <code>calendarNext</code>,
+													<code>funFact</code>, <code>cleanUp</code>, <code>imHome</code></li>
+									</ul>
+							</li>
+							<li><code>{ type: 'phrase', payload: { category: 'confirmations', devices: ['My Echo']}</code>
+									<ul>
+											<li>category: <code>birthday</code>, <code>compliments</code>, <code>confirmations</code>,
+													<code>goodbye</code>, <code>goodmorning</code>, <code>goodnight</code>, <code>iamhome</code>
+											</li>
 									</ul>
 							</li>
 							<li><code>{ type: 'volume', payload: { value: 50, devices: ['My Echo']}</code>
@@ -851,18 +859,19 @@
 					this.channel = channel;
 
 					const options = [
-						['speak',				'&#xf04b;  Speak'], // play
+						['speak',							'&#xf04b;  Speak'], // play
 						['speakAtVolume', 		'&#xf0fe;  Speak At Volume'],
-						['wait',				'&#xf017;  Wait'], // clock-o
-						['stop',				'&#xf04d;  Stop'], // stop
-						['prompt',				'&#xf075;  Prompt'], // comment
-						['volume',				'&#xf028;  Volume'], // volume-up
-						['music',				'&#xf001;  Music'], // music   Alexa.Music.PlaySearchPhrase
-						['smarthome',			'&#xf015;  Smarthome'], // home
-						['routine',				'&#xf0e7;  Execute Routine'], // bolt
+						['wait',							'&#xf017;  Wait'], // clock-o
+						['stop',							'&#xf04d;  Stop'], // stop
+						['prompt',						'&#xf27a;  Prompt'], // commenting
+						['phrase',						'&#xf075;  Phrase'], // comment
+						['volume',						'&#xf028;  Volume'], // volume-up
+						['music',							'&#xf001;  Music'], // music   Alexa.Music.PlaySearchPhrase
+						['smarthome',					'&#xf015;  Smarthome'], // home
+						['routine',						'&#xf0e7;  Execute Routine'], // bolt
 						['pushNotification',	'&#xf10b;  Push Notification'], // mobile
-						['node',				'&#xf126;  Node'], // code-fork
-						['custom',				'&#xf061;  Custom'], // arrow-right
+						['node',							'&#xf126;  Node'], // code-fork
+						['custom',						'&#xf061;  Custom'], // arrow-right
 					];
 
 					const common = { input: {}, right: { group: {}, }, bottom: { group: {}, row: {} } };
@@ -1023,6 +1032,19 @@
 						]).appendTo(this);
 						return () => ({ type: select.arTypedInputOrSelect('data') });
 					}
+					groups.right.phrase = function(data) {
+						data = template(data, { category: { type: 'str', value: 'confirmations' }});
+						const select = arTypedInputOrSelect(data.category, [
+							['birthday', 					`Birthday`],
+							['compliments',  			`Compliments`],
+							['confirmations',  		`Confirmations`],
+							['goodbye',						`Goodbye`],
+							['goodmorning',   		`Good Morning`],
+							['goodnight',					`Good Night`],
+							['iamhome',   				`I'm Home`],
+						]).appendTo(this);
+						return () => ({ category: select.arTypedInputOrSelect('data') });
+					}
 					groups.right.smarthome = function(data) {
 						data = template(data, {entity: '' });
 						const entity = arInputOrSelect(data.entity).appendTo(this);
@@ -1131,6 +1153,7 @@
 					}
 					groups.bottom.stop = common.bottom.group.deviceList(true);
 					groups.bottom.prompt = common.bottom.group.deviceList(false);
+					groups.bottom.phrase = common.bottom.group.deviceList(false);
 					groups.bottom.volume = common.bottom.group.deviceList(false);
 					groups.bottom.music = function(data) {
 						data = template(data, {provider: { type: 'str', value: ''}, search: {type: 'str', value: ''}, duration: { type: 'num', value: ''}});
