@@ -1,21 +1,13 @@
 const util = require('util');
 const fs = require('fs');
 const readFileAsync = util.promisify(fs.readFile);
-const writeFileAsync = util.promisify(fs.writeFile);
 const EventEmitter = require('events');
 
 const AlexaRemote = require('../lib/alexa-remote-ext.js');
 const tools = require('../lib/common.js');
-const known = require('../lib/known-color-values.js');
-const convert = require('../lib/color-convert.js');
-const deltaE = require('../lib/delta-e.js');
-
-const DEBUG_THIS = tools.DEBUG_THIS;
-const DEBUG_ALEXA_REMOTE2 = tools.DEBUG_ALEXA_REMOTE2;
 
 function accountHttpResponse(RED, property, label, req, res) {
 	const account = RED.nodes.getNode(req.query.account);
-	console.log(req.url);
 
 	if(!account) {
 		res.writeHeader(400, {'Content-Type': 'text/plain'});
@@ -184,9 +176,12 @@ module.exports = function (RED) {
 		if(this.refreshInterval < 15000) this.refreshInterval = NaN;
 
 		this.alexa = new AlexaRemote().setMaxListeners(32);
-		this.emitter = new EventEmitter().setMaxListeners(64);
+		this.emitter = new EventEmitter().setMaxListeners(128);
 		this.initing = false;
 		this.state = { code: 'UNINITIALISED', message: '' };
+		this.debugCb = tools.nodeGetDebugCb(this);
+		this.logCb = tools.nodeGetLogCb(this);
+		this.warnCb = tools.nodeGetWarnCb(this);
 		this.errorCb = tools.nodeGetErrorCb(this);
 
 		this.refreshTimeoutStartTime = null;
@@ -352,12 +347,9 @@ module.exports = function (RED) {
 			// if(this.initing) throw new Error('Already initialising!');
 			// this.initing = true;
 
-			const warnCb = tools.nodeGetWarnCb(this);
-			const errCb = tools.nodeGetErrorCb(this);
-
 			let config = {};
 			tools.assign(config, ['proxyOwnIp', 'proxyPort', 'alexaServiceHost', 'amazonPage', 'acceptLanguage', 'userAgent', 'useWsMqtt'], this);	
-			config.logger = DEBUG_ALEXA_REMOTE2 ? console.log : undefined;
+			config.logger = this.debugCb;
 			config.refreshCookieInterval = 0;
 			config.proxyLogLevel = 'warn';
 			config.cookieJustCreated = true; // otherwise it just tries forever...
@@ -369,7 +361,7 @@ module.exports = function (RED) {
 					config.proxyOnly = true; // should not matter					
 
 					const cookieData = tools.isObject(input) && input.loginCookie && tools.clone(input)
-						 || this.cookieFile && !ignoreFile && await readFileAsync(this.cookieFile, 'utf8').then(json => JSON.parse(json)).catch(warnCb)
+						 || this.cookieFile && !ignoreFile && await readFileAsync(this.cookieFile, 'utf8').then(json => JSON.parse(json)).catch(this.warnCb)
 						 || undefined;
 
 					config.cookie = cookieData;
@@ -397,8 +389,8 @@ module.exports = function (RED) {
 				case 'password': this.setState('INIT_PASSWORD'); break;
 			}
 
-			console.log(`Alexa-Remote: starting initialisation:`);
-			tools.log({authMethod: this.authMethod, initType: initType, cookie: config.cookie});
+			this.debugCb(`Alexa-Remote: starting initialisation:`);
+			this.debugCb({authMethod: this.authMethod, initType: initType, cookie: config.cookie});
 
 			// the this.alexa we init could change once the this.alexa.initExt is complete because
 			// this.resetAlexa() or this.initAlexa() might have been called again during this time
@@ -412,11 +404,6 @@ module.exports = function (RED) {
 				this.setState('WAIT_PROXY', text);
 			};
 
-			const warnCallback = (error) => {
-				if(alexa !== this.alexa) return;
-				this.warn(error.stack || error.message || String(error));
-			};
-
 			if(initType === 'proxy') {
 				await tools.portAvailable(config.proxyPort).catch(error => {
 					if(error.code === 'EADDRINUSE') error.message = `port ${config.proxyPort} already in use`;
@@ -425,7 +412,7 @@ module.exports = function (RED) {
 				});
 			}
 
-			const cookieData = await alexa.initExt(config, proxyWaitCallback, warnCallback).catch(error => {
+			const cookieData = await alexa.initExt(config, proxyWaitCallback, this.warnCb).catch(error => {
 				if(alexa !== this.alexa) return;
 				this.setState('ERROR', error && error.message);
 				throw error;
@@ -440,21 +427,21 @@ module.exports = function (RED) {
 				const data = alexa.cookieData;
 				const json = JSON.stringify(data);
 				try { fs.writeFileSync(this.cookieFile, json, 'utf8'); }
-				catch (error) { warnCb(error); }
+				catch (error) { this.warnCb(error); }
 			}
 			
 			await Promise.all([
-				this.buildDevicesForUi().catch(warnCb),
-				this.buildMusicProvidersForUi().catch(warnCb),
-				this.buildNotificationsForUi().catch(warnCb),
-				this.buildSmarthomeForUi().catch(warnCb),
-				this.buildRoutinesForUi().catch(warnCb),
-				this.buildBluetoothForUi().catch(warnCb),
+				this.buildDevicesForUi().catch(this.warnCb),
+				this.buildMusicProvidersForUi().catch(this.warnCb),
+				this.buildNotificationsForUi().catch(this.warnCb),
+				this.buildSmarthomeForUi().catch(this.warnCb),
+				this.buildRoutinesForUi().catch(this.warnCb),
+				this.buildBluetoothForUi().catch(this.warnCb),
 			]);
 
-			this.alexa.on('change-device', () => this.buildDevicesForUi().catch(warnCb));
-			this.alexa.on('change-smarthome', () => this.buildSmarthomeForUi().catch(warnCb));
-			this.alexa.on('change-notification', () => this.buildNotificationsForUi().catch(warnCb));
+			this.alexa.on('change-device', () => this.buildDevicesForUi().catch(this.warnCb));
+			this.alexa.on('change-smarthome', () => this.buildSmarthomeForUi().catch(this.warnCb));
+			this.alexa.on('change-notification', () => this.buildNotificationsForUi().catch(this.warnCb));
 
 			// see above why
 			if(alexa !== this.alexa) {
@@ -510,18 +497,17 @@ module.exports = function (RED) {
 		}
 	});
 
-	RED.httpAdmin.get('/alexa-remote-error-messages.json',	RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'errors', 'Error Messages', req, res));
-	RED.httpAdmin.get('/alexa-remote-routines.json', 		RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'routines', 'Routines', req, res));
-	RED.httpAdmin.get('/alexa-remote-musicProviders.json', 	RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'musicProviders', 'Music Providers', req, res));
-	RED.httpAdmin.get('/alexa-remote-devices.json', 		RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'devices', 'Devices', req, res));
-	RED.httpAdmin.get('/alexa-remote-smarthome.json', 		RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'smarthome', 'Smarthome Devices', req, res));
-	RED.httpAdmin.get('/alexa-remote-bluetooth.json', 		RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'bluetooth', 'Bluetooth Devices', req, res));
-	RED.httpAdmin.get('/alexa-remote-notifications.json', 	RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'notifications', 'Notifications', req, res));
-	RED.httpAdmin.get('/alexa-remote-sounds.json', 			RED.auth.needsPermission('alexa-remote.read'), (req, res) => {
+	RED.httpAdmin.get('/alexa-remote-error-messages.json', RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'errors', 'Error Messages', req, res));
+	RED.httpAdmin.get('/alexa-remote-routines.json',       RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'routines', 'Routines', req, res));
+	RED.httpAdmin.get('/alexa-remote-musicProviders.json', RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'musicProviders', 'Music Providers', req, res));
+	RED.httpAdmin.get('/alexa-remote-devices.json',        RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'devices', 'Devices', req, res));
+	RED.httpAdmin.get('/alexa-remote-smarthome.json',      RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'smarthome', 'Smarthome Devices', req, res));
+	RED.httpAdmin.get('/alexa-remote-bluetooth.json',      RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'bluetooth', 'Bluetooth Devices', req, res));
+	RED.httpAdmin.get('/alexa-remote-notifications.json',  RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'notifications', 'Notifications', req, res));
+	RED.httpAdmin.get('/alexa-remote-sounds.json',         RED.auth.needsPermission('alexa-remote.read'), (req, res) => {
 		const account = RED.nodes.getNode(req.query.account);
 		const device = req.query.device;
 		const label = 'Sounds';
-		console.log(req.url);
 
 		if (!account) {
 			res.writeHeader(400, { 'Content-Type': 'text/plain' });

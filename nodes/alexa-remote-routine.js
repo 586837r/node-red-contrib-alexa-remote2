@@ -6,17 +6,17 @@ module.exports = function (RED) {
 		tools.assign(this, ['routineNode'], input);
 		tools.assignNode(RED, this, ['account'], input);
 		if (!tools.nodeSetup(this, input, true)) return;
-		// tools.log({in:input.routineNode, ths: this.routineNode});
 
 		this.on('input', function (msg) {
 			const send = tools.nodeGetSendCb(this, msg);
+			const log = tools.nodeGetLogCb(this);
 			const warn = tools.nodeGetWarnCb(this);
 			const error = tools.nodeGetErrorCb(this);
 			if (this.account.state.code !== 'READY') return error('Account not initialised!');
 			this.status({ shape: 'dot', fill: 'grey', text: 'sending' });
 			const alexa = this.account.alexa;
+			const raw = this.routineNode;
 			const evaluated = tools.nodeEvaluateProperties(RED, this, msg, this.routineNode);
-			tools.log({ raw: this.routineNode, evaluated: evaluated });
 			const customerId = alexa.ownerCustomerId;
 			const locale = this.account.locale || 'en-US';
 
@@ -501,13 +501,21 @@ module.exports = function (RED) {
 			}
 
 			nativizeNode(evaluated).then(native => {
-				tools.log({ native: native });
-				if(!native) return warn('no devices');
+				if(!native) { warn('no devices'); return; }
 				alexa.sendSequenceNodeExt(native).then(response => {
 					if(!tools.matches(response, { message: '' })) return response;
 					throw new Error(`Response: ${response.message}`);
-				}).then(send).catch(error);
-			}).catch(error);
+				}).then(send).catch(e => {
+					error(e);
+					log(`raw: "${JSON.stringify(raw)}"`);
+					log(`evaluated: "${JSON.stringify(raw)}"`);
+					log(`native: "${JSON.stringify(raw)}"`);
+				});
+			}).catch(e => {
+				error(e);
+				log(`raw: "${JSON.stringify(raw)}"`);
+				log(`evaluated: "${JSON.stringify(raw)}"`);
+			});
 		});
 	}
 	RED.nodes.registerType("alexa-remote-routine", AlexaRemoteRoutine);

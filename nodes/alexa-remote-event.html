@@ -73,11 +73,11 @@
 		icon: 'alexa-remote-icon.png',
 		paletteLabel: 'Alexa Event',
 		label: function () {
-            function keyToLabel(str) {
-                const match = str.match(/(?:[A-Z]?[a-z]+)|[A-Z]|[0-9]+/g);
-                if (match) str = match.map(s => s.slice(0, 1).toUpperCase() + s.slice(1)).join(' ');
-                return str;
-            }
+			function keyToLabel(str) {
+					const match = str.match(/(?:[A-Z]?[a-z]+)|[A-Z]|[0-9]+/g);
+					if (match) str = match.map(s => s.slice(0, 1).toUpperCase() + s.slice(1)).join(' ');
+					return str;
+			}
 			
 			return this.name || `On ${keyToLabel(this.event.slice(3))}`;
 		},

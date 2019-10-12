@@ -9,7 +9,6 @@ module.exports = function (RED) {
 		tools.assign(this, ['config', 'outputs'], input);
 		tools.assignNode(RED, this, ['account'], input);
 		if(!tools.nodeSetup(this, input, true)) return;
-		//console.log({input:input});
 
 		this.on('input', function (msg) {
 			// TODO: change {} to msg, caution! errors!
@@ -85,7 +84,7 @@ module.exports = function (RED) {
 							errorById.set(error.entity.entityId, error);
 						}
 
-						tools.log({states: stateById, errors: errorById});
+						// tools.log({states: stateById, errors: errorById});
 
 						const mapQueryToMsg = (entity, query, reportErrors = true) => {
 							if(!entity) {
