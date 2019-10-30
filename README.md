@@ -5,8 +5,6 @@
 This is a collection of Node-RED nodes for interacting with the Alexa API.
 You can emulate routine behaviour, control and query your devices and much more!
 
-
-**Note:** version 3 is an almost complete overhaul. **Only** the Alexa Account node configuration is compatible with version 2
 All functionality is from [alexa-remote2](https://www.npmjs.com/package/alexa-remote2).
 The goal is to expose all of [alexa-remote2](https://www.npmjs.com/package/alexa-remote2)s functionality in node-red nodes.
 

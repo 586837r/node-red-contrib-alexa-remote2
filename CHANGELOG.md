@@ -1,3 +1,5 @@
+- **3.3.1**
+  - remove smarthome duplicates from ui
 - **3.3.0**
   - added new prompts
   - added phrases
