@@ -927,9 +927,9 @@
 						data = template(data, {action: {type: 'str', value: 'pair'}, device: {type: 'str', value: ''}, gadget: {type:'str', value:''}});
 
 						const action = arTypedInputOrSelect(data.action, [
-							['pair', 		'&#xf0c1;  Pair'], // bluetooth
-							['unpair',		'&#xf127;  Unpair'], // bluetooth, chain-broken
-							['disconnect', 	'&#xf057;  Disconnect'], // bluetooth, trash
+							['pair', 		'&#xf0c1;  Pair / Connect'], // link
+							['unpair',		'&#xf127;  Unpair'], // chain-broken
+							['disconnect', 	'&#xf057;  Disconnect'], // times-circle
 						]);
 						
 						const device = arTypedInputOrSelect(data.device);
