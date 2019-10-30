@@ -251,6 +251,7 @@ module.exports = function (RED) {
 			return this.captureErrorMessage('smarthome', async () => {	
 				//throw new Error('TESTING');
 				const entityById = Array.from(this.alexa.smarthomeSimplifiedByEntityIdExt.values())
+					.filter(e => !e.isDuplicate)
 					.sort((a,b) => {
 						if(a.type !== b.type) {
 							return a.type === 'APPLIANCE' ? -1 : 1;
