@@ -498,7 +498,16 @@ module.exports = function (RED) {
 			if(this.state.code !== 'READY') throw new Error('account must be initialised before updating');
 			this.setState('UPDATE');
 
-			return this.alexa.updateExt().then(value => {
+			return this.alexa.updateExt().then(async value => {
+				await Promise.all([
+					this.buildDevicesForUi().catch(this.warnCb),
+					this.buildMusicProvidersForUi().catch(this.warnCb),
+					this.buildNotificationsForUi().catch(this.warnCb),
+					this.buildSmarthomeForUi().catch(this.warnCb),
+					this.buildRoutinesForUi().catch(this.warnCb),
+					this.buildBluetoothForUi().catch(this.warnCb),
+					this.buildSkillsForUi().catch(this.warnCb),
+				]);
 				this.setState('READY');
 				return value;
 			}).catch(error => {
