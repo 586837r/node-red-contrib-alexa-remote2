@@ -455,6 +455,29 @@ module.exports = function (RED) {
 
 						return routineNode;
 					}
+					case 'skill': {
+						checkPayload({ skill: '', device: undefined });
+						const device = find(node.payload.device);
+
+						return {
+							'@type': 'com.amazon.alexa.behaviors.model.OpaquePayloadOperationNode',
+							type: 'Alexa.Operation.SkillConnections.Launch',
+							skillId: node.payload.skill,
+							operationPayload: {
+								locale: locale,
+								customerId: device.deviceOwnerCustomerId,
+								targetDevice: {
+									deviceType: device.deviceType,
+									deviceSerialNumber: device.serialNumber
+								},
+								connectionRequest: {
+									uri: `connection://AMAZON.Launch/${node.payload.skill}`,
+									input: {}
+								}
+							},
+							name: null
+						};
+					}
 					case 'pushNotification': {
 						if (!tools.matches(node.payload, { text: '' })) throw invalid();
 

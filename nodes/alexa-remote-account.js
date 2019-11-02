@@ -164,6 +164,19 @@ const getNotificationSortValue = (noti) => {
 	return nameValue + typeValue;
 };
 
+function getSkillLabel(skill) {
+	function getIcon(skill) {
+		switch(skill.type) {
+			case 'CUSTOM':           return 'f013'; // cog
+			case 'SMART_HOME':       return 'f015'; // home
+			case 'CONTENT':          return 'f1ea'; // newspaper-o
+			default:                 return 'f059'; // question-circle
+		}
+	}
+
+	return `&#x${getIcon(skill)};  ${skill.name}`;
+}
+
 module.exports = function (RED) {
 	function AlexaRemoteAccountNode(input) {
 		RED.nodes.createNode(this, input);
@@ -222,13 +235,14 @@ module.exports = function (RED) {
 			this.initialised = false;
 			this.alexa = new AlexaRemote();
 
-			this.ui.smarthome 		= JSON.stringify({ entityById: {}, colorNames: [], colorTemperatureNames: []});
-			this.ui.devices 		= JSON.stringify([]);
-			this.ui.notifications 	= JSON.stringify([]);
-			this.ui.routines 		= JSON.stringify([]);
-			this.ui.musicProviders 	= JSON.stringify([]);
-			this.ui.bluetooth 		= JSON.stringify({});
-			this.ui.errors 			= JSON.stringify({});
+      this.ui.smarthome      = JSON.stringify({ entityById: {}, colorNames: [], colorTemperatureNames: []});
+      this.ui.devices        = JSON.stringify([]);
+      this.ui.notifications  = JSON.stringify([]);
+      this.ui.routines       = JSON.stringify([]);
+      this.ui.musicProviders = JSON.stringify([]);
+      this.ui.bluetooth      = JSON.stringify({});
+      this.ui.errors         = JSON.stringify({});
+      this.ui.skills         = JSON.stringify([]);
 
 			this.errorMessages = {};
 
@@ -329,6 +343,14 @@ module.exports = function (RED) {
 					), o), {});
 	
 				this.ui.bluetooth = JSON.stringify(bluetoothForUi);
+			});
+		};
+		this.buildSkillsForUi = function() {
+			return this.captureErrorMessage('bluetooth', async () => {
+				//throw new Error('TESTING');
+				const skills = await this.alexa.getSkillsExt();
+				const skillsForUi = skills.map(o => [o.id, getSkillLabel(o)]);
+				this.ui.skills = JSON.stringify(skillsForUi);
 			});
 		};
 		this.buildErrorsForUi = function() {
@@ -441,6 +463,7 @@ module.exports = function (RED) {
 				this.buildSmarthomeForUi().catch(this.warnCb),
 				this.buildRoutinesForUi().catch(this.warnCb),
 				this.buildBluetoothForUi().catch(this.warnCb),
+				this.buildSkillsForUi().catch(this.warnCb),
 			]);
 
 			this.alexa.on('change-device', () => this.buildDevicesForUi().catch(this.warnCb));
@@ -502,6 +525,7 @@ module.exports = function (RED) {
 	});
 
 	RED.httpAdmin.get('/alexa-remote-error-messages.json', RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'errors', 'Error Messages', req, res));
+	RED.httpAdmin.get('/alexa-remote-skills.json',         RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'skills', 'Skills', req, res));
 	RED.httpAdmin.get('/alexa-remote-routines.json',       RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'routines', 'Routines', req, res));
 	RED.httpAdmin.get('/alexa-remote-musicProviders.json', RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'musicProviders', 'Music Providers', req, res));
 	RED.httpAdmin.get('/alexa-remote-devices.json',        RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'devices', 'Devices', req, res));

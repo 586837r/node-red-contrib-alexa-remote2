@@ -31,6 +31,7 @@ module.exports = function (RED) {
 						case 'musicProviders': 			return alexa.getMusicProvidersPromise			().then(send).catch(error);
 						case 'homeGroup':						return alexa.getHomeGroupPromise					().then(send).catch(error);
 						case 'notifications':				return alexa.getNotificationsPromise			().then(o => o.notifications).then(send).catch(error);
+						case 'skills':							return alexa.getSkillsExt									().then(send).catch(error);
 
 						case 'list':
 							if(!tools.matches(value, { list: '' })) return error(`invalid input: "${JSON.stringify(config)}"`);
