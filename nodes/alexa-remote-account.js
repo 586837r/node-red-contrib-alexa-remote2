@@ -346,7 +346,7 @@ module.exports = function (RED) {
 			});
 		};
 		this.buildSkillsForUi = function() {
-			return this.captureErrorMessage('bluetooth', async () => {
+			return this.captureErrorMessage('skills', async () => {
 				//throw new Error('TESTING');
 				const skills = await this.alexa.getSkillsExt();
 				const skillsForUi = skills.map(o => [o.id, getSkillLabel(o)]);
