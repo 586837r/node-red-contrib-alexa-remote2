@@ -1,4 +1,4 @@
-- **3.4.0**
+- **3.4.0** & **3.4.1**
   - added launch skill option to routine node
 - **3.3.1**
   - remove smarthome duplicates from ui
