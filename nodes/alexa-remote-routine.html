@@ -1162,7 +1162,7 @@
 						const [devices, devicesRow] = common.bottom.row.deviceList(data.devices);
 						const volume = arTypedInput(data.volume, ['num']);
 						const separator = $('<div>').css({ width: 10 });
-						const mode = arSelect(data.mode, ['set', 'add']).attr('style', 'flex: 1 !important; max-width: 150px !important;');
+						const mode = arSelect(data.mode || 'set', ['set', 'add']).attr('style', 'flex: 1 !important; max-width: 150px !important;');
 						channel.type.on('change', () => {
 							const value = channel.type.arSelect('value');
 							const type = value === 'ssml' ? ssml : 'str'
