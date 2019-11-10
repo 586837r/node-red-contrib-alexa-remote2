@@ -357,37 +357,74 @@ module.exports = function (RED) {
 					}
 					case 'volume': {
 						if (!Array.isArray(node.payload.devices)) node.payload.devices = [node.payload.devices || node.payload.device];
-						checkPayload({ value: undefined, devices: [] });
+						checkPayload({ value: undefined, /*mode: '',*/ devices: [] });
 						const volume = Number(node.payload.value);
 						if (Number.isNaN(volume)) throw invalid();
 						const devices = findAll(node.payload.devices);
 						if (devices.length === 0) return undefined;
 
-						if (devices.length === 1) return {
-							'@type': 'com.amazon.alexa.behaviors.model.OpaquePayloadOperationNode',
-							type: 'Alexa.DeviceControls.Volume',
-							operationPayload: {
-								deviceType: devices[0].deviceType,
-								deviceSerialNumber: devices[0].serialNumber,
-								locale: locale,
-								customerId: devices[0].deviceOwnerCustomerId,
-								value: volume,
-							}
-						};
+						if(node.payload.mode === 'add') 
+						{
+							let devicesWithVolume = [];
 
-						return await nativizeNode({
-							type: 'node',
-							payload: {
-								type: 'parallel',
-								children: devices.map(device => ({
-									type: 'volume',
-									payload: {
-										value: volume,
-										device: device,
-									}
-								}))
+							for (const device of devices) {
+								if (deviceToVolume.has(device)) {
+									devicesWithVolume.push(device);
+									continue;
+								}
+	
+								const media = await alexa.getMediaPromise(device);
+	
+								if (tools.matches(media, { volume: 50 })) {
+									deviceToVolume.set(device, media.volume);
+									devicesWithVolume.push(device);
+								}
+								else {
+									warn(`could not fetch volume for device "${device.accountName || device.serialNumber}", ignoring this device...`);
+								}
 							}
-						});
+
+							return await nativizeNode({
+								type: 'node',
+								payload: {
+									type: 'parallel',
+									children: devicesWithVolume.map(device => ({
+										type: 'volume',
+										payload: {
+											value: tools.clamp(deviceToVolume.get(device) + node.payload.value, 0, 100),
+											device: device,
+										}
+									}))
+								}
+							});
+						}
+						else {
+							if (devices.length === 1) return {
+								'@type': 'com.amazon.alexa.behaviors.model.OpaquePayloadOperationNode',
+								type: 'Alexa.DeviceControls.Volume',
+								operationPayload: {
+									deviceType: devices[0].deviceType,
+									deviceSerialNumber: devices[0].serialNumber,
+									locale: locale,
+									customerId: devices[0].deviceOwnerCustomerId,
+									value: volume,
+								}
+							};
+	
+							return await nativizeNode({
+								type: 'node',
+								payload: {
+									type: 'parallel',
+									children: devices.map(device => ({
+										type: 'volume',
+										payload: {
+											value: volume,
+											device: device,
+										}
+									}))
+								}
+							});
+						}
 					}
 					case 'music': {
 						checkPayload({ device: undefined, provider: '', search: '' });

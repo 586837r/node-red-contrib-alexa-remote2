@@ -1182,7 +1182,14 @@
 					groups.bottom.stop = common.bottom.group.deviceList(true);
 					groups.bottom.prompt = common.bottom.group.deviceList(false);
 					groups.bottom.phrase = common.bottom.group.deviceList(false);
-					groups.bottom.volume = common.bottom.group.deviceList(false);
+					groups.bottom.volume = function(data) {
+						data = template(data, { mode: { type: 'str', value: 'set' }, devices: undefined });
+						const mode = arTypedInputOrSelect(data.mode || 'set', ['set', 'add']);
+						const [devices, devicesRow] = common.bottom.row.deviceList(data.devices);					
+						arRow(mode, 'Mode').appendTo(this);
+						devicesRow.appendTo(this);
+						return () => ({ mode: mode.arTypedInputOrSelect('data'), devices: devices.arTypedInputOrInputList('data') });
+					};
 					groups.bottom.music = function(data) {
 						data = template(data, {provider: { type: 'str', value: ''}, search: {type: 'str', value: ''}, duration: { type: 'num', value: ''}});
 						const provider = arTypedInputOrSelect(data.provider);
