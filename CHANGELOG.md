@@ -1,3 +1,5 @@
+- **3.5.0**
+  - added Volume *Add* option to Speak At Volume
 - **3.4.0** & **3.4.1**
   - added launch skill option to routine node
 - **3.3.1**
