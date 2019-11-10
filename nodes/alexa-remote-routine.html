@@ -153,6 +153,10 @@
 	.alexaRemote-arTypedInputOrInputList .hidden {
 		display: none !important;
 	}
+
+	.alexaRemote-arTypedInput .red-ui-typedInput-container {
+		width: 100% !important;
+	}
 </style>
 
 <script type="text/javascript">
@@ -781,8 +785,13 @@
 			function arRow(element, label, flex = '3') {
 				return $('<div>').addClass('alexaRemote-arRow').append(
 					$('<label>').addClass('alexaRemote-arRow_label').html(label),
-					$('<div>').css({ width: 10 }),
+					$('<div>').css({ width: 10, minWidth: 10 }),
 					element.css({ flex: flex }),
+				);
+			}
+			function arGroup(element) {
+				return $('<div>').css({display: 'flex'}).append(
+					...arguments
 				);
 			}
 			function arInput(data = '') {
@@ -1136,7 +1145,7 @@
 						return () => ({ text: text.arTypedInput('data'), devices: devices.arTypedInputOrInputList('data') });
 					};
 					groups.bottom.speakAtVolume = function(data) {
-						data = template(data, { text: { type: 'str', value: '' }, volume: {type: 'num', value: '50'}, devices: undefined });
+						data = template(data, { text: { type: 'str', value: '' }, volume: {type: 'num', value: '50'}, mode: undefined, devices: undefined });
 						const ssml = {
 							value: "ssml",
 							label: "SSML",
@@ -1152,6 +1161,8 @@
 						const text = arTypedInput(data.text, ['str']);
 						const [devices, devicesRow] = common.bottom.row.deviceList(data.devices);
 						const volume = arTypedInput(data.volume, ['num']);
+						const separator = $('<div>').css({ width: 10 });
+						const mode = arSelect(data.mode, ['set', 'add']).attr('style', 'flex: 1 !important; max-width: 150px !important;');
 						channel.type.on('change', () => {
 							const value = channel.type.arSelect('value');
 							const type = value === 'ssml' ? ssml : 'str'
@@ -1159,11 +1170,12 @@
 						});
 						//arTips('<b>Warning:</b> Only works if the echo has recently been playing music!').appendTo(this);
 						arRow(text, 'Text').appendTo(this);
-						arRow(volume, 'Volume').appendTo(this);
+						arRow(arGroup(volume, separator, mode), 'Volume').appendTo(this);
 						devicesRow.appendTo(this).children('label');
 						return () => ({ 
 							text: text.arTypedInput('data'), 
 							volume: volume.arTypedInput('data'),
+							mode: mode.arSelect('value'),
 							devices: devices.arTypedInputOrInputList('data'),
 						});
 					}

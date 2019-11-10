@@ -7,11 +7,13 @@ module.exports = function (RED) {
 		tools.assignNode(RED, this, ['account'], input);
 		if (!tools.nodeSetup(this, input, true)) return;
 
+		const debug = tools.nodeGetDebugCb(this);
+		const log = tools.nodeGetLogCb(this);
+		const warn = tools.nodeGetWarnCb(this);
+		const error = tools.nodeGetErrorCb(this);
+
 		this.on('input', function (msg) {
 			const send = tools.nodeGetSendCb(this, msg);
-			const log = tools.nodeGetLogCb(this);
-			const warn = tools.nodeGetWarnCb(this);
-			const error = tools.nodeGetErrorCb(this);
 			if (this.account.state.code !== 'READY') return error('Account not initialised!');
 			this.status({ shape: 'dot', fill: 'grey', text: 'sending' });
 			const alexa = this.account.alexa;
@@ -150,7 +152,7 @@ module.exports = function (RED) {
 							const single = node.payload.devices || node.payload.device;
 							node.payload.devices = single ? [single] : [];
 						}
-						checkPayload({ type: '', text: '', volume: undefined });
+						checkPayload({ type: '', text: '', /*mode: '',*/ volume: undefined });
 						const devices = findAll(node.payload.devices);
 						if(devices.length === 0) return undefined;
 
@@ -184,42 +186,88 @@ module.exports = function (RED) {
 							});
 						}
 						
-						return await nativizeNode({
-							type: 'node',
-							payload: {
-								type: 'serial',
-								children: [
-									{
-										type: 'volume',
-										payload: {
-											value: node.payload.volume,
-											devices: devicesWithVolume,
+						if(node.payload.mode === 'add') {
+							return await nativizeNode({
+								type: 'node',
+								payload: {
+									type: 'serial',
+									children: [
+										{
+											type: 'node',
+											payload: {
+												type: 'parallel',
+												children: devicesWithVolume.map(device => ({
+													type: 'volume',
+													payload: {
+														value: tools.clamp(deviceToVolume.get(device) + node.payload.volume, 0, 100),
+														device: device,
+													}
+												}))
+											}
+										},
+										{
+											type: 'speak',
+											payload: {
+												type: node.payload.type,
+												text: node.payload.text,
+												devices: devices,
+											}
+										},
+										{
+											type: 'node',
+											payload: {
+												type: 'parallel',
+												children: devicesWithVolume.map(device => ({
+													type: 'volume',
+													payload: {
+														value: deviceToVolume.get(device),
+														device: device,
+													}
+												}))
+											}
 										}
-									},
-									{
-										type: 'speak',
-										payload: {
-											type: node.payload.type,
-											text: node.payload.text,
-											devices: devices,
+									]
+								}
+							});
+						}
+						else {
+							return await nativizeNode({
+								type: 'node',
+								payload: {
+									type: 'serial',
+									children: [
+										{
+											type: 'volume',
+											payload: {
+												value: node.payload.volume,
+												devices: devicesWithVolume,
+											}
+										},
+										{
+											type: 'speak',
+											payload: {
+												type: node.payload.type,
+												text: node.payload.text,
+												devices: devices,
+											}
+										},
+										{
+											type: 'node',
+											payload: {
+												type: 'parallel',
+												children: devicesWithVolume.map(device => ({
+													type: 'volume',
+													payload: {
+														value: deviceToVolume.get(device),
+														device: device,
+													}
+												}))
+											}
 										}
-									},
-									{
-										type: 'node',
-										payload: {
-											type: 'parallel',
-											children: devicesWithVolume.map(device => ({
-												type: 'volume',
-												payload: {
-													value: deviceToVolume.get(device),
-													device: device,
-												}
-											}))
-										}
-									}
-								]
-							}
-						});
+									]
+								}
+							});
+						}
 					}
 					case 'stop': {
 						if (!Array.isArray(node.payload.devices)) node.payload.devices = [node.payload.devices || node.payload.device];
@@ -532,13 +580,13 @@ module.exports = function (RED) {
 				}).then(send).catch(e => {
 					error(e);
 					log(`raw: "${JSON.stringify(raw)}"`);
-					log(`evaluated: "${JSON.stringify(raw)}"`);
-					log(`native: "${JSON.stringify(raw)}"`);
+					log(`evaluated: "${JSON.stringify(evaluated)}"`);
+					log(`native: "${JSON.stringify(native)}"`);
 				});
 			}).catch(e => {
 				error(e);
 				log(`raw: "${JSON.stringify(raw)}"`);
-				log(`evaluated: "${JSON.stringify(raw)}"`);
+				log(`evaluated: "${JSON.stringify(evaluated)}"`);
 			});
 		});
 	}
