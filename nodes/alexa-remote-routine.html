@@ -95,7 +95,7 @@
 						<li>routine can be an id or utterance (case insensitive)</li>
 					</ul>
 				</li>
-				<li><code>{ type: 'pushNotification', payload: { text: 'Hello from Node-RED!' }</code></li>
+				<li><code>{ type: 'pushNotification', payload: { text: 'Hello from Node-RED!', title: 'Node-RED' }</code></li>
 				<li><code>{ type: 'node', payload: { type: 'serial', children: [ { type: 'speak', payload: {...}}] }</code>
 					<ul>
 						<li>type: <code>serial</code>, <code>parallel</code></li>
@@ -1250,6 +1250,12 @@
 					}
 					groups.bottom.routine = common.bottom.group.device(false);
 					groups.bottom.skill = common.bottom.group.device(false);
+					groups.bottom.pushNotification = function(data) {
+						data = template(data, { title: { type: 'str', value: 'Node-RED' } });
+						const title = arTypedInput(data.title, ['str']);					
+						arRow(title, 'Title').appendTo(this);
+						return () => ({ title: title.arTypedInput('data') });
+					};
 					groups.bottom.node = function (data) {
 						data = template(data, { children: [{}] }, 1);
 						const list = arInputList(data.children, function (data) {

@@ -574,7 +574,7 @@ module.exports = function (RED) {
 								customerId: customerId,
 								notificationMessage: node.payload.text,
 								alexaUrl: '#v2/behaviors',
-								title: 'Node-RED'
+								title: node.payload.title || 'Node-RED'
 							},
 							name: null
 						};

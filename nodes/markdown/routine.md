@@ -31,7 +31,7 @@ Emulates Alexa Routine behaviour.
     - action: `turnOn`, `turnOff`, `setColor`, `setColorTemperature`, `setBrightness`, `setPercentage`, `lockAction`, `setTargetTemperature`
   - ```{ type: 'routine', payload: { routine: 'hello' }```
     - routine can be an id or utterance (case insensitive)
-  - ```{ type: 'pushNotification', payload: { text: 'Hello from Node-RED!' }```  
+  - ```{ type: 'pushNotification', payload: { text: 'Hello from Node-RED!', title: 'Node-RED' }```  
   - ```{ type: 'node', payload: { type: 'serial', children: [ { type: 'speak', payload: {...}}] }```  
     - type: `serial`, `parallel`
 
