@@ -1,3 +1,5 @@
+- **3.7.0**
+  - add *Push Notification* title property
 - **3.5.0** & **3.6.0**
   - added *Volume* and *Speak At Volume* *Add* mode
 - **3.4.0** & **3.4.1**
