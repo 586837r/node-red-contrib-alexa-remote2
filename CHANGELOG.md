@@ -1,3 +1,6 @@
+- **3.8.0**
+  - added lists node
+  - update dependency alexa-remote2 to 3.0.3
 - **3.7.0**
   - add *Push Notification* title property
 - **3.5.0** & **3.6.0**

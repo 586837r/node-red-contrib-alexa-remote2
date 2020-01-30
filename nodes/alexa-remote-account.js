@@ -6,175 +6,296 @@ const EventEmitter = require('events');
 const AlexaRemote = require('../lib/alexa-remote-ext.js');
 const tools = require('../lib/common.js');
 
+// we are building all sorts of json payloads to send to the webpage when
+// initializing the account (can be updated via an 'update' query or account.updateAlexa)
+// they are built by the account.builders and stored in account.ui
+// any error that happens during building these payloads are reported in
+// the json payload account.ui.errors
+
+const uiJsonBuilders = {
+	devices: async (alexa, fresh = true) => {
+		function getIcon(device) {
+			switch(device.deviceFamily) {
+				case 'TABLET':                        return 'f10a'; // tablet
+				case 'VOX':                           return 'f007'; // user
+				case 'THIRD_PARTY_AVS_MEDIA_DISPLAY': return 'f135'; // app
+				case 'ECHO':                          return 'f270'; // amazon
+				case 'FIRE_TV':                       return 'f06d'; // fire
+				case 'WHA':                           return 'f247'; // object-group
+				case 'AMAZONMOBILEMUSIC_ANDROID':     return 'f17b'; // android
+				default:                              return 'f059'; // question-circle
+			}
+		}
+	
+		function getLabel(device) {
+			return `&#x${getIcon(device)};  ${device.accountName}`
+		}
+	
+		function getSortValue(device) {
+			let value = device.accountName ? device.accountName.charCodeAt(0) : 0;
+		
+			switch(device.deviceFamily) {
+				case 'ECHO':                          value -= 1000;
+				case 'WHA':                           value -= 1000;
+				case 'FIRE_TV':                       value -= 1000;
+				case 'TABLET':                        value -= 1000;
+				case 'VOX':                           value -= 1000;
+				case 'THIRD_PARTY_AVS_MEDIA_DISPLAY': value -= 1000;
+				case 'AMAZONMOBILEMUSIC_ANDROID':     value -= 1000;
+				default:                              value -= 1000;
+			}
+		
+			return value;
+		}
+	
+		if(fresh) {
+			await this.alexa.initDevicesExt();
+		}
+	
+		return JSON.stringify(Array.from(alexa.deviceByIdExt.values())
+			.sort((a,b) => getSortValue(a) - getSortValue(b))
+			.map(x => [x.serialNumber, getLabel(x), x.capabilities])
+		);
+	},
+	smarthome: async (alexa, fresh = true) => {
+		function getIcon(applianceType) {
+			switch(applianceType) {
+				case 'LIGHT':               return 'f0eb'; // lightbulb-o 
+				case 'SWITCH':              return 'f205'; // toggle-on
+				case 'THERMOSTAT':          return 'f2c9'; // thermometer-half
+				case 'SMARTLOCK':           return 'f084'; // key
+				case 'SCENE_TRIGGER':       return 'f144'; // play-circle
+				case 'ACTIVITY_TRIGGER':    return 'f0f3'; // bell
+				case 'HUB':                 return 'f233'; // server
+				case 'ECHO': /*not native*/ return 'f270'; // amazon
+				case 'OTHER':               return 'f2db'; // microchip
+				default:                    return 'f128'; // question
+			}
+		}
+	
+		function getLabel(entity) {
+			if(entity.type === 'APPLIANCE') {
+				return entity.applianceTypes.map(getIcon).map(c => `&#x${c};`).join('') + `  ${entity.name}`;
+			}
+			else {
+				const icon = 'f247'; // object-group
+				return `&#x${icon};  ${entity.name}`; 
+			}
+		}
+
+		if(fresh) {
+			await Promise.all([
+				alexa.initSmarthomeSimplifiedExt(),
+				alexa.initSmarthomeColorsExt(),
+			]);
+		}
+	
+		const entityById = Array.from(alexa.smarthomeSimplifiedByEntityIdExt.values())
+			.filter(e => !e.isDuplicate)
+			.sort((a, b) => {
+				if (a.type !== b.type) {
+					return a.type === 'APPLIANCE' ? -1 : 1;
+				}
+	
+				const an = a.name.toLowerCase();
+				const bn = b.name.toLowerCase();
+	
+				return an < bn ? -1 : an > bn ? 1 : 0;
+			})
+			.reduce((obj, entity) => (obj[entity.entityId] =
+				[getLabel(entity), entity.properties, entity.actions, entity.type],
+				obj), {});
+	
+		const colorNames = Array.from(alexa.colorNameToLabelExt.entries());
+		const colorTemperatureNames = Array.from(alexa.colorTemperatureNameToLabelExt.entries());
+	
+		//tools.log({smarthomeForUi: smarthomeForUi}, 10, 250);
+		return JSON.stringify({
+			entityById: entityById,
+			colorNames: colorNames,
+			colorTemperatureNames: colorTemperatureNames,
+		});
+	},
+	bluetooth: async (alexa, fresh = true) => {
+		function getLabel(device) {
+			return device.friendlyName;
+		}
+	
+		return JSON.stringify((await alexa.getBluetoothPromise()).bluetoothStates
+			.filter(state => Array.isArray(state.pairedDeviceList))
+			.reduce((o, state) => (o[state.deviceSerialNumber] = state.pairedDeviceList
+				.map(device => [device.address, getLabel(device)]
+			), o), {})
+		);
+	},
+	notifications: async (alexa, fresh = true) => {
+		function getLabel(not) {
+			if(!tools.matches(not, { type: '', status: '', id: ''})) return `&#xf059;  ???`;
+		
+			const name = not.type === 'Timer' ? not.timerLabel : not.reminderLabel;
+			const suffix = not.status === 'ON' ? '' : ` (${String(not.status).toLowerCase()})`;
+			const icon = not.type === 'Timer' ? 'f017' : not.type === 'Alarm' ? 'f0f3' : not.type === 'Reminder' ? 'f073' : 'f059';
+			const shortId = not.id.slice(not.id.lastIndexOf('-') + 1);
+			const shortTime = (not.originalTime || '').slice(0, 5);
+		
+			return `&#x${icon};  ${name || (not.type === 'Alarm' ? shortTime : shortId)}${suffix}`;
+		}
+
+		const getSortValue = (noti) => {
+			const name = noti.type === 'Timer' ? noti.timerLabel : noti.reminderLabel;		
+		
+			const nameValue = name ? name.charCodeAt(0) : 1000;
+		
+			const typeValue = 
+					noti.type === 'Timer' ? 0
+				: noti.type === 'Alarm' ? 10000
+				: noti.type === 'Reminder' ? 20000
+				: 30000;
+		
+			return nameValue + typeValue;
+		};
+
+		return JSON.stringify(Array.from(alexa.notificationByIdExt.values())
+			.sort((a,b) => getSortValue(a) - getSortValue(b))
+			.map(noti => [noti.notificationIndex, getLabel(noti), noti.type, noti.deviceSerialNumber])
+		);
+	},
+	routines: async (alexa, fresh = true) => {
+		function getLabel(routine, smarthomeSimplifiedByEntityIdExt) {
+			routine = tools.isObject(routine) && routine || {};
+			const id = String(routine.automationId);
+			const trigger = Array.isArray(routine.triggers) && routine.triggers[0] || {}; 
+			const type = trigger.type || '';
+			const disabled = routine.status === 'DISABLED';
+			const suffix = disabled ? ' (disabled)' : '';
+		
+			// const shortId = 
+			// 	  id.startsWith('amzn1.alexa.automation') 				? id.slice(id.lastIndexOf('-') + 1) 
+			// 	: id.startsWith('amzn1.alexa.behaviors.preconfigured') 	? tools.keyToLabel(id.slice(id.lastIndexOf(':') + 1, tools.nthIndexOf(id, '_', 1)))
+			// 	: '???';
+		
+			if(type.startsWith('Alexa.Trigger.Alarms')) {
+				let action = type.slice(type.lastIndexOf('.') + 1);
+				if(action === 'NotificationStopped') action = 'dismissed';
+				return `&#xf0f3;  Alarm ${tools.keyToLabel(action)}${suffix}`; //bell
+			}
+		
+			if(type.startsWith('Alexa.Trigger.Gadget.EchoButton')) {
+				let action = type.slice(type.lastIndexOf('.') + 1);
+				let shortId = trigger.payload.gadgetDsn.slice(-3);
+				if(action === 'ButtonPress') action = 'pressed';
+				return `&#xf111;  Button ${shortId} ${tools.keyToLabel(action)}${suffix}`; // circle
+			}
+		
+			if(type === 'CustomUtterance') {
+				const utterance = trigger.payload.utterance;
+				return `&#xf130;  "${utterance}"`; // microphone
+			}
+		
+			if(type === 'motionSensorDetectionStateTrigger') {
+				const entityId = trigger.payload.target;
+				const entity = smarthomeSimplifiedByEntityIdExt.get(entityId);
+				const name = entity && entity.name || '???';
+				return `&#xf047;  Motion in ${name}${suffix}`; // arrows
+			}
+		
+			if(type === 'AbsoluteTimeSchedule') {
+				const time = trigger.schedule && trigger.schedule.triggerTime || '??????';
+				const formatted = `${time.slice(0,2)}:${time.slice(2,4)}:${time.slice(4,6)}`;
+				return `&#xf017;  Schedule ${formatted}${suffix}`; // clock-o
+			}
+		
+			return `&#xf059;  ${id}${suffix}`; // question-circle
+		}
+
+		if(fresh) {
+			await alexa.initRoutinesExt();
+		}
+
+		return JSON.stringify(Array.from(alexa.routineByIdExt.values())
+			.sort((a,b) => (a.status === 'DISABLED' ? 1 : -1) - (b.status === 'DISABLED' ? 1 : -1))
+			.map(routine => [routine.automationId, getLabel(routine, alexa.smarthomeSimplifiedByEntityIdExt)]));
+	},
+	musicProviders: async(alexa, fresh = true) => {
+		if(fresh) {
+			await alexa.initMusicProvidersExt();
+		}
+
+		return JSON.stringify(alexa.musicProvidersExt
+			.filter(provider => provider.supportedOperations.includes('Alexa.Music.PlaySearchPhrase'))
+			.map(provider => [provider.id, provider.displayName]));
+	},
+	skills: async(alexa, fresh = true) => {
+		function getIcon(skill) {
+			switch(skill.type) {
+				case 'CUSTOM':           return 'f013'; // cog
+				case 'SMART_HOME':       return 'f015'; // home
+				case 'CONTENT':          return 'f1ea'; // newspaper-o
+				default:                 return 'f059'; // question-circle
+			}
+		}
+	
+		function getLabel(skill) {
+			return `&#x${getIcon(skill)};  ${skill.name}`;
+		}
+
+		return JSON.stringify((await alexa.getSkillsExt())
+			.map(o => [o.id, getLabel(o)])
+		);
+	},
+	lists: async (alexa, fresh = true) => {
+		function getIcon(list) {
+			switch(list.type) {
+				case 'SHOPPING_LIST': return 'f07a'; // shopping-cart
+				case 'TO_DO':         return 'f14a'; // check-square
+				default:              return 'f03a'; // list
+			}
+		}
+	
+		function getName(list) {
+			if(list.name) return list.name;
+	
+			switch(list.type) {
+				case 'SHOPPING_LIST': return 'Shopping';
+				case 'TO_DO':         return 'To-do';
+				default:              return 'Unnamed';
+			}
+		}
+	
+		function getLabel(list) {
+			return `&#x${getIcon(list)};  ${getName(list)}`;
+		}
+	
+		return JSON.stringify((await alexa.getListsPromise())
+			.filter(x => x.archived == false)
+			.map(x => [x.itemId, getLabel(x)])
+		);
+	},
+};
+
 function accountHttpResponse(RED, property, label, req, res) {
 	const account = RED.nodes.getNode(req.query.account);
-
+	
 	if(!account) {
 		res.writeHeader(400, {'Content-Type': 'text/plain'});
 		return res.end(`Could not load ${label}: Account not deployed!`);
 	}
-
+	
 	if(account.state.code !== 'READY') {
 		res.writeHeader(400, {'Content-Type': 'text/plain'});
 		return res.end(`Could not load ${label}: Account not initialised!`);
 	}
-
-	if(!account.ui.hasOwnProperty(property)) {
-		res.writeHeader(500, {'Content-Type': 'text/plain'});
-		return res.end(`Could not load ${label}: Account not correctly initialised!`);
-	}
-
-	res.writeHeader(200, {'Content-Type': 'application/json'});
-	res.end(typeof account.ui[property] === 'string' ? account.ui[property] : JSON.stringify(account.ui[property]));
-}
-
-function getSmarthomeEntityLabel(entity) {
-	function getIcon(applianceType) {
-		switch(applianceType) {
-			case 'LIGHT':               return 'f0eb'; // lightbulb-o 
-			case 'SWITCH':              return 'f205'; // toggle-on
-			case 'THERMOSTAT':          return 'f2c9'; // thermometer-half
-			case 'SMARTLOCK':           return 'f084'; // key
-			case 'SCENE_TRIGGER':       return 'f144'; // play-circle
-			case 'ACTIVITY_TRIGGER':    return 'f0f3'; // bell
-			case 'HUB':                 return 'f233'; // server
-			case 'ECHO': /*not native*/ return 'f270'; // amazon
-			case 'OTHER':               return 'f2db'; // microchip
-			default:                    return 'f128'; // question
+	
+	// this won't throw, update failures are reported through ui.errors
+	(req.query.refresh ? account.builders[property]() : Promise.resolve()).then(() => {
+		if(!account.ui.hasOwnProperty(property)) {
+			res.writeHeader(500, {'Content-Type': 'text/plain'});
+			return res.end(`Could not load ${label}: Account is missing "${property}" property!`);
 		}
-	}
 
-	if(entity.type === 'APPLIANCE') {
-		return entity.applianceTypes.map(getIcon).map(c => `&#x${c};`).join('') + `  ${entity.name}`;
-	}
-	else {
-		const icon = 'f247'; // object-group
-		return `&#x${icon};  ${entity.name}`; 
-	}
-}
-
-function getDeviceLabel(device) {
-	function getIcon(device) {
-		switch(device.deviceFamily) {
-			case 'TABLET': 							return 'f10a'; // tablet
-			case 'VOX': 							return 'f007'; // user
-			case 'THIRD_PARTY_AVS_MEDIA_DISPLAY': 	return 'f135'; // app
-			case 'ECHO': 							return 'f270'; // amazon
-			case 'FIRE_TV': 						return 'f06d'; // fire
-			case 'WHA':								return 'f247'; // object-group
-			case 'AMAZONMOBILEMUSIC_ANDROID':		return 'f17b'; // android
-			default:								return 'f059'; // question-circle
-		}
-	}
-
-	return `&#x${getIcon(device)};  ${device.accountName}`;
-}
-
-function getDeviceSortValue(device) {
-	let value = device.accountName ? device.accountName.charCodeAt(0) : 0;
-
-	switch(device.deviceFamily) {
-		case 'ECHO': 							value -= 1000;
-		case 'WHA':								value -= 1000;
-		case 'FIRE_TV': 						value -= 1000;
-		case 'TABLET': 							value -= 1000;
-		case 'VOX': 							value -= 1000;
-		case 'THIRD_PARTY_AVS_MEDIA_DISPLAY': 	value -= 1000;
-		case 'AMAZONMOBILEMUSIC_ANDROID':		value -= 1000;
-		default:								value -= 1000;
-	}
-
-	return value;
-}
-
-function getRoutineLabel(routine, smarthomeSimplifiedByEntityIdExt) {
-	routine = tools.isObject(routine) && routine || {};
-	const id = String(routine.automationId);
-	const trigger = Array.isArray(routine.triggers) && routine.triggers[0] || {}; 
-	const type = trigger.type || '';
-	const disabled = routine.status === 'DISABLED';
-	const suffix = disabled ? ' (disabled)' : '';
-
-	// const shortId = 
-	// 	  id.startsWith('amzn1.alexa.automation') 				? id.slice(id.lastIndexOf('-') + 1) 
-	// 	: id.startsWith('amzn1.alexa.behaviors.preconfigured') 	? tools.keyToLabel(id.slice(id.lastIndexOf(':') + 1, tools.nthIndexOf(id, '_', 1)))
-	// 	: '???';
-
-	if(type.startsWith('Alexa.Trigger.Alarms')) {
-		let action = type.slice(type.lastIndexOf('.') + 1);
-		if(action === 'NotificationStopped') action = 'dismissed';
-		return `&#xf0f3;  Alarm ${tools.keyToLabel(action)}${suffix}`; //bell
-	}
-
-	if(type.startsWith('Alexa.Trigger.Gadget.EchoButton')) {
-		let action = type.slice(type.lastIndexOf('.') + 1);
-		let shortId = trigger.payload.gadgetDsn.slice(-3);
-		if(action === 'ButtonPress') action = 'pressed';
-		return `&#xf111;  Button ${shortId} ${tools.keyToLabel(action)}${suffix}`; // circle
-	}
-
-	if(type === 'CustomUtterance') {
-		const utterance = trigger.payload.utterance;
-		return `&#xf130;  "${utterance}"`; // microphone
-	}
-
-	if(type === 'motionSensorDetectionStateTrigger') {
-		const entityId = trigger.payload.target;
-		const entity = smarthomeSimplifiedByEntityIdExt.get(entityId);
-		const name = entity && entity.name || '???';
-		return `&#xf047;  Motion in ${name}${suffix}`; // arrows
-	}
-
-	if(type === 'AbsoluteTimeSchedule') {
-		const time = trigger.schedule && trigger.schedule.triggerTime || '??????';
-		const formatted = `${time.slice(0,2)}:${time.slice(2,4)}:${time.slice(4,6)}`;
-		return `&#xf017;  Schedule ${formatted}${suffix}`; // clock-o
-	}
-
-	return `&#xf059;  ${id}${suffix}`; // question-circle
-}
-
-function getBluetoothDeviceLabel(device) {
-	return device.friendlyName;
-}
-
-function getNotificationLabel(not) {
-	if(!tools.matches(not, { type: '', status: '', id: ''})) return `&#xf059;  ???`;
-
-	const name = not.type === 'Timer' ? not.timerLabel : not.reminderLabel;
-	const suffix = not.status === 'ON' ? '' : ` (${String(not.status).toLowerCase()})`;
-	const icon = not.type === 'Timer' ? 'f017' : not.type === 'Alarm' ? 'f0f3' : not.type === 'Reminder' ? 'f073' : 'f059';
-	const shortId = not.id.slice(not.id.lastIndexOf('-') + 1);
-	const shortTime = (not.originalTime || '').slice(0, 5);
-
-	return `&#x${icon};  ${name || (not.type === 'Alarm' ? shortTime : shortId)}${suffix}`;
-}
-
-const getNotificationSortValue = (noti) => {
-	const name = noti.type === 'Timer' ? noti.timerLabel : noti.reminderLabel;		
-
-	const nameValue = name ? name.charCodeAt(0) : 1000;
-
-	const typeValue = 
-		  noti.type === 'Timer' ? 0
-		: noti.type === 'Alarm' ? 10000
-		: noti.type === 'Reminder' ? 20000
-		: 30000;
-
-	return nameValue + typeValue;
-};
-
-function getSkillLabel(skill) {
-	function getIcon(skill) {
-		switch(skill.type) {
-			case 'CUSTOM':           return 'f013'; // cog
-			case 'SMART_HOME':       return 'f015'; // home
-			case 'CONTENT':          return 'f1ea'; // newspaper-o
-			default:                 return 'f059'; // question-circle
-		}
-	}
-
-	return `&#x${getIcon(skill)};  ${skill.name}`;
+		res.writeHeader(200, {'Content-Type': 'application/json'});
+		res.end(typeof account.ui[property] === 'string' ? account.ui[property] : JSON.stringify(account.ui[property]));
+	});
 }
 
 module.exports = function (RED) {
@@ -202,6 +323,40 @@ module.exports = function (RED) {
 		this.refreshTimeout = null;
 		this.errorMessages = {};
 		this.ui = {};
+		this.builders = {};
+
+		this.buildUiErrorJson = async () => {
+			const a = this.errorMessages;
+			const b = this.alexa.errorMessagesExt;
+			const keys = new Set(Object.getOwnPropertyNames(a), Object.getOwnPropertyNames(b));
+			const combined = {};
+
+			for(const key of keys) {
+				combined[key] = a[key] || b[key];
+			}
+
+			this.ui.errors = JSON.stringify(combined);
+		};
+		this.buildUiJson = async (fresh = true) => {
+			await Promise.all(Object.values(this.builders).map(fn => fn(fresh)));
+		};
+		this.captureErrorMessage = async function(name, asyncFn) {
+			return asyncFn().then(some => {
+				delete this.errorMessages[name];
+				this.buildUiErrorJson();
+				return some;
+			}).catch(error => {
+				this.errorMessages[name] = error.message;
+				this.buildUiErrorJson();
+				throw error;
+			}).catch(this.warnCb);
+		};
+				
+		Object.keys(uiJsonBuilders).forEach(key => {
+			this.builders[key] = async(fresh = true) => this.captureErrorMessage(key, async () => {
+				this.ui[key] = await uiJsonBuilders[key](this.alexa, fresh);
+			});
+		});
 
 		this.setState = function(code, message) {
 			this.state = {
@@ -247,123 +402,6 @@ module.exports = function (RED) {
 			this.errorMessages = {};
 
 			this.setState('UNINITIALISED');
-		};
-
-		this.captureErrorMessage = async function(name, asyncFn) {
-			return asyncFn().then(some => {
-				delete this.errorMessages[name];
-				this.buildErrorsForUi();
-				return some;
-			}).catch(error => {
-				error.message = `building ${name} for ui failed: "${error.message}"`;
-				this.errorMessages[name] = error.message;
-				this.buildErrorsForUi();
-				throw error;
-			});
-		};
-		this.buildSmarthomeForUi = async function() {
-			return this.captureErrorMessage('smarthome', async () => {	
-				//throw new Error('TESTING');
-				const entityById = Array.from(this.alexa.smarthomeSimplifiedByEntityIdExt.values())
-					.filter(e => !e.isDuplicate)
-					.sort((a,b) => {
-						if(a.type !== b.type) {
-							return a.type === 'APPLIANCE' ? -1 : 1;
-						}
-						
-						const an = a.name.toLowerCase();
-						const bn = b.name.toLowerCase();
-		
-						return an < bn ? -1 : an > bn ? 1 : 0;
-					})
-					.reduce((obj, entity) => (obj[entity.entityId] = 
-						[getSmarthomeEntityLabel(entity), entity.properties, entity.actions, entity.type],
-					obj), {});
-	
-				const colorNames = Array.from(this.alexa.colorNameToLabelExt.entries());
-				const colorTemperatureNames = Array.from(this.alexa.colorTemperatureNameToLabelExt.entries());
-	
-				//tools.log({smarthomeForUi: smarthomeForUi}, 10, 250);
-				this.ui.smarthome = JSON.stringify({
-					entityById: entityById,
-					colorNames: colorNames,
-					colorTemperatureNames: colorTemperatureNames,
-				});
-			});
-		};
-		this.buildDevicesForUi = async function() {
-			return this.captureErrorMessage('devices', async () => {
-				//throw new Error('TESTING');
-				const devices = Array.from(this.alexa.deviceByIdExt.values())
-				.sort((a,b) => getDeviceSortValue(a) - getDeviceSortValue(b))
-				.map(dev => [dev.serialNumber, getDeviceLabel(dev), dev.capabilities]);
-
-				this.ui.devices = JSON.stringify(devices);
-			});
-		};
-		this.buildNotificationsForUi = async function() {
-			return this.captureErrorMessage('notifications', async () => {
-				//throw new Error('TESTING');
-				const notifications = Array.from(this.alexa.notificationByIdExt.values())
-				.sort((a,b) => getNotificationSortValue(a) - getNotificationSortValue(b))
-				.map(noti => [noti.notificationIndex, getNotificationLabel(noti), noti.type, noti.deviceSerialNumber]);
-
-				this.ui.notifications = JSON.stringify(notifications);
-			});
-		};
-		this.buildRoutinesForUi = async function() {
-			return this.captureErrorMessage('routines', async () => {
-				//throw new Error('TESTING');
-				const routines = Array.from(this.alexa.routineByIdExt.values())
-				.sort((a,b) => (a.status === 'DISABLED' ? 1 : -1) - (b.status === 'DISABLED' ? 1 : -1))
-				.map(routine => [routine.automationId, getRoutineLabel(routine, this.alexa.smarthomeSimplifiedByEntityIdExt)]);
-
-				this.ui.routines = JSON.stringify(routines);
-			});
-		};
-		this.buildMusicProvidersForUi = async function() {
-			return this.captureErrorMessage('musicProviders', async () => {
-				//throw new Error('TESTING');
-				const musicProviders = this.alexa.musicProvidersExt
-				.filter(provider => provider.supportedOperations.includes('Alexa.Music.PlaySearchPhrase'))
-				.map(provider => [provider.id, provider.displayName]);
-
-				this.ui.musicProviders = JSON.stringify(musicProviders);
-			});
-		};
-		this.buildBluetoothForUi = async function() {
-			return this.captureErrorMessage('bluetooth', async () => {
-				//throw new Error('TESTING');
-				const bluetoothStates = (await this.alexa.getBluetoothPromise()).bluetoothStates;
-
-				const bluetoothForUi = bluetoothStates
-					.filter(state => Array.isArray(state.pairedDeviceList))
-					.reduce((o, state) => (o[state.deviceSerialNumber] = state.pairedDeviceList
-						.map(device => [device.address, getBluetoothDeviceLabel(device)]
-					), o), {});
-	
-				this.ui.bluetooth = JSON.stringify(bluetoothForUi);
-			});
-		};
-		this.buildSkillsForUi = function() {
-			return this.captureErrorMessage('skills', async () => {
-				//throw new Error('TESTING');
-				const skills = await this.alexa.getSkillsExt();
-				const skillsForUi = skills.map(o => [o.id, getSkillLabel(o)]);
-				this.ui.skills = JSON.stringify(skillsForUi);
-			});
-		};
-		this.buildErrorsForUi = function() {
-			const a = this.errorMessages;
-			const b = this.alexa.errorMessagesExt;
-			const keys = new Set(Object.getOwnPropertyNames(a), Object.getOwnPropertyNames(b));
-			const combined = {};
-
-			for(const key of keys) {
-				combined[key] = a[key] || b[key];
-			}
-
-			this.ui.errors = JSON.stringify(combined);
 		};
 
 		this.initAlexa = async function(input, ignoreFile = false) {
@@ -456,15 +494,7 @@ module.exports = function (RED) {
 				catch (error) { this.warnCb(error); }
 			}
 			
-			await Promise.all([
-				this.buildDevicesForUi().catch(this.warnCb),
-				this.buildMusicProvidersForUi().catch(this.warnCb),
-				this.buildNotificationsForUi().catch(this.warnCb),
-				this.buildSmarthomeForUi().catch(this.warnCb),
-				this.buildRoutinesForUi().catch(this.warnCb),
-				this.buildBluetoothForUi().catch(this.warnCb),
-				this.buildSkillsForUi().catch(this.warnCb),
-			]);
+			await this.buildUiJson(false);
 
 			this.alexa.on('change-device', () => this.buildDevicesForUi().catch(this.warnCb));
 			this.alexa.on('change-smarthome', () => this.buildSmarthomeForUi().catch(this.warnCb));
@@ -499,15 +529,7 @@ module.exports = function (RED) {
 			this.setState('UPDATE');
 
 			return this.alexa.updateExt().then(async value => {
-				await Promise.all([
-					this.buildDevicesForUi().catch(this.warnCb),
-					this.buildMusicProvidersForUi().catch(this.warnCb),
-					this.buildNotificationsForUi().catch(this.warnCb),
-					this.buildSmarthomeForUi().catch(this.warnCb),
-					this.buildRoutinesForUi().catch(this.warnCb),
-					this.buildBluetoothForUi().catch(this.warnCb),
-					this.buildSkillsForUi().catch(this.warnCb),
-				]);
+				await buildUiJson(false);
 				this.setState('READY');
 				return value;
 			}).catch(error => {
@@ -541,7 +563,10 @@ module.exports = function (RED) {
 	RED.httpAdmin.get('/alexa-remote-smarthome.json',      RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'smarthome', 'Smarthome Devices', req, res));
 	RED.httpAdmin.get('/alexa-remote-bluetooth.json',      RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'bluetooth', 'Bluetooth Devices', req, res));
 	RED.httpAdmin.get('/alexa-remote-notifications.json',  RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'notifications', 'Notifications', req, res));
-	RED.httpAdmin.get('/alexa-remote-sounds.json',         RED.auth.needsPermission('alexa-remote.read'), (req, res) => {
+	RED.httpAdmin.get('/alexa-remote-lists.json',          RED.auth.needsPermission('alexa-remote.read'), (req, res) => accountHttpResponse(RED, 'lists', 'Lists', req, res));
+
+	// we request sounds on demand because they are per device
+	RED.httpAdmin.get('/alexa-remote-sounds.json', RED.auth.needsPermission('alexa-remote.read'), (req, res) => {
 		const account = RED.nodes.getNode(req.query.account);
 		const device = req.query.device;
 		const label = 'Sounds';
