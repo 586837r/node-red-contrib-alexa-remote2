@@ -16,12 +16,13 @@ The goal is to expose all of [alexa-remote2](https://www.npmjs.com/package/alexa
 2. Create a new Account by pressing the edit button at the right side of the *Account* field.
 3. Choose a **Service Host** and **Page** and **Language** depending on your location. For example:
 
-   |     | Service Host        | Page         | Language |
-   |-----|---------------------|--------------|----------|
-   | USA | pitangui.amazon.com | amazon.com   | en-US    |
-   | UK  | alexa.amazon.co.uk  | amazon.co.uk | en-UK    |
-   | GER | layla.amazon.de     | amazon.de    | de-DE    |
-   | ITA | alexa.amazon.it     | amazon.it    | it-IT    |
+   |     | Service Host        | Page          | Language |
+   |-----|---------------------|---------------|----------|
+   | USA | pitangui.amazon.com | amazon.com    | en-US    |
+   | UK  | alexa.amazon.co.uk  | amazon.co.uk  | en-UK    |
+   | GER | layla.amazon.de     | amazon.de     | de-DE    |
+   | ITA | alexa.amazon.it     | amazon.it     | it-IT    |
+   | AUS | alexa.amazon.com.au | amazon.com.au | en-US    |
    
 4. Set **This IP** to the ip of your Node-RED server
 5. Enter a **File Path** to save the authentication result so following authentications will be 
