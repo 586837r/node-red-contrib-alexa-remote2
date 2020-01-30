@@ -1213,15 +1213,15 @@
 						return () => ({ provider: provider.arTypedInputOrSelect('data'), search: search.arTypedInput('data'), duration: duration.arTypedInput('data')});
 					}
 					groups.bottom.smarthome = function(data) {
-						data = template(data, { entity: '', action: '', value: {}, scale: {} });
+						data = template(data, { entity: '', action: '', value: undefined, scale: undefined });
 						const action = arInputOrSelect(data.action);
 						const parameters = arInputGroups(data.action, data, {
-							setColor: 				common.bottom.group.color('Color', 'colorNameToHex', 'colorNames'),
-							setColorTemperature: 	common.bottom.group.color('Color Temp.', 'colorTemperatureNameToHex', 'colorTemperatureNames'),
-							setBrightness: 			common.bottom.group.number('Brightness'),
-							setPercentage: 			common.bottom.group.number('Percentage'),
-							setLockState: 			common.bottom.group.lockAction(),
-							lockAction: 			common.bottom.group.lockAction(),
+							setColor:             common.bottom.group.color('Color', 'colorNameToHex', 'colorNames'),
+							setColorTemperature:  common.bottom.group.color('Color Temp.', 'colorTemperatureNameToHex', 'colorTemperatureNames'),
+							setBrightness:        common.bottom.group.number('Brightness'),
+							setPercentage:        common.bottom.group.number('Percentage'),
+							setLockState:         common.bottom.group.lockAction(),
+							lockAction:           common.bottom.group.lockAction(),
 							setTargetTemperature: function (data) {
 								data = template(data, { value: { type: 'num', value: '20' }, scale: { type: 'str', value: 'celsius' } });
 								const scale = arTypedInputOrSelect(data.scale, ['celsius', 'fahrenheit']);
