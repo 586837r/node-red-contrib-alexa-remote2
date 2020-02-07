@@ -11,8 +11,7 @@ module.exports = function (RED) {
 		if(!tools.nodeSetup(this, input, true)) return;
 
 		this.on('input', function (msg) {
-			// TODO: change {} to msg, caution! errors!
-			const send = tools.nodeGetSendCb(this, {});
+			const send = tools.nodeGetSendCb(this, msg);
 			const error = tools.nodeGetErrorCb(this);
 			if(this.account.state.code !== 'READY') return error('Account not initialised!');
 			this.status({ shape: 'dot', fill: 'grey', text: 'sending' });
@@ -35,7 +34,7 @@ module.exports = function (RED) {
 				case 'query': {
 					if(!Array.isArray(value)) return invalid();
 
-					// i don't know either
+					// i don't know either (that's what amazon expects...)
 					const getIdForQuery = (entity) => entity.type === 'APPLIANCE' ? entity.applianceId : entity.entityId;
 
 					const queries = value.length === 0 ? msg.payload : value;
@@ -109,7 +108,7 @@ module.exports = function (RED) {
 							if(!state) {
 								if(reportErrors) {
 									const errorObj = errorById.get(id) || { message: `no response for smarthome entity "${entity.name}" (${id})!`};
-									error(errorObj.message, errorObj);								
+									error(errorObj.message || errorObj.code || JSON.stringify(errorObj), errorObj);								
 								}
 								return null;
 							}
@@ -145,7 +144,7 @@ module.exports = function (RED) {
 						}
 
 						const msgs = queries.map((query,i) => mapQueryToMsg(entities[i], query));
-						tools.nodeSendMultiple(this, msgs, this.outputs);
+						tools.nodeSendMultiple(RED, this, msg, msgs, this.outputs);
 					}).catch(error);	
 				}
 				case 'action': {
@@ -257,7 +256,7 @@ module.exports = function (RED) {
 
 							return controlResponse;
 						});
-						tools.nodeSendMultiple(this, msgs, this.outputs);
+						tools.nodeSendMultiple(RED, this, msg, msgs, this.outputs);
 					}).catch(error);
 				}
 				case 'discover': {

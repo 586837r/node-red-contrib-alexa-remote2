@@ -19,8 +19,7 @@ module.exports = function (RED) {
 		if(!tools.nodeSetup(this, input, true)) return;
 
 		this.on('input', function (msg) {
-			// TODO: change {} to msg, caution! errors!
-			const send = tools.nodeGetSendCb(this, {});
+			const send = tools.nodeGetSendCb(this, msg);
 			const error = tools.nodeGetErrorCb(this);
 			if(this.account.state.code !== 'READY') return error('account not initialised');
 			this.status({ shape: 'dot', fill: 'grey', text: 'sending' });
