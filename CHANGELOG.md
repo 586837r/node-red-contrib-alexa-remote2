@@ -1,3 +1,5 @@
+- **3.9.0**
+  - input msg object will no longer be discarded
 - **3.8.0**
   - added lists node
   - update dependency alexa-remote2 to 3.0.3
