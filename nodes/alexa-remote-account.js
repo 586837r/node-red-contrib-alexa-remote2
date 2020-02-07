@@ -287,7 +287,7 @@ function accountHttpResponse(RED, property, label, req, res) {
 	}
 	
 	// this won't throw, update failures are reported through ui.errors
-	(req.query.refresh ? account.builders[property]() : Promise.resolve()).then(() => {
+	(req.query.refresh === '1' ? account.builders[property]() : Promise.resolve()).then(() => {
 		if(!account.ui.hasOwnProperty(property)) {
 			res.writeHeader(500, {'Content-Type': 'text/plain'});
 			return res.end(`Could not load ${label}: Account is missing "${property}" property!`);
