@@ -355,6 +355,41 @@ module.exports = function (RED) {
 							}
 						});
 					}
+					case 'sound': {
+						if (!Array.isArray(node.payload.devices)) node.payload.devices = [node.payload.devices || node.payload.device];
+						checkPayload({ sound: '', devices: [] });
+						const devices = findAll(node.payload.devices);
+						if(devices.length === 0) return undefined;
+
+						if (devices.length === 1)	return {
+							'@type': 'com.amazon.alexa.behaviors.model.OpaquePayloadOperationNode',
+							type: 'Alexa.Sound',
+							skillId: 'amzn1.ask.1p.sound',
+							operationPayload: {
+								customerId: devices[0].deviceOwnerCustomerId,
+								deviceType: devices[0].deviceType,
+								deviceSerialNumber: devices[0].serialNumber,
+								soundStringId: node.payload.sound,
+								locale: locale,
+							},
+							tag: null,
+							name: null,
+						}
+
+						return await nativizeNode({
+							type: 'node',
+							payload: {
+								type: 'parallel',
+								children: devices.map(device => ({
+									type: 'sound',
+									payload: {
+										sound: node.payload.sound,
+										device: device,
+									}
+								}))
+							}
+						});
+					}
 					case 'volume': {
 						if (!Array.isArray(node.payload.devices)) node.payload.devices = [node.payload.devices || node.payload.device];
 						checkPayload({ value: undefined, /*mode: '',*/ devices: [] });

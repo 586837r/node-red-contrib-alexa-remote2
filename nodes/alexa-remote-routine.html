@@ -489,15 +489,30 @@
 						this.notSelect.show();
 					}
 				},
-				selectOptions: function (options) {
+				selectOptions: function (optionsArrayOrObj) {
 					if (arguments.length === 0) {
-						return this.select.children(':not(:disabled)').toArray().map(o => [$(o).val(), $(o).html()]);
+						throw new Error('NYI');
 					}
-					// allows [['myval', 'My Label'], 'myValAndLabel_special'] => [.., ['myValAndLabel_special', 'My Val And Label Special']]
-					options = options.map(o => Array.isArray(o) ? o : [o, keyToLabel(o)]);
+					
 					this.select.empty();
 					this.select.append('<option hidden disabled selected value>???</option>');
-					for (const [value, label] of options) $('<option>').val(value).html(label).appendTo(this.select);
+					
+					// allows [['myval', 'My Label'], 'myValAndLabel_special'] => [.., ['myValAndLabel_special', 'My Val And Label Special']]
+					if(Array.isArray(optionsArrayOrObj)) {
+						for(const option of optionsArrayOrObj) {
+							const [value, label] = Array.isArray(option) ? option : [option, keyToLabel(option)];
+							$('<option>').val(value).html(label).appendTo(this.select);
+						}
+					} else {
+						for(const [groupName, options] of Object.entries(optionsArrayOrObj)) {
+							const group = $('<optgroup>').attr('label', groupName).appendTo(this.select);
+							for(const option of options) {
+								const [value, label] = Array.isArray(option) ? option : [option, keyToLabel(option)];
+								$('<option>').val(value).html(label).appendTo(group);
+							}
+						}
+					}
+
 					this._selectValue(this._inputValue());
 				},
 				selectIndex: function (index) {
@@ -875,8 +890,9 @@
 						['stop',							'&#xf04d;  Stop'], // stop
 						['prompt',						'&#xf27a;  Prompt'], // commenting
 						['phrase',						'&#xf075;  Phrase'], // comment
+						['sound',             '&#xf001;  Sound'], // music
 						['volume',						'&#xf028;  Volume'], // volume-up
-						['music',							'&#xf001;  Music'], // music   Alexa.Music.PlaySearchPhrase
+						['music',							'&#xf001;  Music'], // music
 						['smarthome',					'&#xf015;  Smarthome'], // home
 						['skill',							'&#xf12e;  Launch Skill'], // puzzle-piece
 						['routine',						'&#xf0e7;  Execute Routine'], // bolt
@@ -1057,6 +1073,52 @@
 						]).appendTo(this);
 						return () => ({ category: select.arTypedInputOrSelect('data') });
 					}
+					groups.right.sound = function(data) {
+						data = template(data, { sound: { type: 'str', value: 'amzn_sfx_doorbell_01' }});
+						const select = arTypedInputOrSelect(data.sound, {
+							'Animals': [ // paw
+								['amzn_sfx_cat_meow_1x_01',       'Cat meow'],
+								['amzn_sfx_dog_med_bark_1x_02',   'Dog bark'],
+								['amzn_sfx_lion_roar_02',         'Lion roar'],
+								['amzn_sfx_rooster_crow_01',      'Rooster crow'],
+								['amzn_sfx_wolf_howl_02',         'Wolf howl'],
+							],
+							'Bells and Buzzers': [
+								['bell_02',                       'Bells howl'],
+								['buzzers_pistols_01',            'Buzzer'],
+								['amzn_sfx_church_bell_1x_02',    'Church bell'],
+								['amzn_sfx_doorbell_01',          'Doorbell 1'],
+								['amzn_sfx_doorbell_chime_01',    'Doorbell 2'],
+								['amzn_sfx_doorbell_chime_02',    'Doorbell 3'],
+							],
+							'Crowds': [
+								['amzn_sfx_crowd_applause_01',    'Crowd applause'],
+								['amzn_sfx_large_crowd_cheer_01', 'Crowd cheers'],
+							],
+							'Festive Season': [
+								['christmas_05',                  'Christmas bells'],
+								['horror_10',                     'Halloween creepy door'],
+							],
+							'Miscellaneous': [
+								['air_horn_03',                   'Air horn'],
+								['boing_01',                      'Boing 1'],
+								['boing_03',                      'Boing 2'],
+								['camera_01',                     'Camera'],
+								['squeaky_12',                    'Squeaky door'],
+								['clock_01',                      'Ticking clock'],
+								['amzn_sfx_trumpet_bugle_04',     'Trumpet'],
+							],
+							'Sci-fi': [
+								['futuristic_10',                 'Aircraft'],
+								['amzn_sfx_scifi_engines_on_02',  'Engines on'],
+								['amzn_sfx_scifi_alarm_04',       'Red alert'],
+								['amzn_sfx_scifi_sheilds_up_01',  'Shields up'],
+								['amzn_sfx_scifi_alarm_01',       'Sirens'],
+								['zap_01',                        'Zap'],
+							],
+						}).appendTo(this);
+						return () => ({ sound: select.arTypedInputOrSelect('data') });
+					}
 					groups.right.smarthome = function(data) {
 						data = template(data, {entity: '' });
 						const entity = arInputOrSelect(data.entity).appendTo(this);
@@ -1183,6 +1245,7 @@
 					groups.bottom.stop = common.bottom.group.deviceList(true);
 					groups.bottom.prompt = common.bottom.group.deviceList(false);
 					groups.bottom.phrase = common.bottom.group.deviceList(false);
+					groups.bottom.sound = common.bottom.group.deviceList(false);
 					groups.bottom.volume = function(data) {
 						data = template(data, { mode: { type: 'str', value: 'set' }, devices: undefined });
 						const mode = arTypedInputOrSelect(data.mode || 'set', ['set', 'add']);
