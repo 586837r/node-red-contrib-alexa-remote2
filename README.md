@@ -35,3 +35,11 @@ automatic.
 11. Select a device in the *Alexa Routine* node devices field.
 
 Now trigger the *Alexa Routine* Node with any message and your Alexa will say "Hello World!". (Hopefully!)
+
+### **Guides**
+These are few community guides that can help you install the plugin/module. If you find more let us know.
+
+- [Alexa Text-To-Speech - How-To (2020)](https://youtu.be/vj9K0O_3zxI)
+- [Alexa TTS using Node-RED – How-To (2020)](https://peyanski.com/alexa-tts-how-to/)
+- [Node Red Alexa Remote2](https://tech.scargill.net/node-red-alexa-remote2/)
+
