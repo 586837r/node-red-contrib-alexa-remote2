@@ -1,3 +1,9 @@
+- **3.10.0**
+  - add sounds option to routine node
+  - add lists dashboard example 
+  - fix editing list item *completed* property
+  - fix running multiple accounts
+  - update dependency alexa-remote2 to 3.1.0
 - **3.9.0**
   - input msg object will no longer be discarded
 - **3.8.0**
