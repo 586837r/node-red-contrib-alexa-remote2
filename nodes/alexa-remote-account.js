@@ -496,9 +496,9 @@ module.exports = function (RED) {
 			
 			await this.buildUiJson(false);
 
-			this.alexa.on('change-device', () => this.buildDevicesForUi().catch(this.warnCb));
-			this.alexa.on('change-smarthome', () => this.buildSmarthomeForUi().catch(this.warnCb));
-			this.alexa.on('change-notification', () => this.buildNotificationsForUi().catch(this.warnCb));
+			this.alexa.on('change-device', _ => this.builders.devices().catch(this.warnCb));
+			this.alexa.on('change-smarthome', _ => this.builders.smarthome().catch(this.warnCb));
+			this.alexa.on('change-notification', _ => this.builders.notifications().catch(this.warnCb));
 
 			// see above why
 			if(alexa !== this.alexa) {
