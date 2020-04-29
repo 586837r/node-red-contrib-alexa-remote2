@@ -1,22 +1,25 @@
+- **3.10.1**
+  - fixed logging what shouldn't've been (#127)
+  - fixed *Alexa Init*s *Update Cached State* (#126)
 - **3.10.0**
-  - add sounds option to routine node
-  - add lists dashboard example 
-  - fix editing list item *completed* property
-  - fix running multiple accounts
+  - added sounds option to routine node
+  - added lists dashboard example 
+  - fixed editing list item *completed* property
+  - fixed running multiple accounts
   - update dependency alexa-remote2 to 3.1.0
 - **3.9.0**
   - input msg object will no longer be discarded
 - **3.8.0**
   - added lists node
-  - update dependency alexa-remote2 to 3.0.3
+  - updated dependency alexa-remote2 to 3.0.3
 - **3.7.0**
-  - add *Push Notification* title property
+  - added *Push Notification* title property
 - **3.5.0** & **3.6.0**
   - added *Volume* and *Speak At Volume* *Add* mode
 - **3.4.0** & **3.4.1**
   - added launch skill option to routine node
 - **3.3.1**
-  - remove smarthome duplicates from ui
+  - removed smarthome duplicates from ui
 - **3.3.0**
   - added new prompts
   - added phrases
@@ -30,7 +33,7 @@
 - **3.2.5**
   - *Speak At Volume* will now speak even if it can't get the current volume (volume won't be changed)
 - **3.2.4**
-  - add *Speak At Volume* warning
+  - added *Speak At Volume* warning
 - **3.2.3**
   - refresh does initialisation now (might help with authentication problems #40)
   - request smarthome colors only if required (fixes warning #42)
@@ -57,42 +60,42 @@
 - **3.0.3**
   - fixed routine stop, prompt, volume saving
 - **3.0.2**
-  - fix init errors of smarthome and routines
+  - fixed init errors of smarthome and routines
 - **3.0.1**
-  - fix ui bug for ssml input
+  - fixed ui bug for ssml input
 - **3.0.0**
   - added refresh interval for proxy Account config
   - replaced/overhauled all other nodes, only Account config of version 2 is compatible
 - **2.3.5**
-  - fix cookie refresh causing 'no JSON' error
+  - fixed cookie refresh causing 'no JSON' error
 - **2.3.4**
-  - update depencency alexa-remote2 to 2.3.7
-    - fix special case on authentication check
-  - fix crash on EADDRINUSE
-  - fix "success" status on authentication error
+  - updated depencency alexa-remote2 to 2.3.7
+    - fixed special case on authentication check
+  - fixed crash on EADDRINUSE
+  - fixed "success" status on authentication error
 - **2.3.3**
-  - update dependency alexa-remote2 to 2.3.5
-    - fix special case on authentication check
-  - fix event node memory leak 
+  - updated dependency alexa-remote2 to 2.3.5
+    - fixed special case on authentication check
+  - fixed event node memory leak 
   - set reasonable event max listener count
 - **2.3.2**
-  - update dependency alexa-remote2 to 2.3.4
+  - updated dependency alexa-remote2 to 2.3.4
     - better error reporting on authentication check
     - fixes potential error on event "Media Progress Change"
-  - add missing event "Media Progress Change"
+  - added missing event "Media Progress Change"
   - improve event node label
 - **2.3.1**
-  - update depencency alexa-remote2 to 2.3.2
-    - fix ssml
+  - updated depencency alexa-remote2 to 2.3.2
+    - fixed ssml
 - **2.3.0**
-  - update dependency to fix 'no csrf' error
+  - updated dependency to fix 'no csrf' error
 - **2.2.3**
-  - fix syntax error in node v8 (#23) 
+  - fixed syntax error in node v8 (#23) 
 - **2.2.2**
-  - fix language being ignored
+  - fixed language being ignored
 - **2.2.1**
-  - fix display bugs (device input, this ip)
-  - update and improve documentation
+  - fixed display bugs (device input, this ip)
+  - updated and improve documentation
 - **2.2.0**
   - added changable proxy ip to access from remote 
 - **2.1.0**
