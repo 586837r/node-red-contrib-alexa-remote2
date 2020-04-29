@@ -49,7 +49,7 @@ const uiJsonBuilders = {
 		}
 	
 		if(fresh) {
-			await this.alexa.initDevicesExt();
+			await alexa.initDevicesExt();
 		}
 	
 		return JSON.stringify(Array.from(alexa.deviceByIdExt.values())
@@ -529,7 +529,7 @@ module.exports = function (RED) {
 			this.setState('UPDATE');
 
 			return this.alexa.updateExt().then(async value => {
-				await buildUiJson(false);
+				await this.buildUiJson(false);
 				this.setState('READY');
 				return value;
 			}).catch(error => {
