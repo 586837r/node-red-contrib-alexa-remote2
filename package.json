@@ -33,6 +33,6 @@
 		"url": "https://github.com/586837r/node-red-contrib-alexa-remote2/issues"
 	},
 	"dependencies": {
-		"alexa-remote2": "3.1.0"
+		"alexa-remote2": "3.2.6"
 	}
 }
