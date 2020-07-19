@@ -921,7 +921,8 @@
 								if (!entity.arInputOrSelect('value')) entity.arInputOrSelect('selectSomething');
 							};
 							const requestUpdate = () => {
-								if (!inDocument(entity)) return;
+								// why was this originally here?
+								// if (!inDocument(entity)) return;
 								loader.once('change', requestUpdate);
 								updateEntity();
 								updateProperty();
@@ -1042,7 +1043,8 @@
 								if (!entity.arInputOrSelect('value')) entity.arInputOrSelect('selectSomething');
 							};
 							const requestUpdate = () => {
-								if (!inDocument(entity)) return;
+								// why was this originally here?
+								// if (!inDocument(entity)) return;
 								loader.once('change', requestUpdate);
 								updateEntity();
 								updateAction();
