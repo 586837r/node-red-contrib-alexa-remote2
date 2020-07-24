@@ -1,6 +1,10 @@
+- **3.10.4**
+  - update dependency alexa-remote2 to 3.3.1
+- **3.10.3**
+  - fixed smarthome node ui
 - **3.10.2**
   - update dependency alexa-remote2 to 3.2.6
-    - fixes authentication
+    - fixed authentication
 - **3.10.1**
   - fixed logging what shouldn't've been (#127)
   - fixed *Alexa Init*s *Update Cached State* (#126)
