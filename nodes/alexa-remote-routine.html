@@ -38,18 +38,18 @@
 			<p>With the <strong>Custom</strong> option, you can feed in a routine node as js object for completely dynamic
 				routines. The objects can look like this:</p>
 			<ul>
-				<li><code>{ type: 'speak', payload: { type: 'regular', text: 'Hello!', devices: ['My Echo']}</code></li>
+				<li><code>{ type: 'speak', payload: { type: 'regular', text: 'Hello!', devices: ['My Echo'] } }</code></li>
 				<li>
-					<code>{ type: 'speakAtVolume', payload: { type: 'regular', text: 'Hello!', volume: 50, devices: ['My Echo']}</code>
+					<code>{ type: 'speakAtVolume', payload: { type: 'regular', text: 'Hello!', volume: 50, devices: ['My Echo'] } }</code>
 					<ul>
 						<li>type: <code>regular</code>, <code>ssml</code>, <code>announcement</code></li>
 						<li>devices: string or array, can be falsy to send to all devices (only for type speak with announcement or
 							ssml type)</li>
 					</ul>
 				</li>
-				<li><code>{ type: 'stop', payload: { devices: ['My Echo']}</code></li>
-				<li><code>{ type: 'stop', payload: { devices: ['My Echo']}</code></li>
-				<li><code>{ type: 'prompt', payload: { type: 'goodMorning', devices: ['My Echo']}</code>
+				<li><code>{ type: 'stop', payload: { devices: ['My Echo'] } }</code></li>
+				<li><code>{ type: 'stop', payload: { devices: ['My Echo'] } }</code></li>
+				<li><code>{ type: 'prompt', payload: { type: 'goodMorning', devices: ['My Echo'] } }</code>
 					<ul>
 						<li>prompt: <code>goodMorning</code>, <code>weather</code>, <code>traffic</code>, <code>flashBriefing</code>,
 							<code>singSong</code>, <code>joke</code>, <code>tellStory</code>, <code>calendarToday</code>,
@@ -57,31 +57,31 @@
 							<code>imHome</code></li>
 					</ul>
 				</li>
-				<li><code>{ type: 'phrase', payload: { category: 'confirmations', devices: ['My Echo']}</code>
+				<li><code>{ type: 'phrase', payload: { category: 'confirmations', devices: ['My Echo'] } }</code>
 					<ul>
 						<li>category: <code>birthday</code>, <code>compliments</code>, <code>confirmations</code>,
 							<code>goodbye</code>, <code>goodmorning</code>, <code>goodnight</code>, <code>iamhome</code></li>
 					</ul>
 				</li>
-				<li><code>{ type: 'volume', payload: { value: 50, devices: ['My Echo']}</code>
+				<li><code>{ type: 'volume', payload: { value: 50, devices: ['My Echo'] } }</code>
 					<ul>
 						<li>value 0..100</li>
 					</ul>
 				</li>
 				<li>
-					<code>{ type: 'music', payload: { provider: 'AMAZON_MUSIC', search: '', device: 'My Echo', duration: 300}</code>
+					<code>{ type: 'music', payload: { provider: 'AMAZON_MUSIC', search: '', device: 'My Echo', duration: 300 } }</code>
 					<ul>
 						<li>provider: <code>AMAZON_MUSIC</code>, <code>TUNEIN</code>, <code>CLOUDPLAYER</code>, <code>SPOTIFY</code>
 						</li>
 						<li>duration is optional</li>
 					</ul>
 				</li>
-				<li><code>{ type: 'wait', payload: { time: 3 }</code>
+				<li><code>{ type: 'wait', payload: { time: 3  } }</code>
 					<ul>
 						<li>time in seconds</li>
 					</ul>
 				</li>
-				<li><code>{ type: 'smarthome', payload: { entity: 'Lamp', action: 'setColor', value: '#FF00FF' }</code>
+				<li><code>{ type: 'smarthome', payload: { entity: 'Lamp', action: 'setColor', value: '#FF00FF' } }</code>
 					<em>(seconds)</em>
 					<ul>
 						<li>entity can be an id or name (case insensitive)</li>
@@ -90,13 +90,13 @@
 							<code>lockAction</code>, <code>setTargetTemperature</code></li>
 					</ul>
 				</li>
-				<li><code>{ type: 'routine', payload: { routine: 'hello' }</code>
+				<li><code>{ type: 'routine', payload: { routine: 'hello' } }</code>
 					<ul>
 						<li>routine can be an id or utterance (case insensitive)</li>
 					</ul>
 				</li>
-				<li><code>{ type: 'pushNotification', payload: { text: 'Hello from Node-RED!', title: 'Node-RED' }</code></li>
-				<li><code>{ type: 'node', payload: { type: 'serial', children: [ { type: 'speak', payload: {...}}] }</code>
+				<li><code>{ type: 'pushNotification', payload: { text: 'Hello from Node-RED!', title: 'Node-RED' } }</code></li>
+				<li><code>{ type: 'node', payload: { type: 'serial', children: [{ type: 'speak', payload: { ... } }] } }</code>
 					<ul>
 						<li>type: <code>serial</code>, <code>parallel</code></li>
 					</ul>
