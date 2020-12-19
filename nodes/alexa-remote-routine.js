@@ -269,6 +269,42 @@ module.exports = function (RED) {
 							});
 						}
 					}
+					case 'textCommand': {
+						if (!Array.isArray(node.payload.devices)) {
+							const single = node.payload.devices || node.payload.device;
+							node.payload.devices = single ? [single] : [];
+						}
+						checkPayload({ text: '' });
+						const devices = findAll(node.payload.devices);
+
+						if (devices.length === 0) return undefined;
+						if (devices.length === 1) return {
+							'@type': 'com.amazon.alexa.behaviors.model.OpaquePayloadOperationNode',
+							type: 'Alexa.TextCommand',
+							skillId: 'amzn1.ask.1p.tellalexa',
+							operationPayload: {
+								deviceType: devices[0].deviceType,
+								deviceSerialNumber: devices[0].serialNumber,
+								locale: locale,
+								customerId: devices[0].deviceOwnerCustomerId,
+								text: node.payload.text
+							}
+						};
+
+						return await nativizeNode({
+							type: 'node',
+							payload: {
+								type: 'parallel',
+								children: devices.map(device => ({
+									type: 'textCommand',
+									payload: {
+										text: node.payload.text,
+										device: device,
+									}
+								}))
+							}
+						});
+					}
 					case 'stop': {
 						if (!Array.isArray(node.payload.devices)) node.payload.devices = [node.payload.devices || node.payload.device];
 						checkPayload({ devices: [] });
