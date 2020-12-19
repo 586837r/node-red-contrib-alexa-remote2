@@ -886,6 +886,7 @@
 					const options = [
 						['speak',							'&#xf04b;  Speak'], // play
 						['speakAtVolume', 		'&#xf0fe;  Speak At Volume'],
+						['textCommand',					'&#xf0e7;  Text Command'], // bolt
 						['wait',							'&#xf017;  Wait'], // clock-o
 						['stop',							'&#xf04d;  Stop'], // stop
 						['prompt',						'&#xf27a;  Prompt'], // commenting
@@ -1028,6 +1029,15 @@
 						return () => ({ type: type.arSelect('value') });
 					}
 					groups.right.speakAtVolume = groups.right.speak;
+					groups.right.textCommand = function(data) {
+						data = template(data, { text: { type: 'str', value: 'Hello from Alexa Remote!'}});
+						const input = arTypedInput(data.text, ['str']).appendTo(this);
+						return () => ({ text: input.arTypedInput('data') });
+						//data = template(data, { type: 'regular' });
+						//const type = arSelect(data.type, ['regular', ['ssml', 'SSML'], 'announcement']).appendTo(this);
+						//channel.type = type;
+						//return () => ({ type: type.arSelect('value') });
+					}
 					groups.right.wait = function(data) {
 						data = template(data, { time: { type: 'num', value: '1' }});
 						const type = arTypedInput(data.time, ['num']).appendTo(this);
@@ -1242,6 +1252,7 @@
 							devices: devices.arTypedInputOrInputList('data'),
 						});
 					}
+					groups.bottom.textCommand = common.bottom.group.deviceList(false);
 					groups.bottom.stop = common.bottom.group.deviceList(true);
 					groups.bottom.prompt = common.bottom.group.deviceList(false);
 					groups.bottom.phrase = common.bottom.group.deviceList(false);
