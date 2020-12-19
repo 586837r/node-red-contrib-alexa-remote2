@@ -1,3 +1,5 @@
+- **3.10.5**
+  - added *textCommand*
 - **3.10.4**
   - update dependency alexa-remote2 to 3.3.1
 - **3.10.3**
