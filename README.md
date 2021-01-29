@@ -1,6 +1,6 @@
 # node-red-contrib-alexa-remote-cakebaked
 
-> Forked from forked from [586837r/node-red-contrib-alexa-remote2](https://github.com/586837r/node-red-contrib-alexa-remote2) to keep dependencies up to date.
+> Forked from [586837r/node-red-contrib-alexa-remote2](https://github.com/586837r/node-red-contrib-alexa-remote2) to keep dependencies up to date.
 
 This is a collection of Node-RED nodes for interacting with the Alexa API.
 You can emulate routine behaviour, control and query your devices and much more!
