@@ -1,3 +1,6 @@
+- **4.0.0**
+  - fork project from https://github.com/586837r/node-red-contrib-alexa-remote2
+  - update dependency alexa-remote2 to ^3.6.0
 - **3.10.4**
   - update dependency alexa-remote2 to 3.3.1
 - **3.10.3**
@@ -10,7 +13,7 @@
   - fixed *Alexa Init*s *Update Cached State* (#126)
 - **3.10.0**
   - added sounds option to routine node
-  - added lists dashboard example 
+  - added lists dashboard example
   - fixed editing list item *completed* property
   - fixed running multiple accounts
   - update dependency alexa-remote2 to 3.1.0
@@ -46,7 +49,7 @@
   - request smarthome colors only if required (fixes warning #42)
   - fixed *Execute Routine*
 - **3.2.2**
-  - fixed *Alexa Other* html load error `smarthome is not defined` 
+  - fixed *Alexa Other* html load error `smarthome is not defined`
 - **3.2.1**
   - fix for customerId related errors like `Response: Input failed to validate.`
 - **3.2.0**
@@ -58,7 +61,7 @@
   - update dependency alexa-remote2 to 2.5.5
     - fixed events for some countries
 - **3.0.6**
-  - fixed ui url to be relative (fix for redmatic) 
+  - fixed ui url to be relative (fix for redmatic)
   - fix routine music duration to be optional
 - **3.0.5**
   - fixed potential issue in routine node regarding customerId, cleanup, error reporting
@@ -83,7 +86,7 @@
 - **2.3.3**
   - updated dependency alexa-remote2 to 2.3.5
     - fixed special case on authentication check
-  - fixed event node memory leak 
+  - fixed event node memory leak
   - set reasonable event max listener count
 - **2.3.2**
   - updated dependency alexa-remote2 to 2.3.4
@@ -97,24 +100,24 @@
 - **2.3.0**
   - updated dependency to fix 'no csrf' error
 - **2.2.3**
-  - fixed syntax error in node v8 (#23) 
+  - fixed syntax error in node v8 (#23)
 - **2.2.2**
   - fixed language being ignored
 - **2.2.1**
   - fixed display bugs (device input, this ip)
   - updated and improve documentation
 - **2.2.0**
-  - added changable proxy ip to access from remote 
+  - added changable proxy ip to access from remote
 - **2.1.0**
-  - added to Sequence: Calendar Next, Calendar Today, Calendar Tomorrow 
+  - added to Sequence: Calendar Next, Calendar Today, Calendar Tomorrow
 - **2.0.1**
-  - fixed account file saving 
+  - fixed account file saving
 - **2.0.0**
   - exposed proxy initialisation with refreshable cookie
   - proper catchable error handling
   - removed obsolete set/get account nodes
   - added device selection by list
-- **1.1.0** 
+- **1.1.0**
   - added SSML,Stop and Notification to Sequence node (alexa-remote2 v2.1.0)
   - added *Alexa Account Get/Set Config* to programmatically change account config
 - **1.0.6**
@@ -128,7 +131,7 @@
 - **1.0.3**
   - fixed logging in with email & password
   - fixed some error reporting
-- **1.0.2** 
+- **1.0.2**
   - fixed setting Command/Request to anything other than select
   - fixed events triggering more than once
 - **1.0.1**
