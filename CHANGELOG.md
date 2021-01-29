@@ -1,3 +1,5 @@
+- **4.0.1**
+  - fixes package name
 - **4.0.0**
   - fork project from https://github.com/586837r/node-red-contrib-alexa-remote2
   - update dependency alexa-remote2 to ^3.6.0
