@@ -1,6 +1,6 @@
 {
 	"name": "node-red-contrib-alexa-remote2",
-	"version": "3.10.4",
+	"version": "3.11.1",
 	"author": {
 		"name": "586837r",
 		"email": "586837r@gmail.com"
@@ -33,6 +33,6 @@
 		"url": "https://github.com/586837r/node-red-contrib-alexa-remote2/issues"
 	},
 	"dependencies": {
-		"alexa-remote2": "3.3.1"
+		"alexa-remote2": "3.7.1"
 	}
 }
