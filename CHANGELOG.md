@@ -1,3 +1,5 @@
+- **4.0.3**
+  - Updates dependency alexa-remote2 to 3.8.1
 - **4.0.2**
   - Updates dependency alexa-remote2 to v3.7.1
 - **4.0.1**
