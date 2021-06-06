@@ -33,6 +33,6 @@
 		"url": "https://github.com/cakebake/node-red-contrib-alexa-remote-cakebaked/issues"
 	},
 	"dependencies": {
-		"alexa-remote2": "^3.7.1"
+		"alexa-remote2": "^3.8.1"
 	}
 }
